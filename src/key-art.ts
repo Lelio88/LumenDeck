@@ -124,8 +124,12 @@ export function colorKey(hex: string, on: boolean): string {
   // AUCUN libelle, meme eteinte. Une goutte grise dit deja tout, exactement
   // comme l'ampoule grise de la bascule ; le mot ne faisait qu'encombrer le bas
   // du dessin. La couleur est l'information, elle se passe de legende.
+  // Le liisere emploie stroke-opacity, JAMAIS rgba() : Stream Deck rend le SVG
+  // avec QSvg (SVG Tiny 1.2), qui suit CSS2 et ne connait donc que rgb(). Un
+  // rgba() fait rejeter le document ENTIER, en silence — la touche garde alors
+  // l'image du manifeste et parait figee, sans qu'aucun journal ne le signale.
   return frame(
-    `<path d="${drop}" fill="${fill}" stroke="rgba(255,255,255,0.20)" stroke-width="3"/>`,
+    `<path d="${drop}" fill="${fill}" stroke="#ffffff" stroke-opacity="0.2" stroke-width="3"/>`,
   );
 }
 

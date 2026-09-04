@@ -72,3 +72,23 @@ test('l arc prend le grand chemin au-dela d un demi-tour', () => {
   assert.match(arcPath(72, 58, 40, 0, 90), / 0 0 1 /, 'quart de tour : petit arc');
   assert.match(arcPath(72, 58, 40, 0, 270), / 0 1 1 /, 'trois quarts : grand arc');
 });
+
+test('aucun dessin n emploie une couleur que QSvg refuserait', () => {
+  // Stream Deck rend le SVG avec QSvg (SVG Tiny 1.2), aligne sur CSS2 : rgba(),
+  // hsl() et consorts font rejeter le document ENTIER, sans erreur ni journal.
+  // La touche garde alors l'image du manifeste et semble simplement figee — un
+  // bug indetectable a la lecture du code, d'ou ce garde-fou.
+  const interdits = /rgba\(|hsla?\(|color-mix\(|var\(--/;
+  const dessins = [
+    ['intensite allumee', brightnessKey(55, true)],
+    ['intensite eteinte', brightnessKey(55, false)],
+    ['couleur allumee', colorKey('#8b5cf6', true)],
+    ['couleur eteinte', colorKey('#8b5cf6', false)],
+    ['temperature allumee', temperatureKey(4000, true)],
+    ['temperature eteinte', temperatureKey(4000, false)],
+  ];
+  for (const [nom, svg] of dessins) {
+    const trouve = svg.match(interdits);
+    assert.equal(trouve, null, nom + ' emploie ' + (trouve ? trouve[0] : ''));
+  }
+});

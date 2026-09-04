@@ -1,6 +1,6 @@
 {
   "name": "lumendeck",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "private": true,
   "description": "Pilotage local d'ampoules Tuya (Calex et compatibles) depuis un Stream Deck.",
   "type": "module",
