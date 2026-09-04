@@ -25,8 +25,17 @@ import type { Hsv } from '../driver/types.js';
 import { coordinatesFor } from '../bulbs.js';
 import type { ColorSettings } from '../settings.js';
 
-/** Couleur de repli si la touche n'en a pas encore : un blanc chaud neutre. */
-const FALLBACK: Hsv = { h: 30, s: 40, v: 100 };
+/**
+ * Couleur affichee par defaut, en un SEUL endroit.
+ *
+ * Doit rester identique au `default` du selecteur dans `ui/color.html`.
+ * Raison non evidente : sdpi-components se contente d'AFFICHER cet attribut,
+ * il ne l'ecrit dans les reglages qu'au premier changement. Une touche fraiche
+ * a donc `color` vide et tombe forcement sur ce repli — si les deux valeurs
+ * divergent, la touche peint une couleur que le panneau ne dit nulle part.
+ */
+const FALLBACK_HEX = '#ff8800';
+const FALLBACK: Hsv = hexToHsv(FALLBACK_HEX) ?? { h: 32, s: 100, v: 100 };
 /** Degres de teinte par cran de molette. */
 const DEFAULT_STEP = 15;
 
