@@ -9,11 +9,22 @@
       "Icon": "imgs/actions/toggle/icon",
       "Tooltip": "Bascule l'ampoule, en local, sans passer par le cloud.",
       "PropertyInspectorPath": "ui/bulb.html",
-      "Controllers": ["Keypad", "Encoder"],
-      "States": [{ "Image": "imgs/actions/toggle/key", "TitleAlignment": "middle" }],
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/toggle/key",
+          "TitleAlignment": "middle"
+        }
+      ],
       "Encoder": {
         "layout": "$A1",
-        "TriggerDescription": { "Push": "Allumer / eteindre", "Rotate": "" }
+        "TriggerDescription": {
+          "Push": "Allumer / eteindre",
+          "Rotate": ""
+        }
       }
     },
     {
@@ -22,11 +33,22 @@
       "Icon": "imgs/actions/brightness/icon",
       "Tooltip": "Regle l'intensite, quel que soit le mode de l'ampoule.",
       "PropertyInspectorPath": "ui/brightness.html",
-      "Controllers": ["Keypad", "Encoder"],
-      "States": [{ "Image": "imgs/actions/brightness/key", "TitleAlignment": "middle" }],
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/brightness/key",
+          "TitleAlignment": "middle"
+        }
+      ],
       "Encoder": {
         "layout": "$B1",
-        "TriggerDescription": { "Push": "Allumer / eteindre", "Rotate": "Regler l'intensite" }
+        "TriggerDescription": {
+          "Push": "Allumer / eteindre",
+          "Rotate": "Regler l'intensite"
+        }
       }
     },
     {
@@ -35,11 +57,22 @@
       "Icon": "imgs/actions/color/icon",
       "Tooltip": "Applique une couleur ; la molette fait tourner la teinte.",
       "PropertyInspectorPath": "ui/color.html",
-      "Controllers": ["Keypad", "Encoder"],
-      "States": [{ "Image": "imgs/actions/color/key", "TitleAlignment": "middle" }],
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/color/key",
+          "TitleAlignment": "middle"
+        }
+      ],
       "Encoder": {
         "layout": "$B1",
-        "TriggerDescription": { "Push": "Allumer / eteindre", "Rotate": "Faire tourner la teinte" }
+        "TriggerDescription": {
+          "Push": "Allumer / eteindre",
+          "Rotate": "Faire tourner la teinte"
+        }
       }
     },
     {
@@ -48,11 +81,22 @@
       "Icon": "imgs/actions/temperature/icon",
       "Tooltip": "Regle la temperature de blanc, de 2700 K a 6500 K.",
       "PropertyInspectorPath": "ui/temperature.html",
-      "Controllers": ["Keypad", "Encoder"],
-      "States": [{ "Image": "imgs/actions/temperature/key", "TitleAlignment": "middle" }],
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/temperature/key",
+          "TitleAlignment": "middle"
+        }
+      ],
       "Encoder": {
         "layout": "$B1",
-        "TriggerDescription": { "Push": "Allumer / eteindre", "Rotate": "Rechauffer ou refroidir" }
+        "TriggerDescription": {
+          "Push": "Allumer / eteindre",
+          "Rotate": "Rechauffer ou refroidir"
+        }
       }
     }
   ],
@@ -62,11 +106,22 @@
   "Description": "Pilotage local d'ampoules Tuya (compatibles Calex Smart) : allumage, intensite, couleur et blanc reglable, sans cloud, en une vingtaine de millisecondes.",
   "Icon": "imgs/plugin/marketplace",
   "SDKVersion": 3,
-  "Software": { "MinimumVersion": "7.1" },
+  "Software": {
+    "MinimumVersion": "7.1"
+  },
   "OS": [
-    { "Platform": "windows", "MinimumVersion": "10" },
-    { "Platform": "mac", "MinimumVersion": "12" }
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    }
   ],
-  "Nodejs": { "Version": "24", "Debug": "enabled" },
+  "Nodejs": {
+    "Version": "24",
+    "Debug": "enabled"
+  },
   "UUID": "com.lumendeck.bulb"
 }

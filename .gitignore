@@ -11,3 +11,6 @@ lumendeck.local.json
 
 # Journaux ecrits par Stream Deck dans le dossier du plugin
 com.lumendeck.bulb.sdPlugin/logs/
+
+# Paquet distribuable, reconstruit par "npx streamdeck pack"
+dist/
