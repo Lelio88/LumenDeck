@@ -1,6 +1,6 @@
 {
   "Name": "LumenDeck",
-  "Version": "0.4.0.0",
+  "Version": "0.5.0.0",
   "Author": "Lelio Buton",
   "Actions": [
     {
@@ -15,8 +15,12 @@
       ],
       "States": [
         {
-          "Image": "imgs/actions/toggle/key",
-          "TitleAlignment": "middle"
+          "Image": "imgs/actions/toggle/key-off",
+          "TitleAlignment": "bottom"
+        },
+        {
+          "Image": "imgs/actions/toggle/key-on",
+          "TitleAlignment": "bottom"
         }
       ],
       "Encoder": {
@@ -40,7 +44,7 @@
       "States": [
         {
           "Image": "imgs/actions/brightness/key",
-          "TitleAlignment": "middle"
+          "TitleAlignment": "bottom"
         }
       ],
       "Encoder": {
@@ -64,7 +68,7 @@
       "States": [
         {
           "Image": "imgs/actions/color/key",
-          "TitleAlignment": "middle"
+          "TitleAlignment": "bottom"
         }
       ],
       "Encoder": {
@@ -88,7 +92,7 @@
       "States": [
         {
           "Image": "imgs/actions/temperature/key",
-          "TitleAlignment": "middle"
+          "TitleAlignment": "bottom"
         }
       ],
       "Encoder": {

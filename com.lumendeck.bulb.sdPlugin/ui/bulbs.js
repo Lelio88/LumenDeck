@@ -24,14 +24,72 @@
   const anchor = document.getElementById('bulb-manager');
   if (!client || !anchor) return;
 
+  // Les couleurs viennent des variables de sdpi-components, jamais de valeurs en
+  // dur : le panneau suit ainsi le theme de Stream Deck au lieu de jurer avec.
+  // Les champs bruts heritaient sinon des defauts du navigateur — texte sombre
+  // sur fond sombre, illisible.
   const css = `
+    #bulb-manager {
+      font-family: var(--font-family, "Segoe UI", sans-serif);
+      font-size: var(--font-size, 12px);
+      color: var(--font-color, #d8d8d8);
+    }
+    #bulb-manager input {
+      flex: 1;
+      min-width: 0;
+      box-sizing: border-box;
+      height: var(--input-height, 24px);
+      padding: 0 8px;
+      background-color: var(--input-bg-color, #3d3d3d);
+      color: var(--input-font-color, #d8d8d8);
+      border: 1px solid rgba(255, 255, 255, .10);
+      border-radius: 4px;
+      outline: none;
+      font-family: inherit;
+      font-size: inherit;
+    }
+    #bulb-manager input::placeholder { color: var(--font-color, #d8d8d8); opacity: .45; }
+    #bulb-manager input:focus { border-color: #ffb247; }
+
+    #bulb-manager button {
+      height: var(--input-height, 24px);
+      padding: 0 12px;
+      background-color: var(--input-bg-color, #3d3d3d);
+      color: var(--input-font-color, #d8d8d8);
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: inherit;
+      white-space: nowrap;
+    }
+    #bulb-manager button:hover:not(:disabled) { border-color: #ffb247; color: #ffb247; }
+    #bulb-manager button:disabled { opacity: var(--opacity-disabled, .5); cursor: default; }
+
+    /* Action principale : la seule teintee, pour qu'on sache ou cliquer. */
+    #bd-scan { background-color: #ffb247; color: #1a1a1a; border-color: transparent; font-weight: 600; }
+    #bd-scan:hover:not(:disabled) { background-color: #ffc474; color: #1a1a1a; }
+
     .bd-row { display: flex; gap: 6px; align-items: center; margin: 6px 0; }
-    .bd-row input { flex: 1; min-width: 0; }
-    .bd-found { border-top: 1px solid rgba(255,255,255,.12); padding-top: 8px; margin-top: 8px; }
-    .bd-id { font-family: monospace; font-size: 11px; opacity: .75; }
-    .bd-note { font-size: 11px; opacity: .7; margin: 6px 0; }
-    .bd-ok { color: #7ddf8f; }
-    .bd-err { color: #ff8a80; }
+
+    /* Chaque appareil trouve est une petite surface, pas une ligne de plus. */
+    .bd-found {
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-top: 8px;
+    }
+    .bd-id {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 11px;
+      opacity: .7;
+      word-break: break-all;
+      margin-bottom: 4px;
+    }
+    .bd-note { font-size: 11px; opacity: .72; margin: 6px 0; line-height: 1.45; }
+    .bd-ok { color: #7ddf8f; opacity: 1; }
+    .bd-err { color: #ff8a80; opacity: 1; }
   `;
 
   anchor.innerHTML =

@@ -16,7 +16,29 @@ import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
 import type { BulbSettings } from '../settings.js';
 
-type Paintable = { setTitle(title: string): Promise<void>; showAlert(): Promise<void> };
+type Paintable = {
+  setTitle(title: string): Promise<void>;
+  showAlert(): Promise<void>;
+  /** N'existe que sur une touche : une molette n'a pas d'etats. */
+  setState?: (state: number) => Promise<void>;
+};
+
+/**
+ * Reporte l'etat sur la touche.
+ *
+ * Par l'IMAGE quand c'est possible : Stream Deck dessine le titre par dessus
+ * l'image, et un mot ecrit sur un glyphe est illisible autant qu'inutile — une
+ * ampoule qui s'allume visuellement dit la meme chose, mieux. Sur une molette,
+ * qui n'a pas d'etats, le texte reste le seul canal.
+ */
+async function paint(target: Paintable, on: boolean): Promise<void> {
+  if (typeof target.setState === 'function') {
+    await target.setState(on ? 1 : 0);
+    await target.setTitle('');
+    return;
+  }
+  await target.setTitle(on ? 'Allumee' : 'Eteinte');
+}
 
 @action({ UUID: 'com.lumendeck.bulb.toggle' })
 export class ToggleBulb extends SingletonAction<BulbSettings> {
@@ -38,7 +60,7 @@ export class ToggleBulb extends SingletonAction<BulbSettings> {
     if (!coords) { await target.setTitle('A regler'); return; }
     try {
       const on = await withRetry(coords, (bulb) => bulb.togglePower());
-      await target.setTitle(on ? 'Allumee' : 'Eteinte');
+      await paint(target, on);
     } catch {
       await target.showAlert();
     }
@@ -50,7 +72,7 @@ export class ToggleBulb extends SingletonAction<BulbSettings> {
     if (!coords) { await target.setTitle('A regler'); return; }
     try {
       const state = await withRetry(coords, (bulb) => bulb.read());
-      await target.setTitle(state.on ? 'Allumee' : 'Eteinte');
+      await paint(target, state.on);
     } catch {
       await target.setTitle('Hors ligne');
     }

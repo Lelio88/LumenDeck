@@ -74,7 +74,7 @@ l'existence de Tuya.
 | `src/settings.ts` | Formes des réglages d'une touche. Une touche ne retient que l'**identifiant** de l'ampoule qu'elle pilote, plus ce qui lui est propre. |
 | `src/plugin.ts` | Racine de composition. |
 | `src/tools/probe.mjs` | Sonde de diagnostic : relève les datapoints d'une ampoule. Vit sous `src/` parce qu'il a besoin des dépendances du projet. |
-| `tools/make_icons.py` | Génère les 20 PNG du plugin. Hors chaîne Node, d'où son emplacement séparé. |
+| `tools/make_icons.py` | Génère les 24 PNG du plugin. Hors chaîne Node, d'où son emplacement séparé. |
 
 ## Le contrat `LightDriver`
 

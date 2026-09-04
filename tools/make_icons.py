@@ -1,6 +1,6 @@
 """Genere toutes les icones du plugin LumenDeck.
 
-Ce que fait ce script : produire les 12 PNG attendus par Stream Deck a partir
+Ce que fait ce script : produire les 24 PNG attendus par Stream Deck a partir
 d'un dessin decrit en code. Les icones sont reproductibles et modifiables sans
 logiciel de dessin, et on ne versionne pas des binaires opaques.
 
@@ -45,10 +45,17 @@ SS = 4  # facteur de sur-echantillonnage
 INK = (12, 15, 21)  # fond des faces de touche, quasi noir
 AMBER = (255, 178, 71)  # accent : la lumiere, sujet du plugin
 BONE = (201, 205, 212)  # gris des listes, cale sur celui d'Elgato
+DIM = (92, 100, 112)    # ampoule eteinte : presente mais visiblement inerte
 
 # Part de la largeur occupee par le glyphe. Le reste est de la marge.
-CONTENT_KEY = 0.56
+# La face de touche est plus modeste que l'icone de liste : Stream Deck ecrit le
+# titre de l'action par dessus, il faut lui laisser le bas de la touche.
+CONTENT_KEY = 0.46
 CONTENT_LIST = 0.64
+
+# Hauteur du centre du glyphe sur une face de touche. Remonte a 40 % pour
+# degager la bande basse ou s'affiche le titre.
+KEY_CENTER_Y = 0.40
 
 # En dessous de ce seuil, on dessine la version simplifiee du glyphe.
 DETAIL_THRESHOLD = 32
@@ -183,11 +190,15 @@ def glyph_temperature(d: ImageDraw.ImageDraw, s: int, color, detailed: bool) -> 
 # --- Fabrication ------------------------------------------------------------
 
 
-def fit(layer: Image.Image, size: int, content: float) -> Image.Image:
+def fit(layer: Image.Image, size: int, content: float, center_y: float = 0.5) -> Image.Image:
     """Recadre sur le contenu reel, puis inscrit dans une boite de marge fixe.
 
     C'est ce qui garantit la meme respiration a tous les glyphes, quels que
     soient leurs debordements propres.
+
+    `center_y` remonte le glyphe. Stream Deck dessine le titre de l'action PAR
+    DESSUS l'image de la touche ; un glyphe centre et un texte centre se
+    percutent. On lui laisse donc le bas de la touche.
     """
     bbox = layer.getbbox()
     if bbox is None:
@@ -199,18 +210,19 @@ def fit(layer: Image.Image, size: int, content: float) -> Image.Image:
     new = (max(1, round(cropped.width * scale)), max(1, round(cropped.height * scale)))
     cropped = cropped.resize(new, Image.Resampling.LANCZOS)
 
-    out = canvas(size * SS)
-    out.alpha_composite(cropped, ((size * SS - new[0]) // 2, (size * SS - new[1]) // 2))
+    full = size * SS
+    out = canvas(full)
+    out.alpha_composite(cropped, ((full - new[0]) // 2, max(0, round(full * center_y - new[1] / 2))))
     return out.resize((size, size), Image.Resampling.LANCZOS)
 
 
-def key_face(size: int, glyph) -> Image.Image:
-    """Face de touche : carre plein quasi noir, glyphe ambre centre."""
+def key_face(size: int, glyph, color=AMBER, center_y: float = KEY_CENTER_Y) -> Image.Image:
+    """Face de touche : carre plein quasi noir, glyphe remonte pour laisser le titre."""
     s = size * SS
     layer = canvas(s)
-    glyph(ImageDraw.Draw(layer), s, AMBER + (255,), size >= DETAIL_THRESHOLD)
+    glyph(ImageDraw.Draw(layer), s, color + (255,), size >= DETAIL_THRESHOLD)
     img = canvas(size, INK + (255,))
-    img.alpha_composite(fit(layer, size, CONTENT_KEY))
+    img.alpha_composite(fit(layer, size, CONTENT_KEY, center_y))
     return img
 
 
@@ -244,9 +256,15 @@ def main() -> None:
     for size, suffix in ((20, ""), (40, "@2x")):
         for name, glyph in actions:
             write(list_icon(size, glyph), "actions", name, "icon{}.png".format(suffix))
+
     for size, suffix in ((72, ""), (144, "@2x")):
         for name, glyph in actions:
             write(key_face(size, glyph), "actions", name, "key{}.png".format(suffix))
+
+        # La bascule a DEUX etats. Une ampoule qui s'allume visuellement dit ce
+        # qu'un mot ecrit par dessus l'image disait mal.
+        write(key_face(size, glyph_bulb, DIM), "actions", "toggle", "key-off{}.png".format(suffix))
+        write(key_face(size, glyph_bulb, AMBER), "actions", "toggle", "key-on{}.png".format(suffix))
 
 
 if __name__ == "__main__":
