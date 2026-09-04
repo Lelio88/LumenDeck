@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="fr">
+    <title>Reglages de la couleur</title>
+    <meta charset="utf-8" />
+    <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+</head>
+
+<body>
+    <sdpi-item label="Identifiant">
+        <sdpi-textfield setting="deviceId" placeholder="bf0123456789abcdef0000" required></sdpi-textfield>
+    </sdpi-item>
+
+    <sdpi-item label="Cle locale">
+        <sdpi-password setting="localKey" placeholder="cle de chiffrement de l'ampoule" required></sdpi-password>
+    </sdpi-item>
+
+    <sdpi-item label="Adresse IP">
+        <sdpi-textfield setting="ip" placeholder="192.168.1.50 (facultatif)"></sdpi-textfield>
+    </sdpi-item>
+
+    <sdpi-item label="Couleur">
+        <sdpi-color setting="color" default="#ff8800"></sdpi-color>
+    </sdpi-item>
+
+    <sdpi-item label="Pas de teinte">
+        <sdpi-range setting="step" min="5" max="60" step="5" default="15" showlabels></sdpi-range>
+    </sdpi-item>
+
+    <details>
+        <summary>Comment se comportent touche et molette ?</summary>
+        <p>
+            Sur une touche, un appui allume l'ampoule et applique exactement la couleur
+            choisie ci-dessus. Posez-en plusieurs pour vos ambiances favorites.
+        </p>
+        <p>
+            Sur une molette, la rotation fait tourner la teinte par pas du nombre de degres
+            reglé ci-dessus, en conservant l'intensite actuelle de l'ampoule. Un appui sur
+            la molette allume ou eteint.
+        </p>
+    </details>
+</body>
+
+</html>

@@ -1,6 +1,6 @@
 {
   "Name": "LumenDeck",
-  "Version": "0.1.0.0",
+  "Version": "0.2.0.0",
   "Author": "Lelio Buton",
   "Actions": [
     {
@@ -28,12 +28,38 @@
         "layout": "$B1",
         "TriggerDescription": { "Push": "Allumer / eteindre", "Rotate": "Regler l'intensite" }
       }
+    },
+    {
+      "Name": "Couleur",
+      "UUID": "com.lumendeck.bulb.color",
+      "Icon": "imgs/actions/color/icon",
+      "Tooltip": "Applique une couleur ; la molette fait tourner la teinte.",
+      "PropertyInspectorPath": "ui/color.html",
+      "Controllers": ["Keypad", "Encoder"],
+      "States": [{ "Image": "imgs/actions/color/key", "TitleAlignment": "middle" }],
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": { "Push": "Allumer / eteindre", "Rotate": "Faire tourner la teinte" }
+      }
+    },
+    {
+      "Name": "Blanc chaud / froid",
+      "UUID": "com.lumendeck.bulb.temperature",
+      "Icon": "imgs/actions/temperature/icon",
+      "Tooltip": "Regle la temperature de blanc, de 2700 K a 6500 K.",
+      "PropertyInspectorPath": "ui/temperature.html",
+      "Controllers": ["Keypad", "Encoder"],
+      "States": [{ "Image": "imgs/actions/temperature/key", "TitleAlignment": "middle" }],
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": { "Push": "Allumer / eteindre", "Rotate": "Rechauffer ou refroidir" }
+      }
     }
   ],
   "Category": "LumenDeck",
   "CategoryIcon": "imgs/plugin/category-icon",
   "CodePath": "bin/plugin.js",
-  "Description": "Pilotage local d'ampoules Tuya (compatibles Calex Smart) : allumage, intensite et couleur, sans cloud, en une vingtaine de millisecondes.",
+  "Description": "Pilotage local d'ampoules Tuya (compatibles Calex Smart) : allumage, intensite, couleur et blanc reglable, sans cloud, en une vingtaine de millisecondes.",
   "Icon": "imgs/plugin/marketplace",
   "SDKVersion": 3,
   "Software": { "MinimumVersion": "7.1" },

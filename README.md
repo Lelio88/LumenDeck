@@ -32,9 +32,11 @@ Trois conséquences agréables :
 |---|---|---|
 | **Allumer / éteindre** | un appui | appui sur la molette |
 | **Intensité** | un appui = un palier | rotation continue, niveau affiché à l'écran |
+| **Couleur** | applique la couleur choisie | rotation = la teinte défile |
+| **Blanc chaud / froid** | applique la température choisie | rotation de 2700 K à 6500 K |
 
-La couleur et le blanc chaud/froid sont déjà gérés en interne, mais pas encore proposés comme
-touches. C'est la prochaine étape.
+Bon à savoir : couleur et blanc réglable s'excluent — choisir une température fait quitter la
+couleur. C'est l'ampoule qui l'impose, pas le plugin.
 
 ## Installation
 

@@ -14,8 +14,7 @@
 import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DialRotateEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 import { withRetry } from '../driver/pool.js';
-import { isConfigured, type BrightnessSettings } from '../settings.js';
-import { coordinates } from './toggle.js';
+import { coordinates, isConfigured, type BrightnessSettings } from '../settings.js';
 
 /** Pas par defaut, en points de pourcentage. */
 const DEFAULT_STEP = 10;

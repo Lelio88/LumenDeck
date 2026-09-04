@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="fr">
+    <title>Reglages du blanc</title>
+    <meta charset="utf-8" />
+    <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+</head>
+
+<body>
+    <sdpi-item label="Identifiant">
+        <sdpi-textfield setting="deviceId" placeholder="bf0123456789abcdef0000" required></sdpi-textfield>
+    </sdpi-item>
+
+    <sdpi-item label="Cle locale">
+        <sdpi-password setting="localKey" placeholder="cle de chiffrement de l'ampoule" required></sdpi-password>
+    </sdpi-item>
+
+    <sdpi-item label="Adresse IP">
+        <sdpi-textfield setting="ip" placeholder="192.168.1.50 (facultatif)"></sdpi-textfield>
+    </sdpi-item>
+
+    <sdpi-item label="Temperature">
+        <sdpi-range setting="kelvin" min="2700" max="6500" step="100" default="4000" showlabels></sdpi-range>
+    </sdpi-item>
+
+    <sdpi-item label="Pas de molette">
+        <sdpi-range setting="step" min="50" max="500" step="50" default="200" showlabels></sdpi-range>
+    </sdpi-item>
+
+    <details>
+        <summary>Reperes de temperature</summary>
+        <p>
+            2700 K correspond a une ampoule a incandescence, tres chaude. 4000 K est un
+            blanc neutre. 6500 K est la lumiere du jour, froide et bleutee.
+        </p>
+        <p>
+            Appliquer une temperature fait passer l'ampoule en mode blanc : elle quitte
+            donc la couleur. C'est l'ampoule qui l'impose, pas le plugin.
+        </p>
+    </details>
+</body>
+
+</html>

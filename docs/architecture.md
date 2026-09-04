@@ -31,7 +31,7 @@ adaptateur Zigbee ou Matter s'ajouterait sans toucher une seule ligne des action
                                     │
         ┌───────────────────────────▼──────────────────────────────┐
         │  src/actions/           PRÉSENTATION                     │
-        │  toggle.ts · brightness.ts                               │
+        │  toggle · brightness · color · temperature               │
         │  traduit un événement en intention métier, peint la      │
         │  touche. Ne connaît NI Tuya NI les datapoints.           │
         └───────────────────────────┬──────────────────────────────┘
@@ -63,12 +63,15 @@ l'existence de Tuya.
 | `src/driver/types.ts` | Contrat `LightDriver` et vocabulaire métier (`LightState`, `Hsv`, `LightMode`). Exprime les grandeurs en **pourcentages et kelvins**, jamais dans les unités du transport. |
 | `src/driver/tuya.ts` | Adaptateur LAN Tuya 3.3. Traduit le contrat en datapoints, encode/décode les couleurs, borne les échelles. **Seul fichier qui a le droit de connaître un numéro de DP.** |
 | `src/driver/pool.ts` | Réservoir de connexions indexé par ampoule, plus `withRetry` qui rejoue une fois après reconnexion. |
-| `src/actions/toggle.ts` | Action « allumer / éteindre », touche et molette. Expose aussi `coordinates()`, la traduction réglages → coordonnées d'ampoule. |
+| `src/actions/toggle.ts` | Action « allumer / éteindre », touche et molette. |
 | `src/actions/brightness.ts` | Action « intensité » : pas fixe sur touche, rotation continue sur molette, retour visuel sur l'écran de la molette. |
-| `src/settings.ts` | Formes des réglages persistés par Stream Deck et garde `isConfigured()`. |
+| `src/actions/color.ts` | Action « couleur » : applique une couleur choisie, ou fait tourner la teinte à la molette en préservant l'intensité courante. |
+| `src/actions/temperature.ts` | Action « blanc chaud / froid », de 2700 K à 6500 K. |
+| `src/color-format.ts` | Conversions hexadécimal ↔ TSV et rotation de teinte. Vit côté présentation : l'hexadécimal est une convention d'interface web, pas un langage d'ampoule. |
+| `src/settings.ts` | Formes des réglages persistés, garde `isConfigured()` (générique, pour ne pas écraser les types spécifiques) et `coordinates()`. |
 | `src/plugin.ts` | Racine de composition. |
 | `src/tools/probe.mjs` | Sonde de diagnostic : relève les datapoints d'une ampoule. Vit sous `src/` parce qu'il a besoin des dépendances du projet. |
-| `tools/make_icons.py` | Génère les 12 PNG du plugin. Hors chaîne Node, d'où son emplacement séparé. |
+| `tools/make_icons.py` | Génère les 20 PNG du plugin. Hors chaîne Node, d'où son emplacement séparé. |
 
 ## Le contrat `LightDriver`
 
@@ -125,7 +128,7 @@ Exemple réel : l'utilisateur appuie sur une touche « Intensité » réglée à
 
 | Depuis | Peut importer | Ne doit jamais importer |
 |---|---|---|
-| `src/actions/` | `driver/types`, `driver/pool`, `settings` | `driver/tuya`, `tuyapi` |
+| `src/actions/` | `driver/types`, `driver/pool`, `settings`, `color-format` | `driver/tuya`, `tuyapi`, une autre action |
 | `src/driver/pool.ts` | `driver/types`, `driver/tuya` | `@elgato/streamdeck`, `actions/` |
 | `src/driver/tuya.ts` | `driver/types`, `tuyapi` | `@elgato/streamdeck`, `actions/`, `settings` |
 | `src/driver/types.ts` | rien | tout le reste |
@@ -206,6 +209,10 @@ tourné.
 
 ## Ce qui n'existe pas encore
 
-Le plugin gère l'allumage et l'intensité. La couleur et la température de blanc sont **implémentées
-dans le pilote et testées**, mais aucune action Stream Deck ne les expose. C'est le prochain
-incrément naturel, et il ne demande aucune modification du pilote.
+Quatre actions couvrent l'allumage, l'intensité, la couleur et le blanc réglable. Restent hors du
+périmètre : les **scènes** de l'ampoule (datapoint 25, non exploité), le pilotage de **plusieurs
+ampoules par une même touche**, et tout **adaptateur autre que Tuya**.
+
+Une contrainte matérielle à connaître plutôt qu'un manque : couleur et température **s'excluent
+mutuellement**. Écrire une température fait quitter le mode couleur, et c'est l'ampoule qui
+l'impose, pas le plugin.

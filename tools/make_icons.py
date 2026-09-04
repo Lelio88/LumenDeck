@@ -135,6 +135,51 @@ def glyph_gauge(d: ImageDraw.ImageDraw, s: int, color, detailed: bool) -> None:
         d.ellipse([cx - hr, cy - hr, cx + hr, cy + hr], fill=color)
 
 
+def _drop_body(d: ImageDraw.ImageDraw, s: int, color, k: float) -> None:
+    """Goutte pleine, a l'echelle k. Union d'un disque et d'un triangle."""
+    cx, cy = s * 0.5, s * 0.585
+    r = s * 0.255 * k
+    apex = cy - s * 0.455 * k
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=color)
+    d.polygon([(cx, apex), (cx - r * 0.99, cy - r * 0.10), (cx + r * 0.99, cy - r * 0.10)], fill=color)
+
+
+def glyph_color(d: ImageDraw.ImageDraw, s: int, color, detailed: bool) -> None:
+    """Goutte de peinture, en contour.
+
+    Ecarte la roue chromatique a trois rayons, pourtant le premier reflexe : en
+    monochrome elle se lit comme un VOLANT, pas comme une couleur. Ecarte aussi
+    les disques colores qui se chevauchent, qui ne fonctionneraient qu'en
+    couleur — or ce glyphe sert aussi de silhouette grise dans les listes.
+
+    La goutte, elle, est pointue en haut et ronde en bas : exactement l'inverse
+    de l'ampoule, donc aucune confusion possible a 20 px.
+
+    Le contour est obtenu en dessinant la goutte pleine puis en effacant une
+    goutte plus petite. ImageDraw ecrit les pixels sans fusion, y compris le
+    canal alpha : dessiner en (0,0,0,0) evide reellement la forme.
+    """
+    _drop_body(d, s, color, 1.0)
+    _drop_body(d, s, (0, 0, 0, 0), 0.58 if detailed else 0.52)
+
+
+def glyph_temperature(d: ImageDraw.ImageDraw, s: int, color, detailed: bool) -> None:
+    """Cercle a moitie plein : la dualite chaud / froid.
+
+    Ecarte volontairement le thermometre, pourtant evident : sa silhouette (une
+    tige surmontant un renflement rond) se confond avec celle de l'ampoule des
+    que l'icone descend a 20 px. Le demi-disque, lui, ne ressemble a aucun des
+    trois autres glyphes du jeu.
+    """
+    w = s * 0.088
+    cx, cy, r = s * 0.5, s * 0.5, s * 0.285
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=color, width=max(1, int(round(w))))
+
+    # Moitie pleine, legerement en retrait pour ne pas empater l'anneau.
+    inset = r - w * 0.9
+    d.pieslice([cx - inset, cy - inset, cx + inset, cy + inset], start=90, end=270, fill=color)
+
+
 # --- Fabrication ------------------------------------------------------------
 
 
@@ -190,12 +235,18 @@ def main() -> None:
         write(key_face(size, glyph_bulb), "plugin", "marketplace{}.png".format(suffix))
     for size, suffix in ((28, ""), (56, "@2x")):
         write(list_icon(size, glyph_bulb), "plugin", "category-icon{}.png".format(suffix))
+    actions = (
+        ("toggle", glyph_bulb),
+        ("brightness", glyph_gauge),
+        ("color", glyph_color),
+        ("temperature", glyph_temperature),
+    )
     for size, suffix in ((20, ""), (40, "@2x")):
-        write(list_icon(size, glyph_bulb), "actions", "toggle", "icon{}.png".format(suffix))
-        write(list_icon(size, glyph_gauge), "actions", "brightness", "icon{}.png".format(suffix))
+        for name, glyph in actions:
+            write(list_icon(size, glyph), "actions", name, "icon{}.png".format(suffix))
     for size, suffix in ((72, ""), (144, "@2x")):
-        write(key_face(size, glyph_bulb), "actions", "toggle", "key{}.png".format(suffix))
-        write(key_face(size, glyph_gauge), "actions", "brightness", "key{}.png".format(suffix))
+        for name, glyph in actions:
+            write(key_face(size, glyph), "actions", name, "key{}.png".format(suffix))
 
 
 if __name__ == "__main__":

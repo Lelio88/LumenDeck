@@ -14,6 +14,7 @@ import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import TuyAPI from 'tuyapi';
 import { TuyaLanDriver } from '../tuya.ts';
+import { hexToHsv } from '../../color-format.ts';
 
 const VAULT = 'C:/Users/buton/Documents/Projets/.lumendeck-secrets/tuya-devices.csv';
 const IP = '192.168.1.50';
@@ -76,6 +77,24 @@ try {
   check(`+50 depuis 80 borne a 100 (obtenu ${high})`, () => assert.equal(high, 100));
   const low = await bulb.nudgeBrightness(-200);
   check(`-200 borne a 1 (obtenu ${low})`, () => assert.equal(low, 1));
+
+  console.log('');
+  console.log('4. CHAINE COMPLETE depuis le format de l interface');
+  const wanted = hexToHsv('#ff8800');
+  await bulb.setColor(wanted);
+  s = await bulb.read();
+  check('la couleur hexadecimale arrive intacte sur l ampoule', () => {
+    assert.equal(s.mode, 'colour', 'devrait etre en mode couleur');
+    assert.ok(Math.abs(s.color.h - wanted.h) <= 2, 'teinte ' + s.color.h + ', attendue ' + wanted.h);
+    assert.ok(Math.abs(s.color.s - wanted.s) <= 2, 'saturation ' + s.color.s + ', attendue ' + wanted.s);
+  });
+
+  await bulb.setTemperature(2700);
+  s = await bulb.read();
+  check('la temperature chaude bascule bien en blanc', () => {
+    assert.equal(s.mode, 'white');
+    assert.ok(Math.abs(s.temperatureK - 2700) <= 20, 'obtenu ' + s.temperatureK + ' K');
+  });
 } finally {
   await bulb.close();
 }

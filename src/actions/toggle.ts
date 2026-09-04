@@ -13,7 +13,7 @@
 import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 import { withRetry } from '../driver/pool.js';
-import { isConfigured, type BulbSettings } from '../settings.js';
+import { coordinates, isConfigured, type BulbSettings } from '../settings.js';
 
 type Paintable = { setTitle(title: string): Promise<void>; showAlert(): Promise<void> };
 
@@ -52,11 +52,4 @@ export class ToggleBulb extends SingletonAction<BulbSettings> {
       await target.setTitle('Hors ligne');
     }
   }
-}
-
-/** Traduit les reglages de la touche en coordonnees pour le reservoir. */
-export function coordinates(s: BulbSettings & { deviceId: string; localKey: string }) {
-  return s.ip
-    ? { id: s.deviceId, key: s.localKey, ip: s.ip }
-    : { id: s.deviceId, key: s.localKey };
 }

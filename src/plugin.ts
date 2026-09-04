@@ -7,6 +7,8 @@
  */
 import streamDeck from '@elgato/streamdeck';
 import { Brightness } from './actions/brightness.js';
+import { Color } from './actions/color.js';
+import { Temperature } from './actions/temperature.js';
 import { ToggleBulb } from './actions/toggle.js';
 import { releaseAll } from './driver/pool.js';
 
@@ -19,6 +21,8 @@ streamDeck.logger.setLevel('info');
 
 streamDeck.actions.registerAction(new ToggleBulb());
 streamDeck.actions.registerAction(new Brightness());
+streamDeck.actions.registerAction(new Color());
+streamDeck.actions.registerAction(new Temperature());
 
 // Referme proprement les sessions Tuya a l'extinction : une connexion laissee
 // ouverte empeche l'application Calex de reprendre la main sur l'ampoule.
