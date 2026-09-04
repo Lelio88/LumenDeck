@@ -18,6 +18,7 @@
 import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DialRotateEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 
+import { temperatureKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
 import type { TemperatureSettings } from '../settings.js';
@@ -33,8 +34,22 @@ const DEFAULT_STEP = 200;
 type Paintable = {
   setTitle(title: string): Promise<void>;
   showAlert(): Promise<void>;
+  /** Remplace l'image de la touche. `undefined` restaure celle du manifeste. */
+  setImage?: (image?: string) => Promise<void>;
+  /** N'existe que sur une molette : l'ecran du Stream Deck+. */
   setFeedback?: (payload: Record<string, unknown>) => Promise<void>;
 };
+
+/**
+ * Ramene la touche a son apparence de repos, avec un mot d'explication.
+ *
+ * Efface l'image dessinee : sans cela, une touche qui perd son ampoule
+ * continuerait d'afficher la derniere valeur connue, ce qui est pire que rien.
+ */
+async function reset(target: Paintable, label: string): Promise<void> {
+  await target.setImage?.(undefined);
+  await target.setTitle(label);
+}
 
 const clamp = (n: number) => Math.min(KELVIN_MAX, Math.max(KELVIN_MIN, n));
 
@@ -52,15 +67,21 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
     const coords = await coordinatesFor(settings);
-    if (!coords) { await target.setTitle('A regler'); return; }
-    await paint(target, clamp(settings.kelvin ?? DEFAULT_KELVIN));
+    if (!coords) { await reset(target, 'A regler'); return; }
+    try {
+      // Idem : l'etat reel prime sur le reglage memorise.
+      const state = await withRetry(coords, (bulb) => bulb.read());
+      await paint(target, state.temperatureK ?? clamp(settings.kelvin ?? DEFAULT_KELVIN), state.on);
+    } catch {
+      await reset(target, 'Hors ligne');
+    }
   }
 
   override async onKeyDown(ev: KeyDownEvent<TemperatureSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
     const coords = await coordinatesFor(settings);
-    if (!coords) { await target.setTitle('A regler'); return; }
+    if (!coords) { await reset(target, 'A regler'); return; }
 
     const wanted = clamp(settings.kelvin ?? DEFAULT_KELVIN);
     try {
@@ -80,7 +101,7 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
     const coords = await coordinatesFor(settings);
-    if (!coords) { await target.setTitle('A regler'); return; }
+    if (!coords) { await reset(target, 'A regler'); return; }
 
     const step = Math.abs(settings.step ?? DEFAULT_STEP);
     try {
@@ -104,16 +125,19 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
     if (!coords) return;
     try {
       const on = await withRetry(coords, (bulb) => bulb.togglePower());
-      if (!on) { await target.setTitle('Eteinte'); return; }
-      await paint(target, clamp(settings.kelvin ?? DEFAULT_KELVIN));
+      await paint(target, clamp(settings.kelvin ?? DEFAULT_KELVIN), on);
     } catch {
       await target.showAlert();
     }
   }
 }
 
-async function paint(target: Paintable, kelvin: number): Promise<void> {
-  await target.setTitle(String(kelvin) + ' K');
+async function paint(target: Paintable, kelvin: number, on: boolean = true): Promise<void> {
+  // Le demi-disque prend la teinte reelle du blanc demande : on VOIT la chaleur.
+  // Le nombre reste dessine dedans, parce que 3800 et 4200 K se ressemblent
+  // beaucoup a l'oeil alors qu'ils ne se choisissent pas au hasard.
+  await target.setImage?.(temperatureKey(kelvin, on));
+  await target.setTitle('');
   if (typeof target.setFeedback === 'function') {
     const pct = Math.round(((kelvin - KELVIN_MIN) / (KELVIN_MAX - KELVIN_MIN)) * 100);
     await target.setFeedback({ title: warmth(kelvin), value: String(kelvin) + ' K', indicator: pct });

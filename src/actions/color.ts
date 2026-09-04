@@ -18,7 +18,8 @@
 import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DialRotateEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 
-import { hexToHsv, rotateHue } from '../color-format.js';
+import { hexToHsv, hsvToHex, rotateHue } from '../color-format.js';
+import { colorKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import type { Hsv } from '../driver/types.js';
 import { coordinatesFor } from '../bulbs.js';
@@ -32,8 +33,22 @@ const DEFAULT_STEP = 15;
 type Paintable = {
   setTitle(title: string): Promise<void>;
   showAlert(): Promise<void>;
+  /** Remplace l'image de la touche. `undefined` restaure celle du manifeste. */
+  setImage?: (image?: string) => Promise<void>;
+  /** N'existe que sur une molette : l'ecran du Stream Deck+. */
   setFeedback?: (payload: Record<string, unknown>) => Promise<void>;
 };
+
+/**
+ * Ramene la touche a son apparence de repos, avec un mot d'explication.
+ *
+ * Efface l'image dessinee : sans cela, une touche qui perd son ampoule
+ * continuerait d'afficher la derniere valeur connue, ce qui est pire que rien.
+ */
+async function reset(target: Paintable, label: string): Promise<void> {
+  await target.setImage?.(undefined);
+  await target.setTitle(label);
+}
 
 /** Couleur retenue par la touche, ou le repli si elle est absente ou illisible. */
 function configured(settings: ColorSettings): Hsv {
@@ -54,15 +69,24 @@ function hueName(h: number): string {
 export class Color extends SingletonAction<ColorSettings> {
   override async onWillAppear(ev: WillAppearEvent<ColorSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
-    if (!(await coordinatesFor(ev.payload.settings))) { await target.setTitle('A regler'); return; }
-    await paint(target, configured(ev.payload.settings));
+    const coords = await coordinatesFor(ev.payload.settings);
+    if (!coords) { await reset(target, 'A regler'); return; }
+    try {
+      // On LIT l'ampoule plutot que de la supposer allumee : elle a pu etre
+      // eteinte depuis l'application Calex, et une touche qui ment est pire
+      // qu'une touche muette.
+      const state = await withRetry(coords, (bulb) => bulb.read());
+      await paint(target, state.color ?? configured(ev.payload.settings), state.on);
+    } catch {
+      await reset(target, 'Hors ligne');
+    }
   }
 
   override async onKeyDown(ev: KeyDownEvent<ColorSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
     const coords = await coordinatesFor(settings);
-    if (!coords) { await target.setTitle('A regler'); return; }
+    if (!coords) { await reset(target, 'A regler'); return; }
 
     const wanted = configured(settings);
     try {
@@ -82,7 +106,7 @@ export class Color extends SingletonAction<ColorSettings> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
     const coords = await coordinatesFor(settings);
-    if (!coords) { await target.setTitle('A regler'); return; }
+    if (!coords) { await reset(target, 'A regler'); return; }
 
     const step = Math.abs(settings.step ?? DEFAULT_STEP);
     try {
@@ -106,18 +130,23 @@ export class Color extends SingletonAction<ColorSettings> {
     if (!coords) return;
     try {
       const on = await withRetry(coords, (bulb) => bulb.togglePower());
-      if (!on) { await target.setTitle('Eteinte'); return; }
-      await paint(target, configured(settings));
+      await paint(target, configured(settings), on);
     } catch {
       await target.showAlert();
     }
   }
 }
 
-async function paint(target: Paintable, color: Hsv): Promise<void> {
-  const label = hueName(color.h);
-  await target.setTitle(label);
+async function paint(target: Paintable, color: Hsv, on: boolean = true): Promise<void> {
+  // La goutte prend la couleur reellement appliquee : aucun mot ne decrit une
+  // teinte aussi bien que la teinte elle-meme.
+  await target.setImage?.(colorKey(hsvToHex(color), on));
+  await target.setTitle('');
   if (typeof target.setFeedback === 'function') {
-    await target.setFeedback({ title: 'Couleur', value: label, indicator: Math.round((color.h / 360) * 100) });
+    await target.setFeedback({
+      title: 'Couleur',
+      value: on ? hueName(color.h) : 'Eteinte',
+      indicator: Math.round((color.h / 360) * 100),
+    });
   }
 }

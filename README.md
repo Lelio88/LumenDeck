@@ -35,6 +35,9 @@ Trois conséquences agréables :
 | **Couleur** | applique la couleur choisie | rotation = la teinte défile |
 | **Blanc chaud / froid** | applique la température choisie | rotation de 2700 K à 6500 K |
 
+Les touches **montrent** leur état plutôt que de l'écrire : l'ampoule s'allume, la jauge se remplit,
+la goutte prend la couleur choisie, le disque se teinte à la vraie chaleur du blanc.
+
 Bon à savoir : couleur et blanc réglable s'excluent — choisir une température fait quitter la
 couleur. C'est l'ampoule qui l'impose, pas le plugin.
 

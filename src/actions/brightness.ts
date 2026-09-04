@@ -13,6 +13,7 @@
  */
 import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DialRotateEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
+import { brightnessKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
 import type { BrightnessSettings } from '../settings.js';
@@ -24,8 +25,22 @@ const DEFAULT_STEP = 10;
 type Paintable = {
   setTitle(title: string): Promise<void>;
   showAlert(): Promise<void>;
+  /** Remplace l'image de la touche. `undefined` restaure celle du manifeste. */
+  setImage?: (image?: string) => Promise<void>;
+  /** N'existe que sur une molette : l'ecran du Stream Deck+. */
   setFeedback?: (payload: Record<string, unknown>) => Promise<void>;
 };
+
+/**
+ * Ramene la touche a son apparence de repos, avec un mot d'explication.
+ *
+ * Efface l'image dessinee : sans cela, une touche qui perd son ampoule
+ * continuerait d'afficher la derniere valeur connue, ce qui est pire que rien.
+ */
+async function reset(target: Paintable, label: string): Promise<void> {
+  await target.setImage?.(undefined);
+  await target.setTitle(label);
+}
 
 @action({ UUID: 'com.lumendeck.bulb.brightness' })
 export class Brightness extends SingletonAction<BrightnessSettings> {
@@ -33,12 +48,12 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
     const coords = await coordinatesFor(settings);
-    if (!coords) { await target.setTitle('A regler'); return; }
+    if (!coords) { await reset(target, 'A regler'); return; }
     try {
       const state = await withRetry(coords, (bulb) => bulb.read());
       await paint(target, state.brightness, state.on);
     } catch {
-      await target.setTitle('Hors ligne');
+      await reset(target, 'Hors ligne');
     }
   }
 
@@ -57,7 +72,7 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
     const coords = await coordinatesFor(settings);
-    if (!coords) { await target.setTitle('A regler'); return; }
+    if (!coords) { await reset(target, 'A regler'); return; }
     try {
       const state = await withRetry(coords, async (bulb) => {
         await bulb.togglePower();
@@ -71,7 +86,7 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
 
   private async nudge(target: Paintable, settings: BrightnessSettings, delta: number): Promise<void> {
     const coords = await coordinatesFor(settings);
-    if (!coords) { await target.setTitle('A regler'); return; }
+    if (!coords) { await reset(target, 'A regler'); return; }
     try {
       const level = await withRetry(coords, (bulb) => bulb.nudgeBrightness(delta));
       await paint(target, level, true);
@@ -83,9 +98,13 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
 
 /** Ecrit sur la touche, et sur l'ecran de la molette quand il y en a un. */
 async function paint(target: Paintable, percent: number, on: boolean): Promise<void> {
-  const label = on ? String(percent) + ' %' : 'Eteinte';
-  await target.setTitle(label);
+  // L'image PORTE la valeur : une jauge qui se remplit, avec le pourcentage
+  // dessine dedans. Le titre ferait doublon, et Stream Deck l'ecrirait par
+  // dessus le dessin.
+  await target.setImage?.(brightnessKey(percent, on));
+  await target.setTitle('');
   if (typeof target.setFeedback === 'function') {
+    const label = on ? String(percent) + ' %' : 'Eteinte';
     await target.setFeedback({ title: 'Intensite', value: label, indicator: on ? percent : 0 });
   }
 }

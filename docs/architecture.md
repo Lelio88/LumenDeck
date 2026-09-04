@@ -67,6 +67,7 @@ l'existence de Tuya.
 | `src/actions/brightness.ts` | Action « intensité » : pas fixe sur touche, rotation continue sur molette, retour visuel sur l'écran de la molette. |
 | `src/actions/color.ts` | Action « couleur » : applique une couleur choisie, ou fait tourner la teinte à la molette en préservant l'intensité courante. |
 | `src/actions/temperature.ts` | Action « blanc chaud / froid », de 2700 K à 6500 K. |
+| `src/key-art.ts` | Dessine les faces de touche **à la volée**, en SVG : jauge qui se remplit, goutte à la vraie couleur, disque teinté à la vraie température. N'importe rien — donc testable sans ampoule ni Stream Deck. |
 | `src/color-format.ts` | Conversions hexadécimal ↔ TSV et rotation de teinte. Vit côté présentation : l'hexadécimal est une convention d'interface web, pas un langage d'ampoule. |
 | `src/bulbs.ts` | **Registre des ampoules**, dans les réglages globaux du plugin. Une ampoule y est déclarée une fois ; `coordinatesFor()` est le point d'entrée unique des actions. |
 | `src/discovery.ts` | Écoute les annonces UDP que les ampoules Tuya diffusent d'elles-mêmes. Trouve identifiant et adresse — jamais la clé, qui n'est pas dans l'annonce. |
@@ -134,6 +135,7 @@ Exemple réel : l'utilisateur appuie sur une touche « Intensité » réglée à
 | `src/actions/` | `driver/types`, `driver/pool`, `bulbs`, `settings`, `color-format` | `driver/tuya`, `tuyapi`, une autre action |
 | `src/bulbs.ts` | `@elgato/streamdeck` (réglages globaux) | `driver/*`, `actions/*` |
 | `src/discovery.ts` | `node:dgram`, `node:crypto` | tout le reste — il n'écoute que le réseau |
+| `src/key-art.ts` | **rien** | tout — c'est un module de dessin pur |
 | `src/driver/pool.ts` | `driver/types`, `driver/tuya` | `@elgato/streamdeck`, `actions/` |
 | `src/driver/tuya.ts` | `driver/types`, `tuyapi` | `@elgato/streamdeck`, `actions/`, `settings` |
 | `src/driver/types.ts` | rien | tout le reste |
@@ -211,6 +213,22 @@ tourné.
 | `tuyapi` 7.x | Protocole Tuya 3.3 | Type de retour de `get()` en union — d'où la vérification explicite dans `readDps()`. |
 | `@elgato/cli` | Validation, installation, empaquetage | Porte aussi les gabarits officiels, source de vérité pour le format du manifeste. |
 | Pillow (Python) | Génération des icônes | Hors chaîne Node : une machine sans Python ne peut pas régénérer les images, mais peut construire le plugin. |
+
+## Montrer plutôt qu'écrire
+
+Stream Deck dessine le titre d'une action **par-dessus** l'image de la touche. Un glyphe centré et un
+texte centré se percutent, et c'est ce qui rendait les premières versions illisibles.
+
+Deux réponses, selon ce qu'il y a à dire. Pour l'allumage, **deux images** déclarées au manifeste :
+ampoule grise éteinte, ambre allumée, et aucun titre — `setState()` bascule de l'une à l'autre. Pour
+les valeurs, l'image est **dessinée à la volée** en SVG et envoyée par `setImage()` : une jauge qui
+se remplit à proportion, une goutte remplie de la couleur réellement appliquée, un demi-disque teinté
+à la vraie température du blanc. Le nombre est dessiné *dans* l'image, à un endroit choisi.
+
+Stream Deck accepte une chaîne SVG telle quelle — aucune rasterisation, donc aucune dépendance
+graphique dans un plugin qui n'en avait pas besoin, et un rendu net à toutes les tailles.
+
+Une molette n'ayant pas d'états, elle conserve le texte et l'écran du Stream Deck+.
 
 ## Le registre des ampoules
 
