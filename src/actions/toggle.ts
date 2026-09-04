@@ -11,7 +11,7 @@
  * sans etat.
  */
 import { action, SingletonAction } from '@elgato/streamdeck';
-import type { DialDownEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
+import type { DialDownEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
 import type { BulbSettings } from '../settings.js';
@@ -43,6 +43,17 @@ async function paint(target: Paintable, on: boolean): Promise<void> {
 @action({ UUID: 'com.lumendeck.bulb.toggle' })
 export class ToggleBulb extends SingletonAction<BulbSettings> {
   override async onWillAppear(ev: WillAppearEvent<BulbSettings>): Promise<void> {
+    await this.refresh(ev.action as unknown as Paintable, ev.payload.settings);
+  }
+
+  /**
+   * Un reglage a change dans le panneau.
+   *
+   * Ce n'est pas cosmetique : la touche peut desormais designer une AUTRE
+   * ampoule. On relit donc l'etat plutot que de garder l'affichage precedent,
+   * qui parlerait de la mauvaise lampe.
+   */
+  override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<BulbSettings>): Promise<void> {
     await this.refresh(ev.action as unknown as Paintable, ev.payload.settings);
   }
 

@@ -16,7 +16,7 @@
  * poursuivre le reglage en cours.
  */
 import { action, SingletonAction } from '@elgato/streamdeck';
-import type { DialDownEvent, DialRotateEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
+import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 
 import { temperatureKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
@@ -75,6 +75,14 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
     } catch {
       await reset(target, 'Hors ligne');
     }
+  }
+
+  /** Le curseur bouge dans le panneau : le disque se teinte aussitot. */
+  override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<TemperatureSettings>): Promise<void> {
+    const target = ev.action as unknown as Paintable;
+    const { settings } = ev.payload;
+    if (!(await coordinatesFor(settings))) { await reset(target, 'A regler'); return; }
+    await paint(target, clamp(settings.kelvin ?? DEFAULT_KELVIN), true);
   }
 
   override async onKeyDown(ev: KeyDownEvent<TemperatureSettings>): Promise<void> {

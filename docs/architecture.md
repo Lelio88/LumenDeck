@@ -230,6 +230,14 @@ graphique dans un plugin qui n'en avait pas besoin, et un rendu net à toutes le
 
 Une molette n'ayant pas d'états, elle conserve le texte et l'écran du Stream Deck+.
 
+Le dessin se rafraîchit aussi sur `onDidReceiveSettings`, c'est-à-dire dès qu'un réglage change dans
+le panneau. Deux comportements distincts s'y jouent. Pour l'allumage et l'intensité, on **relit
+l'ampoule** : un réglage modifié peut désigner une autre lampe, et garder l'affichage précédent
+reviendrait à parler de la mauvaise. Pour la couleur et la température, on **n'interroge rien** et on
+peint la valeur choisie : l'utilisateur est en train de la sélectionner, il veut la voir pendant
+qu'il la choisit. L'aperçu reste fidèle, puisque appuyer allume l'ampoule et applique exactement
+cette valeur.
+
 ## Le registre des ampoules
 
 Les identifiants ne vivent pas dans les touches mais dans les **réglages globaux** du plugin. Une

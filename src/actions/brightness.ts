@@ -12,7 +12,7 @@
  * qui evite la molette qui « ne fait rien » des que l'ampoule est en couleur.
  */
 import { action, SingletonAction } from '@elgato/streamdeck';
-import type { DialDownEvent, DialRotateEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
+import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 import { brightnessKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
@@ -45,8 +45,16 @@ async function reset(target: Paintable, label: string): Promise<void> {
 @action({ UUID: 'com.lumendeck.bulb.brightness' })
 export class Brightness extends SingletonAction<BrightnessSettings> {
   override async onWillAppear(ev: WillAppearEvent<BrightnessSettings>): Promise<void> {
-    const target = ev.action as unknown as Paintable;
-    const { settings } = ev.payload;
+    await this.refresh(ev.action as unknown as Paintable, ev.payload.settings);
+  }
+
+  /** Un reglage a change : la touche peut viser une autre ampoule. */
+  override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<BrightnessSettings>): Promise<void> {
+    await this.refresh(ev.action as unknown as Paintable, ev.payload.settings);
+  }
+
+  /** Lit l'ampoule et reporte son etat REEL, jamais un etat suppose. */
+  private async refresh(target: Paintable, settings: BrightnessSettings): Promise<void> {
     const coords = await coordinatesFor(settings);
     if (!coords) { await reset(target, 'A regler'); return; }
     try {

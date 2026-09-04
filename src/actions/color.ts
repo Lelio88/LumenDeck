@@ -16,7 +16,7 @@
  * donne un point de depart previsible plutot qu'un rouge arbitraire.
  */
 import { action, SingletonAction } from '@elgato/streamdeck';
-import type { DialDownEvent, DialRotateEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
+import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 
 import { hexToHsv, hsvToHex, rotateHue } from '../color-format.js';
 import { colorKey } from '../key-art.js';
@@ -80,6 +80,21 @@ export class Color extends SingletonAction<ColorSettings> {
     } catch {
       await reset(target, 'Hors ligne');
     }
+  }
+
+  /**
+   * Un reglage a change dans le panneau : la touche prend AUSSITOT la couleur.
+   *
+   * On ne consulte pas l'ampoule ici, volontairement. L'utilisateur est en train
+   * de choisir une teinte : il veut la voir sur la touche pendant qu'il la
+   * choisit, pas apres avoir appuye. L'apercu est fidele, puisque appuyer allume
+   * l'ampoule et applique exactement cette couleur.
+   */
+  override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<ColorSettings>): Promise<void> {
+    const target = ev.action as unknown as Paintable;
+    const { settings } = ev.payload;
+    if (!(await coordinatesFor(settings))) { await reset(target, 'A regler'); return; }
+    await paint(target, configured(settings), true);
   }
 
   override async onKeyDown(ev: KeyDownEvent<ColorSettings>): Promise<void> {
