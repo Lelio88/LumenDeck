@@ -1,0 +1,13 @@
+node_modules/
+*.log
+
+# Artefacts de build du plugin (recompilables)
+com.lumendeck.bulb.sdPlugin/bin/
+
+# Configuration locale : contient device id + local_key de TES ampoules.
+# Le coffre de reference est ../.lumendeck-secrets/ (hors depot).
+lumendeck.local.json
+.env
+
+# Journaux ecrits par Stream Deck dans le dossier du plugin
+com.lumendeck.bulb.sdPlugin/logs/

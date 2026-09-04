@@ -1,0 +1,206 @@
+/**
+ * Pilote LAN pour ampoules Tuya (Calex Smart et compatibles), protocole 3.3.
+ *
+ * Ce que fait ce module : traduire le contrat metier LightDriver en datapoints
+ * Tuya, sur une connexion locale persistante — sans jamais passer par le cloud.
+ *
+ * LE CHOIX NON EVIDENT, ET LA RAISON D'ETRE DE CE FICHIER : sur ces ampoules,
+ * l'intensite lumineuse n'a pas un seul reglage mais deux, selon le mode courant
+ * (DP 21). En mode 'white' elle vit dans le DP 22 ; en mode 'colour' elle vit
+ * dans la troisieme composante du DP 24, et le DP 22 devient inerte. Un pilote
+ * naif ecrit toujours le DP 22 et donne l'impression que « la molette ne fait
+ * rien » des que l'utilisateur a choisi une couleur. C'est le defaut le plus
+ * repandu des integrations Tuya. Ici, setBrightness route vers le bon datapoint.
+ *
+ * Corollaire assume : demander une luminosite en mode 'scene' ou 'music' fait
+ * SORTIR du mode, vers 'white'. C'est deliberé — une commande qui ne produit
+ * aucun effet visible est un pire defaut qu'une commande qui change de mode.
+ *
+ * Invariants a preserver :
+ *   - aucun numero de DP ne doit fuir hors de ce fichier ;
+ *   - toute ecriture est suivie d'une relecture de l'etat par l'appelant s'il a
+ *     besoin d'afficher la verite (l'ampoule est seule maitresse de son etat) ;
+ *   - les erreurs remontent telles quelles, jamais avalees.
+ *
+ * Usage canonique :
+ *   const bulb = await TuyaLanDriver.connect({ id, key, ip });
+ *   await bulb.togglePower();
+ *   await bulb.nudgeBrightness(+10);
+ *   await bulb.close();
+ */
+import TuyAPI from 'tuyapi';
+import type { Hsv, LightCapabilities, LightDriver, LightMode, LightState } from './types.js';
+
+/** Datapoints du profil Tuya « dj » (source lumineuse), schema v2. */
+const DP = {
+  power: '20',
+  mode: '21',
+  brightness: '22',
+  temperature: '23',
+  color: '24',
+} as const;
+
+/** Bornes natives Tuya : la luminosite ne descend pas sous 10/1000. */
+const TUYA_MIN = 10;
+const TUYA_MAX = 1000;
+
+/** Plage de blanc des ampoules Calex CCT. Ajuster par modele si besoin. */
+const KELVIN_MIN = 2700;
+const KELVIN_MAX = 6500;
+
+export type TuyaLanConfig = {
+  readonly id: string;
+  readonly key: string;
+  /** Adresse LAN. Omise, elle est decouverte par diffusion UDP (plus lent). */
+  readonly ip?: string;
+};
+
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+
+/** 0-100 % vers l'echelle Tuya 10-1000. */
+export const pctToTuya = (pct: number) => clamp(Math.round(pct * 10), TUYA_MIN, TUYA_MAX);
+/** Echelle Tuya 10-1000 vers 1-100 %. */
+export const tuyaToPct = (raw: number) => clamp(Math.round(raw / 10), 1, 100);
+
+/** Encode une couleur au format DP 24 : teinte, saturation et valeur sur 4 hex chacune. */
+export function encodeColor({ h, s, v }: Hsv): string {
+  const hex = (n: number, max: number) => clamp(Math.round(n), 0, max).toString(16).padStart(4, '0');
+  return hex(h, 360) + hex(s * 10, TUYA_MAX) + hex(v * 10, TUYA_MAX);
+}
+
+/** Decode le DP 24. Renvoie null si la chaine n'a pas la forme attendue. */
+export function decodeColor(raw: unknown): Hsv | null {
+  if (typeof raw !== 'string' || !/^[0-9a-f]{12}$/i.test(raw)) return null;
+  return {
+    h: parseInt(raw.slice(0, 4), 16),
+    s: clamp(Math.round(parseInt(raw.slice(4, 8), 16) / 10), 0, 100),
+    v: clamp(Math.round(parseInt(raw.slice(8, 12), 16) / 10), 0, 100),
+  };
+}
+
+export const kelvinToTuya = (k: number) =>
+  clamp(Math.round(((k - KELVIN_MIN) / (KELVIN_MAX - KELVIN_MIN)) * TUYA_MAX), 0, TUYA_MAX);
+export const tuyaToKelvin = (raw: number) =>
+  Math.round(KELVIN_MIN + (clamp(raw, 0, TUYA_MAX) / TUYA_MAX) * (KELVIN_MAX - KELVIN_MIN));
+
+export class TuyaLanDriver implements LightDriver {
+  readonly capabilities: LightCapabilities = {
+    supportsColor: true,
+    supportsTemperature: true,
+    temperatureRangeK: [KELVIN_MIN, KELVIN_MAX],
+  };
+
+  private readonly device: TuyAPI;
+
+  // Champ assigne explicitement plutot qu'en propriete de parametre : cette
+  // syntaxe TypeScript exige une transformation, la ou le reste du fichier se
+  // contente d'un effacement de types. Node peut ainsi executer ce module tel
+  // quel, sans etape de build — ce dont les tests profitent directement.
+  private constructor(device: TuyAPI) {
+    this.device = device;
+  }
+
+  /** Ouvre une connexion locale persistante. Echoue franchement si l'ampoule est injoignable. */
+  static async connect(config: TuyaLanConfig): Promise<TuyaLanDriver> {
+    const device = new TuyAPI({
+      id: config.id,
+      key: config.key,
+      ip: config.ip,
+      version: '3.3',
+      issueRefreshOnConnect: true,
+    });
+    if (!config.ip) await device.find();
+    await device.connect();
+    return new TuyaLanDriver(device);
+  }
+
+  /**
+   * Lit la table brute des datapoints.
+   *
+   * tuyapi type le retour de get() comme une union — une valeur isolee OU l'objet
+   * complet — selon les options passees. Avec `schema: true` c'est toujours
+   * l'objet, mais le type ne peut pas le savoir. On verifie donc plutot que de
+   * forcer le typage : une ampoule qui repond autre chose est une anomalie qui
+   * doit se voir immediatement, pas se propager en `undefined` silencieux.
+   */
+  private async readDps(): Promise<Record<string, unknown>> {
+    const status = await this.device.get({ schema: true });
+    if (typeof status !== 'object' || status === null || !('dps' in status)) {
+      throw new Error('Reponse inattendue de l ampoule : table de datapoints absente');
+    }
+    return (status as { dps: Record<string, unknown> }).dps;
+  }
+
+  async read(): Promise<LightState> {
+    const dps = await this.readDps();
+    const mode = (dps[DP.mode] ?? 'white') as LightMode;
+    const color = decodeColor(dps[DP.color]);
+    return {
+      on: dps[DP.power] === true,
+      mode,
+      // En mode couleur, l'intensite percue est la composante V, pas le DP 22.
+      brightness: mode === 'colour' && color ? color.v : tuyaToPct(Number(dps[DP.brightness] ?? TUYA_MAX)),
+      temperatureK: dps[DP.temperature] === undefined ? null : tuyaToKelvin(Number(dps[DP.temperature])),
+      color: mode === 'colour' ? color : null,
+    };
+  }
+
+  async setPower(on: boolean): Promise<void> {
+    await this.device.set({ dps: Number(DP.power), set: on });
+  }
+
+  async togglePower(): Promise<boolean> {
+    const { on } = await this.read();
+    await this.setPower(!on);
+    return !on;
+  }
+
+  /**
+   * Regle l'intensite dans le mode courant.
+   *
+   * Route vers la composante V du DP 24 en mode couleur, vers le DP 22 sinon.
+   * Depuis 'scene' ou 'music', bascule volontairement en 'white' (voir l'en-tete).
+   */
+  async setBrightness(percent: number): Promise<void> {
+    const pct = clamp(Math.round(percent), 1, 100);
+    const state = await this.read();
+
+    if (state.mode === 'colour' && state.color) {
+      await this.device.set({ dps: Number(DP.color), set: encodeColor({ ...state.color, v: pct }) });
+      return;
+    }
+    if (state.mode === 'scene' || state.mode === 'music') {
+      await this.device.set({
+        multiple: true,
+        data: { [DP.mode]: 'white', [DP.brightness]: pctToTuya(pct) },
+      });
+      return;
+    }
+    await this.device.set({ dps: Number(DP.brightness), set: pctToTuya(pct) });
+  }
+
+  async nudgeBrightness(delta: number): Promise<number> {
+    const { brightness } = await this.read();
+    const next = clamp(brightness + delta, 1, 100);
+    await this.setBrightness(next);
+    return next;
+  }
+
+  async setTemperature(kelvin: number): Promise<void> {
+    await this.device.set({
+      multiple: true,
+      data: { [DP.mode]: 'white', [DP.temperature]: kelvinToTuya(kelvin) },
+    });
+  }
+
+  async setColor(color: Hsv): Promise<void> {
+    await this.device.set({
+      multiple: true,
+      data: { [DP.mode]: 'colour', [DP.color]: encodeColor(color) },
+    });
+  }
+
+  async close(): Promise<void> {
+    this.device.disconnect();
+  }
+}

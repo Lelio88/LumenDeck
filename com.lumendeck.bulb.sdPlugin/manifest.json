@@ -1,0 +1,46 @@
+{
+  "Name": "LumenDeck",
+  "Version": "0.1.0.0",
+  "Author": "Lelio Buton",
+  "Actions": [
+    {
+      "Name": "Allumer / eteindre",
+      "UUID": "com.lumendeck.bulb.toggle",
+      "Icon": "imgs/actions/toggle/icon",
+      "Tooltip": "Bascule l'ampoule, en local, sans passer par le cloud.",
+      "PropertyInspectorPath": "ui/bulb.html",
+      "Controllers": ["Keypad", "Encoder"],
+      "States": [{ "Image": "imgs/actions/toggle/key", "TitleAlignment": "middle" }],
+      "Encoder": {
+        "layout": "$A1",
+        "TriggerDescription": { "Push": "Allumer / eteindre", "Rotate": "" }
+      }
+    },
+    {
+      "Name": "Intensite",
+      "UUID": "com.lumendeck.bulb.brightness",
+      "Icon": "imgs/actions/brightness/icon",
+      "Tooltip": "Regle l'intensite, quel que soit le mode de l'ampoule.",
+      "PropertyInspectorPath": "ui/brightness.html",
+      "Controllers": ["Keypad", "Encoder"],
+      "States": [{ "Image": "imgs/actions/brightness/key", "TitleAlignment": "middle" }],
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": { "Push": "Allumer / eteindre", "Rotate": "Regler l'intensite" }
+      }
+    }
+  ],
+  "Category": "LumenDeck",
+  "CategoryIcon": "imgs/plugin/category-icon",
+  "CodePath": "bin/plugin.js",
+  "Description": "Pilotage local d'ampoules Tuya (compatibles Calex Smart) : allumage, intensite et couleur, sans cloud, en une vingtaine de millisecondes.",
+  "Icon": "imgs/plugin/marketplace",
+  "SDKVersion": 3,
+  "Software": { "MinimumVersion": "7.1" },
+  "OS": [
+    { "Platform": "windows", "MinimumVersion": "10" },
+    { "Platform": "mac", "MinimumVersion": "12" }
+  ],
+  "Nodejs": { "Version": "24", "Debug": "enabled" },
+  "UUID": "com.lumendeck.bulb"
+}

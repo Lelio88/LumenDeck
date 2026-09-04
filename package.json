@@ -1,0 +1,33 @@
+{
+  "name": "lumendeck",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pilotage local d'ampoules Tuya (Calex et compatibles) depuis un Stream Deck.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.lumendeck.bulb\"",
+    "test": "node --test src/driver/__tests__/codec.test.mjs",
+    "test:live": "node src/driver/__tests__/live.integration.mjs",
+    "probe": "node src/tools/probe.mjs"
+  },
+  "dependencies": {
+    "@elgato/streamdeck": "^2.1.2",
+    "tuyapi": "^7.7.1"
+  },
+  "devDependencies": {
+    "@elgato/cli": "^1.9.0",
+    "@rollup/plugin-commonjs": "^29.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@tsconfig/node20": "^20.1.10",
+    "@types/node": "^26.4.1",
+    "rollup": "^4.63.1",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3"
+  }
+}

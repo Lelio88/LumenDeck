@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="fr">
+    <title>Reglages de l'ampoule</title>
+    <meta charset="utf-8" />
+    <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+</head>
+
+<body>
+    <sdpi-item label="Identifiant">
+        <sdpi-textfield setting="deviceId" placeholder="bf0123456789abcdef0000" required></sdpi-textfield>
+    </sdpi-item>
+
+    <sdpi-item label="Cle locale">
+        <sdpi-password setting="localKey" placeholder="cle de chiffrement de l'ampoule" required></sdpi-password>
+    </sdpi-item>
+
+    <sdpi-item label="Adresse IP">
+        <sdpi-textfield setting="ip" placeholder="192.168.1.50 (facultatif)"></sdpi-textfield>
+    </sdpi-item>
+
+    <details>
+        <summary>Ou trouver ces informations ?</summary>
+        <p>
+            L'identifiant et la cle locale s'obtiennent en une seule fois, sans compte
+            developpeur, en scannant un QR code depuis votre application Calex Smart ou
+            Smart Life. Voir la documentation du plugin.
+        </p>
+        <p>
+            L'adresse IP est facultative : sans elle, l'ampoule est cherchee par diffusion
+            sur le reseau, ce qui est un peu plus lent au premier appui. La renseigner est
+            recommande, et pensez a reserver l'adresse sur votre box pour qu'elle ne change
+            pas.
+        </p>
+    </details>
+</body>
+
+</html>
