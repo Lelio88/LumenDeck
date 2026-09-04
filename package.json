@@ -12,7 +12,9 @@
     "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.lumendeck.bulb\"",
     "test": "node --test src/driver/__tests__/codec.test.mjs src/driver/__tests__/color-format.test.mjs",
     "test:live": "node src/driver/__tests__/live.integration.mjs",
-    "probe": "node src/tools/probe.mjs"
+    "probe": "node src/tools/probe.mjs",
+    "deploy": "npm run build && streamdeck dev && streamdeck link com.lumendeck.bulb.sdPlugin && streamdeck restart com.lumendeck.bulb",
+    "pack": "npm run build && streamdeck pack com.lumendeck.bulb.sdPlugin --output dist --force"
   },
   "dependencies": {
     "@elgato/streamdeck": "^2.1.2",
