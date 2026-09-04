@@ -24,6 +24,8 @@
  */
 import dgram from 'node:dgram';
 import crypto from 'node:crypto';
+import net from 'node:net';
+import os from 'node:os';
 
 /** Cle publique de dechiffrement des annonces, commune a tous les appareils Tuya. */
 const BROADCAST_KEY = crypto.createHash('md5').update('yGAdlopoPVldABfn').digest();
@@ -133,4 +135,74 @@ export function discover(timeoutMs: number = DEFAULT_TIMEOUT_MS): Promise<Discov
       resolve([...found.values()]);
     }, timeoutMs).unref();
   });
+}
+
+// --- Seconde methode : le balayage ------------------------------------------
+// L'ecoute des annonces echoue des que les diffusions n'atteignent pas la
+// machine : beaucoup de box ne relaient pas le trafic diffuse du cote sans-fil
+// vers le filaire. L'unicast, lui, passe toujours — d'ou cette methode de
+// secours, qui frappe a la porte de chaque adresse au lieu d'attendre qu'on lui
+// parle. Elle trouve des ADRESSES, pas des identifiants : suffisant pour
+// retrouver une ampoule deja connue, insuffisant pour en decouvrir une nouvelle.
+
+/** Port de commande Tuya. Une adresse qui l'ouvre heberge tres probablement une ampoule. */
+const CONTROL_PORT = 6668;
+
+/** Adresses sondees en parallele. Au-dela, Windows etrangle la pile reseau. */
+const BATCH = 64;
+
+/** Delai par adresse. Sur un reseau local, un appareil present repond en quelques ms. */
+const PROBE_MS = 400;
+
+/** Prefixes /24 des interfaces IPv4 locales, doublons ecartes. */
+export function localSubnets(): string[] {
+  const prefixes = new Set<string>();
+  for (const addresses of Object.values(os.networkInterfaces())) {
+    for (const a of addresses ?? []) {
+      // On ecarte le lien-local (169.254) : personne n'y heberge d'ampoule.
+      if (a.family === 'IPv4' && !a.internal && !a.address.startsWith('169.254')) {
+        prefixes.add(a.address.split('.').slice(0, 3).join('.'));
+      }
+    }
+  }
+  return [...prefixes];
+}
+
+function knock(ip: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    let settled = false;
+    const finish = (result: string | null) => {
+      if (settled) return;
+      settled = true;
+      socket.destroy();
+      resolve(result);
+    };
+    socket.setTimeout(PROBE_MS);
+    socket.on('connect', () => finish(ip));
+    socket.on('timeout', () => finish(null));
+    socket.on('error', () => finish(null));
+    socket.connect(CONTROL_PORT, ip);
+  });
+}
+
+/**
+ * Balaie les reseaux locaux et renvoie les adresses qui ouvrent le port Tuya.
+ *
+ * Par LOTS : ouvrir 254 sockets d'un coup fait etrangler la pile reseau de
+ * Windows et produit des faux negatifs — une adresse declaree silencieuse alors
+ * que l'appareil est bien la.
+ */
+export async function sweep(subnets: string[] = localSubnets()): Promise<string[]> {
+  const targets: string[] = [];
+  for (const prefix of subnets) {
+    for (let host = 1; host <= 254; host++) targets.push(prefix + '.' + host);
+  }
+
+  const open: string[] = [];
+  for (let i = 0; i < targets.length; i += BATCH) {
+    const results = await Promise.all(targets.slice(i, i + BATCH).map(knock));
+    for (const ip of results) if (ip) open.push(ip);
+  }
+  return open;
 }

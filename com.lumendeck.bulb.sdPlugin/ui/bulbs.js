@@ -10,9 +10,14 @@
  * dupliquer quatre fois garantissait qu'il diverge a la premiere correction.
  * Chaque page se contente d'un div d'ancrage.
  *
- * Ce que la decouverte NE trouve PAS : la cle locale. Les ampoules Tuya
- * diffusent leur identifiant et leur adresse, jamais leur cle. Elle reste donc a
- * saisir, mais une fois par ampoule au lieu d'une fois par touche.
+ * DEUX METHODES DE RECHERCHE, et le panneau doit savoir presenter les deux :
+ *   - par annonces : l'ampoule dit qui elle est, on connait son identifiant ;
+ *   - par balayage : on a frappe a chaque adresse du reseau, donc on connait
+ *     l'adresse mais pas l'identifiant — sauf si l'ampoule etait deja enregistree
+ *     et que le plugin a su la reconnaitre.
+ *
+ * Ce que la recherche ne trouve JAMAIS : la cle locale. Elle n'est pas diffusee
+ * et ne s'obtient pas depuis le reseau. Elle reste a coller une fois par ampoule.
  */
 (() => {
   const client = window.SDPIComponents?.streamDeckClient;
@@ -31,9 +36,10 @@
 
   anchor.innerHTML =
     '<style>' + css + '</style>' +
-    '<p class="bd-note">La recherche ecoute les annonces que vos ampoules diffusent ' +
-    'deja sur le reseau. Elle trouve leur identifiant et leur adresse, mais pas leur ' +
-    'cle : celle-ci reste a coller une fois par ampoule.</p>' +
+    '<p class="bd-note">La recherche ecoute d\'abord les annonces que vos ampoules ' +
+    'diffusent, puis, si rien n\'arrive, frappe a chaque adresse du reseau. Comptez ' +
+    'une vingtaine de secondes dans le pire cas. Elle trouve adresse et identifiant, ' +
+    'mais jamais la cle : celle-ci reste a coller une fois par ampoule.</p>' +
     '<div class="bd-row"><button type="button" id="bd-scan">Rechercher mes ampoules</button></div>' +
     '<div id="bd-status" class="bd-note"></div>' +
     '<div id="bd-results"></div>';
@@ -49,52 +55,69 @@
 
   const send = (payload) => client.send('sendToPlugin', payload);
 
-  /** Dessine une ampoule trouvee, avec son champ de cle et son bouton. */
+  const field = (type, placeholder) => {
+    const input = document.createElement('input');
+    input.type = type;
+    input.placeholder = placeholder;
+    return input;
+  };
+
+  /** Dessine un appareil trouve, avec ce qu'il reste a renseigner. */
   function renderFound(bulb) {
     const row = document.createElement('div');
     row.className = 'bd-found';
 
     const head = document.createElement('div');
     head.className = 'bd-id';
-    head.textContent = bulb.id + '  ·  ' + bulb.ip + '  ·  protocole ' + bulb.version +
-      (bulb.known ? '  ·  deja enregistree' : '');
+    head.textContent = bulb.id
+      ? bulb.id + '  ·  ' + bulb.ip + (bulb.known ? '  ·  deja enregistree' : '')
+      : 'Appareil Tuya a ' + bulb.ip + '  ·  identifiant inconnu';
     row.appendChild(head);
 
-    const name = document.createElement('input');
-    name.type = 'text';
-    name.placeholder = 'Nom (facultatif) — ex. Bureau';
-
-    const key = document.createElement('input');
-    key.type = 'password';
-    key.placeholder = bulb.known ? 'Cle inchangee si vide' : 'Cle locale';
+    // Trouve par balayage : l'identifiant n'a pas pu etre lu, il faut le fournir.
+    const idInput = bulb.id ? null : field('text', 'Identifiant de l\'ampoule');
+    const name = field('text', 'Nom (facultatif) — ex. Bureau');
+    const key = field('password', bulb.known ? 'Cle inchangee si vide' : 'Cle locale');
 
     const save = document.createElement('button');
     save.type = 'button';
     save.textContent = 'Enregistrer';
     save.addEventListener('click', () => {
+      const id = bulb.id ?? idInput.value.trim();
+      if (!id) {
+        say('Il manque l\'identifiant de cette ampoule.', 'err');
+        return;
+      }
       if (!bulb.known && !key.value.trim()) {
         say('Cette ampoule a besoin de sa cle locale pour etre pilotable.', 'err');
         return;
       }
-      send({ event: 'saveBulb', id: bulb.id, ip: bulb.ip, key: key.value.trim(), name: name.value.trim() });
+      send({ event: 'saveBulb', id, ip: bulb.ip, key: key.value.trim(), name: name.value.trim() });
     });
 
-    const line1 = document.createElement('div');
-    line1.className = 'bd-row';
-    line1.append(name);
+    if (idInput) {
+      const line = document.createElement('div');
+      line.className = 'bd-row';
+      line.append(idInput);
+      row.append(line);
+    }
 
-    const line2 = document.createElement('div');
-    line2.className = 'bd-row';
-    line2.append(key, save);
+    const nameLine = document.createElement('div');
+    nameLine.className = 'bd-row';
+    nameLine.append(name);
 
-    row.append(line1, line2);
+    const keyLine = document.createElement('div');
+    keyLine.className = 'bd-row';
+    keyLine.append(key, save);
+
+    row.append(nameLine, keyLine);
     return row;
   }
 
   scanButton.addEventListener('click', () => {
     results.innerHTML = '';
     scanButton.disabled = true;
-    say('Recherche en cours, six secondes...');
+    say('Recherche en cours...');
     send({ event: 'discoverBulbs' });
   });
 
@@ -105,12 +128,18 @@
     if (payload.event === 'discoverBulbs') {
       scanButton.disabled = false;
       const items = Array.isArray(payload.items) ? payload.items : [];
+
       if (items.length === 0) {
-        say('Aucune ampoule reperee. Verifiez qu\'elle est alimentee et sur le meme reseau ' +
-            'que cet ordinateur, et que le pare-feu ne bloque pas Stream Deck.', 'err');
+        say('Aucun appareil trouve. Verifiez que l\'ampoule est alimentee et sur le meme ' +
+            'reseau que cet ordinateur.', 'err');
         return;
       }
-      say(items.length + ' ampoule(s) trouvee(s).', 'ok');
+
+      const how = payload.method === 'balayage'
+        ? ' (trouve par balayage du reseau : vos ampoules ne diffusent pas jusqu\'ici, ' +
+          'c\'est frequent entre un ordinateur filaire et une ampoule en wifi)'
+        : '';
+      say(items.length + ' appareil(s) trouve(s)' + how, 'ok');
       items.forEach((bulb) => results.appendChild(renderFound(bulb)));
       return;
     }
