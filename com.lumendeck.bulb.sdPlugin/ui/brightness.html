@@ -8,16 +8,8 @@
 </head>
 
 <body>
-    <sdpi-item label="Identifiant">
-        <sdpi-textfield setting="deviceId" placeholder="bf0123456789abcdef0000" required></sdpi-textfield>
-    </sdpi-item>
-
-    <sdpi-item label="Cle locale">
-        <sdpi-password setting="localKey" placeholder="cle de chiffrement de l'ampoule" required></sdpi-password>
-    </sdpi-item>
-
-    <sdpi-item label="Adresse IP">
-        <sdpi-textfield setting="ip" placeholder="192.168.1.50 (facultatif)"></sdpi-textfield>
+    <sdpi-item label="Ampoule">
+        <sdpi-select setting="deviceId" datasource="getBulbs" placeholder="Choisissez une ampoule"></sdpi-select>
     </sdpi-item>
 
     <sdpi-item label="Pas">
@@ -25,16 +17,23 @@
     </sdpi-item>
 
     <details>
+        <summary>Ajouter ou modifier une ampoule</summary>
+        <div id="bulb-manager"></div>
+    </details>
+
+    <details>
         <summary>A quoi sert le pas ?</summary>
         <p>
-            Sur une touche, chaque appui applique ce pas. Une valeur negative fait une
-            touche « baisser » : posez-en deux cote a cote, l'une a +10 et l'autre a -10.
+            Sur une touche, chaque appui applique ce pas. Une valeur negative fait une touche
+            « baisser » : posez-en deux cote a cote, l'une a +10 et l'autre a -10.
         </p>
         <p>
-            Sur une molette de Stream Deck+, le pas est la valeur d'un cran de rotation ;
-            son signe est ignore, c'est le sens de rotation qui decide.
+            Sur une molette, le pas est la valeur d'un cran ; son signe est ignore, c'est le
+            sens de rotation qui decide.
         </p>
     </details>
+
+    <script src="bulbs.js"></script>
 </body>
 
 </html>

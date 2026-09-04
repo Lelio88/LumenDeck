@@ -68,7 +68,10 @@ l'existence de Tuya.
 | `src/actions/color.ts` | Action « couleur » : applique une couleur choisie, ou fait tourner la teinte à la molette en préservant l'intensité courante. |
 | `src/actions/temperature.ts` | Action « blanc chaud / froid », de 2700 K à 6500 K. |
 | `src/color-format.ts` | Conversions hexadécimal ↔ TSV et rotation de teinte. Vit côté présentation : l'hexadécimal est une convention d'interface web, pas un langage d'ampoule. |
-| `src/settings.ts` | Formes des réglages persistés, garde `isConfigured()` (générique, pour ne pas écraser les types spécifiques) et `coordinates()`. |
+| `src/bulbs.ts` | **Registre des ampoules**, dans les réglages globaux du plugin. Une ampoule y est déclarée une fois ; `coordinatesFor()` est le point d'entrée unique des actions. |
+| `src/discovery.ts` | Écoute les annonces UDP que les ampoules Tuya diffusent d'elles-mêmes. Trouve identifiant et adresse — jamais la clé, qui n'est pas dans l'annonce. |
+| `src/ui-bridge.ts` | Répond aux panneaux : lister, chercher, enregistrer, oublier une ampoule. La clé entre par ici et n'en ressort jamais. |
+| `src/settings.ts` | Formes des réglages d'une touche. Une touche ne retient que l'**identifiant** de l'ampoule qu'elle pilote, plus ce qui lui est propre. |
 | `src/plugin.ts` | Racine de composition. |
 | `src/tools/probe.mjs` | Sonde de diagnostic : relève les datapoints d'une ampoule. Vit sous `src/` parce qu'il a besoin des dépendances du projet. |
 | `tools/make_icons.py` | Génère les 20 PNG du plugin. Hors chaîne Node, d'où son emplacement séparé. |
@@ -128,7 +131,9 @@ Exemple réel : l'utilisateur appuie sur une touche « Intensité » réglée à
 
 | Depuis | Peut importer | Ne doit jamais importer |
 |---|---|---|
-| `src/actions/` | `driver/types`, `driver/pool`, `settings`, `color-format` | `driver/tuya`, `tuyapi`, une autre action |
+| `src/actions/` | `driver/types`, `driver/pool`, `bulbs`, `settings`, `color-format` | `driver/tuya`, `tuyapi`, une autre action |
+| `src/bulbs.ts` | `@elgato/streamdeck` (réglages globaux) | `driver/*`, `actions/*` |
+| `src/discovery.ts` | `node:dgram`, `node:crypto` | tout le reste — il n'écoute que le réseau |
 | `src/driver/pool.ts` | `driver/types`, `driver/tuya` | `@elgato/streamdeck`, `actions/` |
 | `src/driver/tuya.ts` | `driver/types`, `tuyapi` | `@elgato/streamdeck`, `actions/`, `settings` |
 | `src/driver/types.ts` | rien | tout le reste |
@@ -206,6 +211,26 @@ tourné.
 | `tuyapi` 7.x | Protocole Tuya 3.3 | Type de retour de `get()` en union — d'où la vérification explicite dans `readDps()`. |
 | `@elgato/cli` | Validation, installation, empaquetage | Porte aussi les gabarits officiels, source de vérité pour le format du manifeste. |
 | Pillow (Python) | Génération des icônes | Hors chaîne Node : une machine sans Python ne peut pas régénérer les images, mais peut construire le plugin. |
+
+## Le registre des ampoules
+
+Les identifiants ne vivent pas dans les touches mais dans les **réglages globaux** du plugin. Une
+touche ne retient que l'identifiant de l'ampoule qu'elle pilote ; clé et adresse sont lues dans le
+registre au moment d'agir.
+
+La première version rangeait tout dans chaque touche. Configurer quatre touches sur la même ampoule
+imposait donc de saisir quatre fois les mêmes secrets — et une clé changée aurait obligé à se
+souvenir de toutes les touches à corriger. `adoptLegacy()` reprend silencieusement une configuration
+posée par cette version-là, pour ne rien casser à la mise à jour.
+
+La **découverte** complète le dispositif : les ampoules Tuya diffusent leur présence en UDP toutes
+les cinq secondes, sur le port 6666 en clair et le 6667 chiffré par une clé universelle publique.
+On y lit l'identifiant, l'adresse et la version de protocole. Jamais la clé locale : elle n'est pas
+dans l'annonce, et c'est structurel — elle reste donc à saisir une fois par ampoule.
+
+Piège à connaître : ces annonces arrivent en **UDP entrant**. Un pare-feu qui bloque le processus
+les jette avant qu'il ne les voie, et la recherche ne renvoie rien alors que l'ampoule répond
+parfaitement en TCP. Symptôme trompeur, cause bête.
 
 ## Ce qui n'existe pas encore
 

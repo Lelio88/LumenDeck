@@ -21,7 +21,8 @@ import type { DialDownEvent, DialRotateEvent, KeyDownEvent, WillAppearEvent } fr
 import { hexToHsv, rotateHue } from '../color-format.js';
 import { withRetry } from '../driver/pool.js';
 import type { Hsv } from '../driver/types.js';
-import { coordinates, isConfigured, type ColorSettings } from '../settings.js';
+import { coordinatesFor } from '../bulbs.js';
+import type { ColorSettings } from '../settings.js';
 
 /** Couleur de repli si la touche n'en a pas encore : un blanc chaud neutre. */
 const FALLBACK: Hsv = { h: 30, s: 40, v: 100 };
@@ -53,18 +54,19 @@ function hueName(h: number): string {
 export class Color extends SingletonAction<ColorSettings> {
   override async onWillAppear(ev: WillAppearEvent<ColorSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
-    if (!isConfigured(ev.payload.settings)) { await target.setTitle('A regler'); return; }
+    if (!(await coordinatesFor(ev.payload.settings))) { await target.setTitle('A regler'); return; }
     await paint(target, configured(ev.payload.settings));
   }
 
   override async onKeyDown(ev: KeyDownEvent<ColorSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    if (!isConfigured(settings)) { await target.setTitle('A regler'); return; }
+    const coords = await coordinatesFor(settings);
+    if (!coords) { await target.setTitle('A regler'); return; }
 
     const wanted = configured(settings);
     try {
-      await withRetry(coordinates(settings), async (bulb) => {
+      await withRetry(coords, async (bulb) => {
         // Allumer d'abord : appliquer une couleur a une ampoule eteinte est
         // silencieux, et l'utilisateur croirait la touche cassee.
         await bulb.setPower(true);
@@ -79,11 +81,12 @@ export class Color extends SingletonAction<ColorSettings> {
   override async onDialRotate(ev: DialRotateEvent<ColorSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    if (!isConfigured(settings)) { await target.setTitle('A regler'); return; }
+    const coords = await coordinatesFor(settings);
+    if (!coords) { await target.setTitle('A regler'); return; }
 
     const step = Math.abs(settings.step ?? DEFAULT_STEP);
     try {
-      const applied = await withRetry(coordinates(settings), async (bulb) => {
+      const applied = await withRetry(coords, async (bulb) => {
         const state = await bulb.read();
         const base = state.color ?? configured(settings);
         const next = rotateHue(base, ev.payload.ticks * step);
@@ -99,9 +102,10 @@ export class Color extends SingletonAction<ColorSettings> {
   override async onDialDown(ev: DialDownEvent<ColorSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    if (!isConfigured(settings)) return;
+    const coords = await coordinatesFor(settings);
+    if (!coords) return;
     try {
-      const on = await withRetry(coordinates(settings), (bulb) => bulb.togglePower());
+      const on = await withRetry(coords, (bulb) => bulb.togglePower());
       if (!on) { await target.setTitle('Eteinte'); return; }
       await paint(target, configured(settings));
     } catch {

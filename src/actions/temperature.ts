@@ -19,7 +19,8 @@ import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DialRotateEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 
 import { withRetry } from '../driver/pool.js';
-import { coordinates, isConfigured, type TemperatureSettings } from '../settings.js';
+import { coordinatesFor } from '../bulbs.js';
+import type { TemperatureSettings } from '../settings.js';
 
 /** Plage atteignable par les ampoules Calex a blanc reglable. */
 const KELVIN_MIN = 2700;
@@ -50,18 +51,20 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
   override async onWillAppear(ev: WillAppearEvent<TemperatureSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    if (!isConfigured(settings)) { await target.setTitle('A regler'); return; }
+    const coords = await coordinatesFor(settings);
+    if (!coords) { await target.setTitle('A regler'); return; }
     await paint(target, clamp(settings.kelvin ?? DEFAULT_KELVIN));
   }
 
   override async onKeyDown(ev: KeyDownEvent<TemperatureSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    if (!isConfigured(settings)) { await target.setTitle('A regler'); return; }
+    const coords = await coordinatesFor(settings);
+    if (!coords) { await target.setTitle('A regler'); return; }
 
     const wanted = clamp(settings.kelvin ?? DEFAULT_KELVIN);
     try {
-      await withRetry(coordinates(settings), async (bulb) => {
+      await withRetry(coords, async (bulb) => {
         // Allumer d'abord : regler une ampoule eteinte ne produit rien de
         // visible, et la touche passerait pour cassee.
         await bulb.setPower(true);
@@ -76,11 +79,12 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
   override async onDialRotate(ev: DialRotateEvent<TemperatureSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    if (!isConfigured(settings)) { await target.setTitle('A regler'); return; }
+    const coords = await coordinatesFor(settings);
+    if (!coords) { await target.setTitle('A regler'); return; }
 
     const step = Math.abs(settings.step ?? DEFAULT_STEP);
     try {
-      const applied = await withRetry(coordinates(settings), async (bulb) => {
+      const applied = await withRetry(coords, async (bulb) => {
         const state = await bulb.read();
         const base = state.temperatureK ?? clamp(settings.kelvin ?? DEFAULT_KELVIN);
         const next = clamp(base + ev.payload.ticks * step);
@@ -96,9 +100,10 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
   override async onDialDown(ev: DialDownEvent<TemperatureSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    if (!isConfigured(settings)) return;
+    const coords = await coordinatesFor(settings);
+    if (!coords) return;
     try {
-      const on = await withRetry(coordinates(settings), (bulb) => bulb.togglePower());
+      const on = await withRetry(coords, (bulb) => bulb.togglePower());
       if (!on) { await target.setTitle('Eteinte'); return; }
       await paint(target, clamp(settings.kelvin ?? DEFAULT_KELVIN));
     } catch {

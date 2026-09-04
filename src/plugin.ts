@@ -11,6 +11,7 @@ import { Color } from './actions/color.js';
 import { Temperature } from './actions/temperature.js';
 import { ToggleBulb } from './actions/toggle.js';
 import { releaseAll } from './driver/pool.js';
+import { installUiBridge } from './ui-bridge.js';
 
 // INFO plutot que TRACE : le mode trace journalise tous les echanges avec Stream
 // Deck, or les reglages des actions transportent la local_key des ampoules. Ce
@@ -23,6 +24,10 @@ streamDeck.actions.registerAction(new ToggleBulb());
 streamDeck.actions.registerAction(new Brightness());
 streamDeck.actions.registerAction(new Color());
 streamDeck.actions.registerAction(new Temperature());
+
+// Repond aux panneaux de configuration : liste, recherche et enregistrement
+// des ampoules connues.
+installUiBridge();
 
 // Referme proprement les sessions Tuya a l'extinction : une connexion laissee
 // ouverte empeche l'application Calex de reprendre la main sur l'ampoule.

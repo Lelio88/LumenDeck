@@ -14,7 +14,8 @@
 import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DialRotateEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 import { withRetry } from '../driver/pool.js';
-import { coordinates, isConfigured, type BrightnessSettings } from '../settings.js';
+import { coordinatesFor } from '../bulbs.js';
+import type { BrightnessSettings } from '../settings.js';
 
 /** Pas par defaut, en points de pourcentage. */
 const DEFAULT_STEP = 10;
@@ -31,9 +32,10 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
   override async onWillAppear(ev: WillAppearEvent<BrightnessSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    if (!isConfigured(settings)) { await target.setTitle('A regler'); return; }
+    const coords = await coordinatesFor(settings);
+    if (!coords) { await target.setTitle('A regler'); return; }
     try {
-      const state = await withRetry(coordinates(settings), (bulb) => bulb.read());
+      const state = await withRetry(coords, (bulb) => bulb.read());
       await paint(target, state.brightness, state.on);
     } catch {
       await target.setTitle('Hors ligne');
@@ -54,9 +56,10 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
   override async onDialDown(ev: DialDownEvent<BrightnessSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    if (!isConfigured(settings)) { await target.setTitle('A regler'); return; }
+    const coords = await coordinatesFor(settings);
+    if (!coords) { await target.setTitle('A regler'); return; }
     try {
-      const state = await withRetry(coordinates(settings), async (bulb) => {
+      const state = await withRetry(coords, async (bulb) => {
         await bulb.togglePower();
         return bulb.read();
       });
@@ -67,9 +70,10 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
   }
 
   private async nudge(target: Paintable, settings: BrightnessSettings, delta: number): Promise<void> {
-    if (!isConfigured(settings)) { await target.setTitle('A regler'); return; }
+    const coords = await coordinatesFor(settings);
+    if (!coords) { await target.setTitle('A regler'); return; }
     try {
-      const level = await withRetry(coordinates(settings), (bulb) => bulb.nudgeBrightness(delta));
+      const level = await withRetry(coords, (bulb) => bulb.nudgeBrightness(delta));
       await paint(target, level, true);
     } catch {
       await target.showAlert();

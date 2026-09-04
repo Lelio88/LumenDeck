@@ -15,13 +15,30 @@ import assert from 'node:assert/strict';
 import TuyAPI from 'tuyapi';
 import { TuyaLanDriver } from '../tuya.ts';
 import { hexToHsv } from '../../color-format.ts';
+import { discover } from '../../discovery.ts';
 
-const VAULT = 'C:/Users/buton/Documents/Projets/.lumendeck-secrets/tuya-devices.csv';
-const IP = '192.168.1.50';
+// Rien de personnel en dur : le coffre et l'adresse se surchargent par
+// l'environnement, et a defaut l'ampoule est cherchee sur le reseau.
+const VAULT = process.env.LUMENDECK_VAULT
+  ?? 'C:/Users/buton/Documents/Projets/.lumendeck-secrets/tuya-devices.csv';
+
+/** Trouve l'adresse d'une ampoule en ecoutant ses annonces. */
+async function locate(id) {
+  const found = await discover(7000);
+  const match = found.find((b) => b.id === id);
+  if (!match) {
+    throw new Error(
+      'Ampoule ' + id + ' introuvable sur le reseau. Verifiez qu elle est alimentee, '
+      + 'ou definissez LUMENDECK_IP pour imposer une adresse.',
+    );
+  }
+  return match.ip;
+}
 
 const [head, row] = readFileSync(VAULT, 'utf8').trim().split(/\r?\n/);
 const cols = head.split(',');
 const dev = Object.fromEntries(cols.map((c, i) => [c, row.split(',')[i]]));
+const IP = process.env.LUMENDECK_IP ?? (await locate(dev.id));
 const cfg = { id: dev.id, key: dev.local_key, ip: IP };
 
 /** Ouvre une connexion brute le temps d'une operation, puis la referme. */

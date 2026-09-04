@@ -6,6 +6,15 @@ réseau ; elle est créée au moment où vous appairez l'ampoule dans l'applicat
 
 Comptez cinq minutes. Vous n'aurez à le faire qu'une fois par ampoule.
 
+> **Depuis la version 0.3, le plugin cherche vos ampoules tout seul.** Ouvrez le panneau de
+> réglages d'une touche, dépliez « Ajouter ou modifier une ampoule » et cliquez sur « Rechercher ».
+> L'identifiant et l'adresse se remplissent seuls ; seule la clé reste à coller, et une seule fois
+> pour toutes vos touches. La procédure ci-dessous ne sert plus qu'à obtenir cette clé.
+>
+> Si la recherche ne trouve rien alors que l'ampoule fonctionne, c'est presque toujours le
+> **pare-feu** : les annonces arrivent en UDP entrant, et Windows les bloque tant que Stream Deck
+> n'y est pas autorisé.
+
 ## Ce dont vous avez besoin
 
 - Votre téléphone, avec l'application **Calex Smart** (ou **Smart Life**, c'est la même chose)
