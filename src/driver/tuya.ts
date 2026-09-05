@@ -1,5 +1,5 @@
 /**
- * Pilote LAN pour ampoules Tuya (Calex Smart et compatibles), protocole 3.3.
+ * Pilote LAN pour ampoules Tuya (Calex Smart et compatibles), protocoles 3.2 a 3.5.
  *
  * Ce que fait ce module : traduire le contrat metier LightDriver en datapoints
  * Tuya, sur une connexion locale persistante — sans jamais passer par le cloud.
@@ -53,7 +53,19 @@ export type TuyaLanConfig = {
   readonly key: string;
   /** Adresse LAN. Omise, elle est decouverte par diffusion UDP (plus lent). */
   readonly ip?: string;
+  /**
+   * Version du protocole annoncee par l'ampoule, par exemple "3.4".
+   *
+   * Omise, on retombe sur 3.3, de tres loin la plus repandue. La supposer etait
+   * la seule chose qui limitait le plugin a une partie du catalogue Tuya : les
+   * modeles vendus depuis 2022 parlent souvent 3.4 ou 3.5, et la decouverte
+   * reseau lisait deja cette valeur sans que personne ne la conserve.
+   */
+  readonly version?: string;
 };
+
+/** Version retenue quand l'ampoule n'a pas eu l'occasion de l'annoncer. */
+export const DEFAULT_PROTOCOL = '3.3';
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
@@ -84,11 +96,38 @@ export const tuyaToKelvin = (raw: number) =>
   Math.round(KELVIN_MIN + (clamp(raw, 0, TUYA_MAX) / TUYA_MAX) * (KELVIN_MAX - KELVIN_MIN));
 
 export class TuyaLanDriver implements LightDriver {
-  readonly capabilities: LightCapabilities = {
+  // Optimiste par defaut : si la table de datapoints est illisible, mieux vaut
+  // laisser l'utilisateur essayer que lui interdire une action qui marcherait.
+  private caps: LightCapabilities = {
     supportsColor: true,
     supportsTemperature: true,
     temperatureRangeK: [KELVIN_MIN, KELVIN_MAX],
   };
+
+  get capabilities(): LightCapabilities {
+    return this.caps;
+  }
+
+  /**
+   * Deduit ce que l'ampoule sait faire de sa table de datapoints.
+   *
+   * Une ampoule blanche seule n'expose pas le DP 24 (couleur), et parfois pas le
+   * DP 23 (temperature). Sans ce releve, l'action correspondante echouait sans
+   * un mot et l'utilisateur concluait que le plugin est casse, alors que c'est
+   * son materiel qui ne sait pas.
+   */
+  private async detectCapabilities(): Promise<void> {
+    try {
+      const dps = await this.readDps();
+      this.caps = {
+        supportsColor: DP.color in dps,
+        supportsTemperature: DP.temperature in dps,
+        temperatureRangeK: [KELVIN_MIN, KELVIN_MAX],
+      };
+    } catch {
+      // Table illisible : on conserve l'hypothese optimiste ci-dessus.
+    }
+  }
 
   private readonly device: TuyAPI;
 
@@ -106,12 +145,14 @@ export class TuyaLanDriver implements LightDriver {
       id: config.id,
       key: config.key,
       ip: config.ip,
-      version: '3.3',
+      version: config.version ?? DEFAULT_PROTOCOL,
       issueRefreshOnConnect: true,
     });
     if (!config.ip) await device.find();
     await device.connect();
-    return new TuyaLanDriver(device);
+    const driver = new TuyaLanDriver(device);
+    await driver.detectCapabilities();
+    return driver;
   }
 
   /**

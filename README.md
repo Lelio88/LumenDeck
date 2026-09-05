@@ -89,7 +89,7 @@ accès à rien d'autre, et elle se renouvelle si vous ré-appairez l'ampoule.
 protocole local que ces ampoules exposent déjà sur votre réseau.
 
 Il est jeune : il pilote une ampoule à la fois par touche, et n'a été éprouvé que sur un modèle
-(Calex « LED SMART », protocole Tuya 3.3). Si vous en essayez un autre, le retour est bienvenu.
+(Calex « LED SMART »). Si vous en essayez un autre, le retour est bienvenu.
 
 ---
 

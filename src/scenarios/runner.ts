@@ -35,7 +35,7 @@ import type { LightDriver, LightState } from '../driver/types.js';
 import { MIN_HOLD_MS, type Cue, type Scenario } from './catalogue.js';
 
 /** Coordonnees d'une ampoule, telles que les rend `coordinatesFor`. */
-export type Target = { id: string; key: string; ip?: string };
+export type Target = { id: string; key: string; ip?: string; version?: string };
 
 type Session = {
   readonly scenarioId: string;

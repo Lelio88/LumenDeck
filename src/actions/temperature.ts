@@ -70,8 +70,14 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
     if (!coords) { await reset(target, 'A regler'); return; }
     try {
       // Idem : l'etat reel prime sur le reglage memorise.
-      const state = await withRetry(coords, (bulb) => bulb.read());
-      await paint(target, state.temperatureK ?? clamp(settings.kelvin ?? DEFAULT_KELVIN), state.on);
+      const snapshot = await withRetry(coords, async (bulb) => ({
+        state: await bulb.read(),
+        supported: bulb.capabilities.supportsTemperature,
+      }));
+      // Certaines ampoules couleur n'ont pas de blanc reglable. Meme raison que
+      // pour la couleur : mieux vaut l'ecrire que laisser croire a une panne.
+      if (!snapshot.supported) { await reset(target, 'Sans blanc'); return; }
+      await paint(target, snapshot.state.temperatureK ?? clamp(settings.kelvin ?? DEFAULT_KELVIN), snapshot.state.on);
     } catch {
       await reset(target, 'Hors ligne');
     }
@@ -93,12 +99,15 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
 
     const wanted = clamp(settings.kelvin ?? DEFAULT_KELVIN);
     try {
-      await withRetry(coords, async (bulb) => {
+      const supported = await withRetry(coords, async (bulb) => {
+        if (!bulb.capabilities.supportsTemperature) return false;
         // Allumer d'abord : regler une ampoule eteinte ne produit rien de
         // visible, et la touche passerait pour cassee.
         await bulb.setPower(true);
         await bulb.setTemperature(wanted);
+        return true;
       });
+      if (!supported) { await reset(target, 'Sans blanc'); return; }
       await paint(target, wanted);
     } catch {
       await target.showAlert();

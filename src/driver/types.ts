@@ -58,6 +58,8 @@ export type Hsv = {
  * un no-op silencieux sous pretexte que la lampe est en mode couleur.
  */
 export interface LightDriver {
+  /** Ce que cette lampe sait reellement faire. Releve a la connexion. */
+  readonly capabilities: LightCapabilities;
   /** Lit l'etat courant. Doit refleter la lampe, pas un cache optimiste. */
   read(): Promise<LightState>;
   /** Allume ou eteint. */

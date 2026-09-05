@@ -150,7 +150,17 @@
         say('Cette ampoule a besoin de sa cle locale pour etre pilotable.', 'err');
         return;
       }
-      send({ event: 'saveBulb', id, ip: bulb.ip, key: key.value.trim(), name: name.value.trim() });
+      // La version du protocole est relevee pendant la recherche et n'est
+      // connaissable qu'a ce moment : l'ampoule ne l'annonce que dans sa
+      // diffusion. La transmettre ici evite de supposer 3.3 pour toujours.
+      send({
+        event: 'saveBulb',
+        id,
+        ip: bulb.ip,
+        key: key.value.trim(),
+        name: name.value.trim(),
+        version: bulb.version || '',
+      });
     });
 
     if (idInput) {

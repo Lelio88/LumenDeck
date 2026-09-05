@@ -35,6 +35,13 @@ export type KnownBulb = {
   ip?: string;
   /** Nom lisible, pour que les listes affichent autre chose qu'un identifiant. */
   name?: string;
+  /**
+   * Version du protocole annoncee par l'ampoule, par exemple "3.4".
+   *
+   * Absente, le pilote retombe sur 3.3. C'est la decouverte reseau qui la
+   * renseigne : elle figure dans l'annonce que l'ampoule diffuse d'elle-meme.
+   */
+  version?: string;
 };
 
 type GlobalSettings = {
@@ -74,7 +81,13 @@ export async function remember(bulb: Partial<KnownBulb> & { id: string }): Promi
   const index = bulbs.findIndex((b) => b.id === bulb.id);
 
   if (index === -1) {
-    bulbs.push({ id: bulb.id, key: bulb.key ?? '', ...(bulb.ip ? { ip: bulb.ip } : {}), ...(bulb.name ? { name: bulb.name } : {}) });
+    bulbs.push({
+      id: bulb.id,
+      key: bulb.key ?? '',
+      ...(bulb.ip ? { ip: bulb.ip } : {}),
+      ...(bulb.name ? { name: bulb.name } : {}),
+      ...(bulb.version ? { version: bulb.version } : {}),
+    });
   } else {
     const previous = bulbs[index] as KnownBulb;
     bulbs[index] = {
@@ -82,6 +95,7 @@ export async function remember(bulb: Partial<KnownBulb> & { id: string }): Promi
       key: bulb.key || previous.key,
       ...(bulb.ip ?? previous.ip ? { ip: bulb.ip ?? previous.ip } : {}),
       ...(bulb.name ?? previous.name ? { name: bulb.name ?? previous.name } : {}),
+      ...(bulb.version ?? previous.version ? { version: bulb.version ?? previous.version } : {}),
     };
   }
   await writeAll(bulbs);
@@ -142,13 +156,16 @@ export function label(bulb: KnownBulb): string {
  */
 export async function coordinatesFor(
   settings: { deviceId?: string; localKey?: string; ip?: string },
-): Promise<{ id: string; key: string; ip?: string } | null> {
+): Promise<{ id: string; key: string; ip?: string; version?: string } | null> {
   await adoptLegacy(settings);
 
   const bulb = (await resolve(settings.deviceId)) ?? (await soleBulb());
   if (!bulb || !bulb.key) return null;
 
-  return bulb.ip
-    ? { id: bulb.id, key: bulb.key, ip: bulb.ip }
-    : { id: bulb.id, key: bulb.key };
+  return {
+    id: bulb.id,
+    key: bulb.key,
+    ...(bulb.ip ? { ip: bulb.ip } : {}),
+    ...(bulb.version ? { version: bulb.version } : {}),
+  };
 }

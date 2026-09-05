@@ -77,7 +77,12 @@ async function identify(ip: string, known: bulbs.KnownBulb[]): Promise<bulbs.Kno
     if (!candidate.key) continue;
     await pool.release(candidate.id);
     try {
-      const driver = await TuyaLanDriver.connect({ id: candidate.id, key: candidate.key, ip });
+      const driver = await TuyaLanDriver.connect({
+        id: candidate.id,
+        key: candidate.key,
+        ip,
+        ...(candidate.version ? { version: candidate.version } : {}),
+      });
       await driver.read();
       await driver.close();
       return candidate;
@@ -110,6 +115,14 @@ async function sendDiscovery(): Promise<void> {
 
   const heard = await discover(SCAN_MS);
   if (heard.length > 0) {
+    // Rafraichir adresse ET version des ampoules DEJA connues. `remember`
+    // fusionne, donc la cle deja saisie survit. C'est ce qui permet a une
+    // ampoule mise a jour vers le protocole 3.4 de continuer a repondre sans
+    // que l'utilisateur ait quoi que ce soit a refaire.
+    for (const bulb of heard) {
+      if (configured.has(bulb.id)) await bulbs.remember({ id: bulb.id, ip: bulb.ip, version: bulb.version });
+    }
+
     await reply({
       event: 'discoverBulbs',
       method: 'annonces',
@@ -124,7 +137,7 @@ async function sendDiscovery(): Promise<void> {
     const match = await identify(ip, known);
     items.push(
       match
-        ? { id: match.id, ip, version: '3.3', known: true }
+        ? { id: match.id, ip, version: match.version ?? null, known: true }
         : { id: null, ip, version: null, known: false },
     );
   }
@@ -169,6 +182,7 @@ export function installUiBridge(): void {
             ...(text(request.key) ? { key: text(request.key) as string } : {}),
             ...(text(request.ip) ? { ip: text(request.ip) as string } : {}),
             ...(text(request.name) ? { name: text(request.name) as string } : {}),
+            ...(text(request.version) ? { version: text(request.version) as string } : {}),
           });
           await reply({ event: 'saveBulb', ok: true, id });
           await sendBulbList();

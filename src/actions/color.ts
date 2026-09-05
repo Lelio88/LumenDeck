@@ -84,8 +84,16 @@ export class Color extends SingletonAction<ColorSettings> {
       // On LIT l'ampoule plutot que de la supposer allumee : elle a pu etre
       // eteinte depuis l'application Calex, et une touche qui ment est pire
       // qu'une touche muette.
-      const state = await withRetry(coords, (bulb) => bulb.read());
-      await paint(target, state.color ?? configured(ev.payload.settings), state.on);
+      // On releve l'etat ET ce que la lampe sait faire dans le meme aller-retour.
+      const snapshot = await withRetry(coords, async (bulb) => ({
+        state: await bulb.read(),
+        supported: bulb.capabilities.supportsColor,
+      }));
+      // Une ampoule blanche seule n'expose pas le datapoint de couleur. Le dire
+      // vaut mieux que d'echouer en silence : sans ce mot, l'utilisateur conclut
+      // que le plugin est casse alors que c'est son materiel qui ne sait pas.
+      if (!snapshot.supported) { await reset(target, 'Sans couleur'); return; }
+      await paint(target, snapshot.state.color ?? configured(ev.payload.settings), snapshot.state.on);
     } catch {
       await reset(target, 'Hors ligne');
     }
@@ -114,12 +122,15 @@ export class Color extends SingletonAction<ColorSettings> {
 
     const wanted = configured(settings);
     try {
-      await withRetry(coords, async (bulb) => {
+      const supported = await withRetry(coords, async (bulb) => {
+        if (!bulb.capabilities.supportsColor) return false;
         // Allumer d'abord : appliquer une couleur a une ampoule eteinte est
         // silencieux, et l'utilisateur croirait la touche cassee.
         await bulb.setPower(true);
         await bulb.setColor(wanted);
+        return true;
       });
+      if (!supported) { await reset(target, 'Sans couleur'); return; }
       await paint(target, wanted);
     } catch {
       await target.showAlert();

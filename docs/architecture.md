@@ -79,13 +79,38 @@ l'existence de Tuya.
 | `src/scenarios/runner.ts` | Déroule les images dans le temps. Une exécution par ampoule, relevé de l'état avant la première image et restauration à l'arrêt. |
 | `src/key-art.ts` | Dessine les faces de touche **à la volée**, en SVG : jauge qui se remplit, goutte à la vraie couleur, disque teinté à la vraie température. N'importe rien — donc testable sans ampoule ni Stream Deck. |
 | `src/color-format.ts` | Conversions hexadécimal ↔ TSV et rotation de teinte. Vit côté présentation : l'hexadécimal est une convention d'interface web, pas un langage d'ampoule. |
-| `src/bulbs.ts` | **Registre des ampoules**, dans les réglages globaux du plugin. Une ampoule y est déclarée une fois ; `coordinatesFor()` est le point d'entrée unique des actions. |
+| `src/bulbs.ts` | **Registre des ampoules** (identifiant, clé, adresse, nom, **version de protocole**), dans les réglages globaux du plugin. Une ampoule y est déclarée une fois ; `coordinatesFor()` est le point d'entrée unique des actions. |
 | `src/discovery.ts` | Écoute les annonces UDP que les ampoules Tuya diffusent d'elles-mêmes. Trouve identifiant et adresse — jamais la clé, qui n'est pas dans l'annonce. |
 | `src/ui-bridge.ts` | Répond aux panneaux : lister, chercher, enregistrer, oublier une ampoule. La clé entre par ici et n'en ressort jamais. |
 | `src/settings.ts` | Formes des réglages d'une touche. Une touche ne retient que l'**identifiant** de l'ampoule qu'elle pilote, plus ce qui lui est propre. |
 | `src/plugin.ts` | Racine de composition. |
 | `src/tools/probe.mjs` | Sonde de diagnostic : relève les datapoints d'une ampoule. Vit sous `src/` parce qu'il a besoin des dépendances du projet. |
 | `tools/make_icons.py` | Génère les 24 PNG du plugin. Hors chaîne Node, d'où son emplacement séparé. |
+
+## Compatibilité matérielle
+
+Rien dans le code n'est spécifique à Calex : cette marque appose son nom sur du matériel Tuya, comme
+des centaines d'autres. Le critère qui décide est le protocole, pas la marque — **si l'ampoule se
+configure dans l'application Smart Life ou Tuya Smart, elle relève de ce pilote**. Cela couvre
+notamment Lidl (Livarno Home, Silvercrest), Action (LSC Smart Connect), Nedis, Gosund, Teckin,
+Treatlife, BlitzWolf, Woox, Moes.
+
+Deux conditions réelles subsistent :
+
+1. L'ampoule expose le profil d'éclairage habituel (datapoints 20 à 24), ce qui est le cas de
+   pratiquement toutes les ampoules blanc + couleur.
+2. Sa **version de protocole** est connue. Elle figure dans l'annonce UDP que l'ampoule diffuse
+   d'elle-même ; la découverte la relève, le registre la conserve, le pilote la transmet à `tuyapi`.
+   Une ampoule déclarée à la main, sans passer par la recherche réseau, retombe sur **3.3** — de très
+   loin la plus répandue, mais les modèles vendus depuis 2022 parlent souvent 3.4 ou 3.5.
+
+Ce qui **ne relève pas** de ce pilote et demanderait un adaptateur distinct : Philips Hue et IKEA
+Trådfri (Zigbee via pont), LIFX, WiZ, Yeelight, Nanoleaf, Shelly, Govee. C'est précisément ce que le
+contrat `LightDriver` rend possible sans toucher aux actions.
+
+**Ce que la lampe sait faire est relevé, pas supposé.** À la connexion, le pilote lit sa table de
+datapoints et en déduit ses `capabilities` : une ampoule blanche seule n'expose pas le datapoint 24,
+et les actions Couleur et Température l'écrivent sur la touche au lieu d'échouer sans un mot.
 
 ## Le contrat `LightDriver`
 

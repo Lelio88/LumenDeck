@@ -53,7 +53,12 @@ async function targetsFor(settings: ScenarioSettings): Promise<Target[]> {
   const second = await resolve(settings.deviceId2);
   if (!second?.key) return [primary];
 
-  return [primary, second.ip ? { id: second.id, key: second.key, ip: second.ip } : { id: second.id, key: second.key }];
+  return [primary, {
+    id: second.id,
+    key: second.key,
+    ...(second.ip ? { ip: second.ip } : {}),
+    ...(second.version ? { version: second.version } : {}),
+  }];
 }
 
 @action({ UUID: 'com.lumendeck.bulb.scenario' })
