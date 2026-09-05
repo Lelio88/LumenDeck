@@ -1,0 +1,150 @@
+{
+  "Localization": {
+    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": "Tuya スマート電球（Calex Smart 互換）をローカルで制御。電源・明るさ・色・白色温度を、クラウドを介さず約 20 ミリ秒で。",
+    "Power": "電源",
+    "Brightness": "明るさ",
+    "Colour": "色",
+    "White": "白色",
+    "Scenario": "シナリオ",
+    "Turns the bulb on or off.": "電球をオン・オフします。",
+    "Adjusts brightness; the dial sweeps continuously.": "明るさを調整します。ダイヤルは連続的に変化します。",
+    "Applies a colour; the dial rotates the hue.": "色を適用します。ダイヤルで色相を回します。",
+    "Sets the white balance, from warm to cool.": "白色温度を暖色から寒色まで調整します。",
+    "Plays a light animation: blink, police lights, candle, storm...": "光の演出を再生します。点滅、パトカー、ろうそく、雷雨など。",
+    "Turn on / off": "オン / オフ",
+    "Adjust brightness": "明るさを調整",
+    "Rotate the hue": "色相を回す",
+    "Adjust the white": "白色温度を調整",
+    "Start / stop the scenario": "シナリオを開始 / 停止",
+    "key": {
+      "toSet": "未設定",
+      "offline": "オフライン",
+      "on": "オン",
+      "off": "オフ",
+      "noColour": "色非対応",
+      "noWhite": "白色非対応"
+    },
+    "warmth": {
+      "warm": "暖色",
+      "neutral": "中間色",
+      "cool": "寒色",
+      "daylight": "昼光色"
+    },
+    "dial": {
+      "brightness": "明るさ",
+      "colour": "色",
+      "white": "白色",
+      "scenario": "シナリオ"
+    },
+    "hue": {
+      "red": "赤",
+      "orange": "オレンジ",
+      "yellow": "黄",
+      "green": "緑",
+      "cyan": "シアン",
+      "blue": "青",
+      "violet": "紫",
+      "pink": "ピンク"
+    },
+    "scenario": {
+      "clignotement": {
+        "name": "点滅",
+        "description": "電球が延々とオン・オフを繰り返します。離れた場所からも見えるタイマーとして便利です。"
+      },
+      "gyrophare": {
+        "name": "パトカー",
+        "description": "赤と青が交互に光る、パトカー風の演出。電球が二つあれば互いに応答します。"
+      },
+      "respiration": {
+        "name": "呼吸",
+        "description": "色はそのままに、明るさがゆっくり上下します。作業中に落ち着く演出です。"
+      },
+      "bougie": {
+        "name": "ろうそく",
+        "description": "暖かな炎が揺らめきます。同じ揺れ方は二度とありません。この中でいちばん美しい演出です。"
+      },
+      "orage": {
+        "name": "雷雨",
+        "description": "青みがかった薄闇を、白い稲光が不規則に切り裂きます。"
+      },
+      "arc-en-ciel": {
+        "name": "虹",
+        "description": "色相が色相環をゆっくり一周します。"
+      },
+      "alerte": {
+        "name": "アラート",
+        "description": "赤く三回光ったあと、電球は元の状態に正確に戻ります。出来事を知らせる用途に。"
+      },
+      "lever-de-soleil": {
+        "name": "日の出",
+        "description": "暗い熾火から白昼まで五分かけて。おだやかに目覚めたいときに。"
+      }
+    },
+    "pi": {
+      "bulb": "電球",
+      "bulbPlaceholder": "電球を選択",
+      "secondBulb": "2 つ目の電球",
+      "secondBulbPlaceholder": "なし（任意）",
+      "scenario": "シナリオ",
+      "scenarioPlaceholder": "シナリオを選択",
+      "colour": "色",
+      "step": "刻み幅",
+      "hueStep": "色相の刻み幅",
+      "dialStep": "ダイヤルの刻み幅",
+      "temperature": "色温度",
+      "manage": "電球を追加・編集",
+      "shared": {
+        "title": "一つの電球、複数のキー",
+        "body": "電球はプラグイン全体で一度だけ登録します。すべてのキーが同じ一覧から選ぶので、毎回キーを入力し直す必要はなく、変更も一箇所で済みます。"
+      },
+      "stepHelp": {
+        "title": "刻み幅とは？",
+        "key": "キーでは、押すたびにこの刻み幅が適用されます。負の値にすると「暗くする」キーになります。+10 と -10 を並べて置くと便利です。",
+        "dial": "ダイヤルでは、刻み幅は一目盛りの値です。符号は無視され、回す向きで決まります。"
+      },
+      "tempHelp": {
+        "title": "色温度の目安",
+        "scale": "2700 K は白熱電球に相当し、とても暖かい光です。4000 K は中間的な白。6500 K は昼光色で、青みがかった冷たい光です。",
+        "mode": "色温度を適用すると電球は白色モードに切り替わり、色を離れます。これは電球側の仕様で、プラグインの都合ではありません。"
+      },
+      "colourHelp": {
+        "title": "キーとダイヤルの動作",
+        "key": "キーを押すと電球が点灯し、上で選んだ色がそのまま適用されます。お気に入りの雰囲気ごとに複数置くと便利です。",
+        "dial": "ダイヤルを回すと、電球の現在の明るさを保ったまま色相が変わります。押すとオン・オフを切り替えます。"
+      },
+      "scenarioHelp": {
+        "title": "どう動きますか？",
+        "toggle": "一度押すとシナリオが始まり、もう一度押すと止まります。電球は元の状態に正確に戻ります。色も明るさも、点灯・消灯もそのままです。",
+        "second": "2 つ目の電球は任意です。今のところ二つを使うのはパトカーだけで、赤と青で互いに応答します。一つだけなら同じ電球で両色を交互に出します。",
+        "oneShot": "アラートと日の出は自動で止まります。それぞれ三回の点滅後、五分後です。ほかのシナリオはもう一度押すまで続きます。",
+        "safety": "演出は毎秒 2 回の切り替えまでに意図的に制限しています。これを超える点滅は、光感受性のある方に発作を引き起こすおそれがあります。"
+      },
+      "scan": {
+        "note": "検索はまず電球が発する通知を待ち受け、何も届かなければネットワーク上のすべてのアドレスに順に問い合わせます。最悪の場合で 20 秒ほどかかります。アドレスと識別子は見つかりますが、キーは決して見つかりません。キーは電球ごとに一度、手で貼り付ける必要があります。",
+        "button": "ネットワークを検索",
+        "running": "検索中…",
+        "none": "機器が見つかりませんでした。電球に電源が入っていて、このコンピューターと同じネットワークにあるか確認してください。",
+        "found": "台の機器が見つかりました",
+        "sweep": "（ネットワーク走査で発見：電球の通知がここまで届いていません。有線のコンピューターと Wi-Fi の電球の組み合わせでよくあることです）"
+      },
+      "field": {
+        "id": "電球の識別子",
+        "name": "名前（任意）— 例：デスク",
+        "key": "ローカルキー",
+        "keyKept": "空欄なら既存のキーを保持"
+      },
+      "found": {
+        "already": "登録済み",
+        "device": "Tuya 機器",
+        "noId": "識別子は不明"
+      },
+      "save": {
+        "button": "保存",
+        "missingId": "この電球の識別子がありません。",
+        "ok": "電球を保存しました。上の一覧から選んでください。",
+        "failed": "保存できませんでした。",
+        "needKey": "この電球を操作するにはローカルキーが必要です。"
+      }
+    }
+  }
+}

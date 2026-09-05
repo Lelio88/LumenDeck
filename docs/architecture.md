@@ -91,10 +91,15 @@ l'existence de Tuya.
 
 ## Langues
 
-Le plugin est écrit **en anglais**, et traduit en français, allemand, espagnol et italien. Les
-dictionnaires sont générés par `tools/make_locales.py` — jamais édités à la main, pour la même
-raison que les PNG : cinq fichiers parallèles divergent dès la première correction, et l'écart ne
-se voit qu'en changeant la langue de Stream Deck.
+Le plugin est écrit **en anglais** et traduit dans les huit langues que Stream Deck connaît —
+allemand, espagnol, français, japonais, coréen, chinois simplifié et traditionnel — plus l'italien.
+Les dictionnaires sont générés par `tools/make_locales.py` : jamais édités à la main, pour la même
+raison que les PNG. Neuf fichiers parallèles divergent dès la première correction, et l'écart ne se
+voit qu'en changeant la langue de Stream Deck ; ici, une entrée incomplète **fait échouer** la
+génération.
+
+Les textes affichés portent leurs **diacritiques** (« Clé locale », « Weißabgleich », « Cálido »).
+La règle d'ASCII du projet vaut pour les commentaires de code, pas pour ce que lit l'utilisateur.
 
 **Deux espaces de noms**, parce que deux consommateurs différents lisent ces fichiers :
 
@@ -117,6 +122,11 @@ reste affiché : jamais de clés nues à l'écran.
 ko, zh_CN, zh_TW`. `it.json` n'est donc lu que par les **panneaux**, qui se calent sur la langue du
 système via `navigator.language`. Les noms d'actions et les mots sur les touches, eux, suivent la
 langue de Stream Deck et resteront en anglais tant qu'Elgato n'ajoutera pas l'italien.
+
+**Le chinois ne se déduit pas d'un préfixe.** Le navigateur annonce tantôt la région (`zh-TW`,
+`zh-HK`), tantôt le système d'écriture (`zh-Hant`), tantôt `zh` tout court. La détection des
+panneaux teste donc l'écriture avant de retomber sur le simplifié — convention reprise de
+sdpi-components, pour que les deux moteurs choisissent le même fichier.
 
 ## Compatibilité matérielle
 

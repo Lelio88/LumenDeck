@@ -1,23 +1,23 @@
 {
   "Localization": {
-    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": "Controllo locale di lampadine Tuya (Calex Smart e compatibili): accensione, intensita, colore e bianco regolabile, senza cloud, in circa venti millisecondi.",
+    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": "Controllo locale di lampadine Tuya (Calex Smart e compatibili): accensione, intensità, colore e bianco regolabile, senza cloud, in circa venti millisecondi.",
     "Power": "Accensione",
-    "Brightness": "Intensita",
+    "Brightness": "Intensità",
     "Colour": "Colore",
     "White": "Bianco",
     "Scenario": "Scenario",
     "Turns the bulb on or off.": "Accende o spegne la lampadina.",
-    "Adjusts brightness; the dial sweeps continuously.": "Regola l'intensita; la manopola scorre in modo continuo.",
-    "Applies a colour; the dial rotates the hue.": "Applica un colore; la manopola ruota la tonalita.",
+    "Adjusts brightness; the dial sweeps continuously.": "Regola l'intensità; la manopola scorre in modo continuo.",
+    "Applies a colour; the dial rotates the hue.": "Applica un colore; la manopola ruota la tonalità.",
     "Sets the white balance, from warm to cool.": "Regola il bianco, dal caldo al freddo.",
-    "Plays a light animation: blink, police lights, candle, storm...": "Riproduce un'animazione luminosa: lampeggio, lampeggiante, candela, temporale...",
+    "Plays a light animation: blink, police lights, candle, storm...": "Riproduce un'animazione luminosa: lampeggio, lampeggiante, candela, temporale…",
     "Turn on / off": "Accendi / spegni",
-    "Adjust brightness": "Regola intensita",
-    "Rotate the hue": "Ruota la tonalita",
+    "Adjust brightness": "Regola intensità",
+    "Rotate the hue": "Ruota la tonalità",
     "Adjust the white": "Regola il bianco",
     "Start / stop the scenario": "Avvia / ferma lo scenario",
     "key": {
-      "toSet": "Imposta",
+      "toSet": "Da impostare",
       "offline": "Non in linea",
       "on": "Accesa",
       "off": "Spenta",
@@ -31,7 +31,7 @@
       "daylight": "Luce diurna"
     },
     "dial": {
-      "brightness": "Intensita",
+      "brightness": "Intensità",
       "colour": "Colore",
       "white": "Bianco",
       "scenario": "Scenario"
@@ -57,11 +57,11 @@
       },
       "respiration": {
         "name": "Respiro",
-        "description": "L'intensita sale e scende lentamente, mantenendo il colore. Calmo, per lavorare."
+        "description": "L'intensità sale e scende lentamente, mantenendo il colore. Calmo, per lavorare."
       },
       "bougie": {
         "name": "Candela",
-        "description": "Una fiamma calda che tremola, mai due volte uguale. Il piu bello della serie."
+        "description": "Una fiamma calda che tremola, mai due volte uguale. Il più bello della serie."
       },
       "orage": {
         "name": "Temporale",
@@ -69,7 +69,7 @@
       },
       "arc-en-ciel": {
         "name": "Arcobaleno",
-        "description": "La tonalita ruota dolcemente su tutto il cerchio cromatico."
+        "description": "La tonalità ruota dolcemente su tutto il cerchio cromatico."
       },
       "alerte": {
         "name": "Allerta",
@@ -89,40 +89,40 @@
       "scenarioPlaceholder": "Scegli uno scenario",
       "colour": "Colore",
       "step": "Passo",
-      "hueStep": "Passo di tonalita",
+      "hueStep": "Passo di tonalità",
       "dialStep": "Passo manopola",
       "temperature": "Temperatura",
       "manage": "Aggiungi o modifica una lampadina",
       "shared": {
-        "title": "Una lampadina, piu tasti",
+        "title": "Una lampadina, più tasti",
         "body": "Le lampadine si dichiarano una sola volta per tutto il plugin. Tutti i tasti attingono dalla stessa lista: non serve reinserire la chiave ogni volta, e una chiave cambiata si corregge in un solo punto."
       },
       "stepHelp": {
         "title": "A cosa serve il passo?",
         "key": "Su un tasto, ogni pressione applica questo passo. Un valore negativo crea un tasto «abbassa»: mettine due affiancati, uno a +10 e uno a -10.",
-        "dial": "Su una manopola, il passo e il valore di uno scatto; il segno viene ignorato, decide il senso di rotazione."
+        "dial": "Su una manopola, il passo è il valore di uno scatto; il segno viene ignorato, decide il senso di rotazione."
       },
       "tempHelp": {
         "title": "Riferimenti di temperatura",
-        "scale": "2700 K corrisponde a una lampadina a incandescenza, molto calda. 4000 K e un bianco neutro. 6500 K e luce diurna, fredda e bluastra.",
+        "scale": "2700 K corrisponde a una lampadina a incandescenza, molto calda. 4000 K è un bianco neutro. 6500 K è luce diurna, fredda e bluastra.",
         "mode": "Applicare una temperatura porta la lampadina in modo bianco, quindi abbandona il colore. Lo impone la lampadina, non il plugin."
       },
       "colourHelp": {
         "title": "Come si comportano tasto e manopola?",
         "key": "Su un tasto, una pressione accende la lampadina e applica esattamente il colore scelto sopra. Mettine diversi per le tue atmosfere preferite.",
-        "dial": "Su una manopola, la rotazione ruota la tonalita mantenendo l'intensita attuale. Premere accende o spegne."
+        "dial": "Su una manopola, la rotazione ruota la tonalità mantenendo l'intensità attuale. Premere accende o spegne."
       },
       "scenarioHelp": {
         "title": "Come funziona?",
-        "toggle": "Una pressione avvia lo scenario, una seconda lo ferma. La lampada torna esattamente allo stato precedente: stesso colore, stessa intensita, accesa o spenta.",
-        "second": "La seconda lampadina e facoltativa. Solo Lampeggiante ne usa due oggi, perche si rispondano in rosso e blu. Con una sola, alterna i due colori sulla stessa lampada.",
-        "oneShot": "Allerta e Alba si fermano da soli, dopo tre lampi e cinque minuti rispettivamente. Gli altri proseguono finche non premi di nuovo.",
-        "safety": "Le animazioni sono volutamente limitate a due alternanze al secondo: oltre, un lampeggio puo scatenare una crisi in una persona fotosensibile."
+        "toggle": "Una pressione avvia lo scenario, una seconda lo ferma. La lampada torna esattamente allo stato precedente: stesso colore, stessa intensità, accesa o spenta.",
+        "second": "La seconda lampadina è facoltativa. Solo Lampeggiante ne usa due oggi, perché si rispondano in rosso e blu. Con una sola, alterna i due colori sulla stessa lampada.",
+        "oneShot": "Allerta e Alba si fermano da soli, dopo tre lampi e cinque minuti rispettivamente. Gli altri proseguono finché non premi di nuovo.",
+        "safety": "Le animazioni sono volutamente limitate a due alternanze al secondo: oltre, un lampeggio può scatenare una crisi in una persona fotosensibile."
       },
       "scan": {
         "note": "La ricerca ascolta prima gli annunci che le tue lampadine diffondono, poi, se non arriva nulla, bussa a ogni indirizzo della rete. Conta una ventina di secondi nel caso peggiore. Trova indirizzo e identificativo, ma mai la chiave: quella resta da incollare una volta per lampadina.",
         "button": "Cerca nella rete",
-        "running": "Ricerca in corso...",
+        "running": "Ricerca in corso…",
         "none": "Nessun dispositivo trovato. Verifica che la lampadina sia alimentata e sulla stessa rete di questo computer.",
         "found": "dispositivo/i trovato/i",
         "sweep": " (trovato tramite scansione della rete: le tue lampadine non trasmettono fin qui, frequente tra un computer via cavo e una lampadina wifi)"
@@ -134,7 +134,7 @@
         "keyKept": "Lascia vuoto per mantenere la chiave"
       },
       "found": {
-        "already": "gia salvata",
+        "already": "già salvata",
         "device": "Dispositivo Tuya a",
         "noId": "identificativo sconosciuto"
       },

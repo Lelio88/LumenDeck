@@ -92,7 +92,8 @@ accès à rien d'autre, et elle se renouvelle si vous ré-appairez l'ampoule.
 
 ## Bon à savoir
 
-L'extension parle **anglais, français, allemand, espagnol et italien**, et suit la langue de Stream Deck.
+L'extension parle **anglais, français, allemand, espagnol, italien, japonais, coréen et chinois**
+(simplifié et traditionnel), et suit la langue de Stream Deck.
 
 **Ce projet n'est pas affilié à Calex ni à Tuya.** C'est un projet personnel, qui utilise le
 protocole local que ces ampoules exposent déjà sur votre réseau.

@@ -1,0 +1,150 @@
+{
+  "Localization": {
+    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": "在本機控制 Tuya 智慧燈泡（相容 Calex Smart）：開關、亮度、顏色與白光色溫，無需雲端，約二十毫秒。",
+    "Power": "電源",
+    "Brightness": "亮度",
+    "Colour": "顏色",
+    "White": "白光",
+    "Scenario": "情境",
+    "Turns the bulb on or off.": "開啟或關閉燈泡。",
+    "Adjusts brightness; the dial sweeps continuously.": "調整亮度；旋鈕可連續調整。",
+    "Applies a colour; the dial rotates the hue.": "套用顏色；旋鈕可轉動色相。",
+    "Sets the white balance, from warm to cool.": "調整白光色溫，從暖色到冷色。",
+    "Plays a light animation: blink, police lights, candle, storm...": "播放燈光動畫：閃爍、警示燈、燭光、雷雨……",
+    "Turn on / off": "開 / 關",
+    "Adjust brightness": "調整亮度",
+    "Rotate the hue": "轉動色相",
+    "Adjust the white": "調整白光",
+    "Start / stop the scenario": "啟動 / 停止情境",
+    "key": {
+      "toSet": "待設定",
+      "offline": "離線",
+      "on": "開",
+      "off": "關",
+      "noColour": "不支援顏色",
+      "noWhite": "不支援白光"
+    },
+    "warmth": {
+      "warm": "暖色",
+      "neutral": "中性",
+      "cool": "冷色",
+      "daylight": "日光"
+    },
+    "dial": {
+      "brightness": "亮度",
+      "colour": "顏色",
+      "white": "白光",
+      "scenario": "情境"
+    },
+    "hue": {
+      "red": "紅色",
+      "orange": "橙色",
+      "yellow": "黃色",
+      "green": "綠色",
+      "cyan": "青色",
+      "blue": "藍色",
+      "violet": "紫色",
+      "pink": "粉紅"
+    },
+    "scenario": {
+      "clignotement": {
+        "name": "閃爍",
+        "description": "燈泡不停地亮滅。適合當作遠處也看得見的計時提示。"
+      },
+      "gyrophare": {
+        "name": "警示燈",
+        "description": "紅藍交替，如同警車。若有兩顆燈泡，它們會互相呼應。"
+      },
+      "respiration": {
+        "name": "呼吸",
+        "description": "亮度緩緩起伏，顏色保持不變。安靜，適合工作時使用。"
+      },
+      "bougie": {
+        "name": "燭光",
+        "description": "溫暖的火焰搖曳不定，從不重複。這一組裡最好看的一個。"
+      },
+      "orage": {
+        "name": "雷雨",
+        "description": "泛藍的幽暗，被不規則的白色閃電劃破。"
+      },
+      "arc-en-ciel": {
+        "name": "彩虹",
+        "description": "色相沿著整個色環緩緩轉動。"
+      },
+      "alerte": {
+        "name": "警報",
+        "description": "紅光閃三下，然後燈泡準確回到原本的狀態。用於提示某個事件。"
+      },
+      "lever-de-soleil": {
+        "name": "日出",
+        "description": "五分鐘，從暗紅餘燼到明亮白晝。適合用來溫柔地醒來。"
+      }
+    },
+    "pi": {
+      "bulb": "燈泡",
+      "bulbPlaceholder": "選擇燈泡",
+      "secondBulb": "第二顆燈泡",
+      "secondBulbPlaceholder": "無（選填）",
+      "scenario": "情境",
+      "scenarioPlaceholder": "選擇情境",
+      "colour": "顏色",
+      "step": "級距",
+      "hueStep": "色相級距",
+      "dialStep": "旋鈕級距",
+      "temperature": "色溫",
+      "manage": "新增或修改燈泡",
+      "shared": {
+        "title": "一顆燈泡，多個按鍵",
+        "body": "燈泡只需為整個外掛登記一次。所有按鍵都從同一個清單中選擇：無需每次重新輸入金鑰，金鑰變更也只需在一處修改。"
+      },
+      "stepHelp": {
+        "title": "級距有什麼用？",
+        "key": "在按鍵上，每按一次就套用一次該級距。負值會變成「調暗」鍵：把兩個並排放置，一個 +10，一個 -10。",
+        "dial": "在旋鈕上，級距是一格的數值；正負號會被忽略，由旋轉方向決定。"
+      },
+      "tempHelp": {
+        "title": "色溫參考",
+        "scale": "2700 K 相當於白熾燈，非常暖。4000 K 是中性白。6500 K 是日光色，偏冷偏藍。",
+        "mode": "套用色溫會讓燈泡切換到白光模式，因而離開彩色。這是燈泡本身的限制，不是外掛造成的。"
+      },
+      "colourHelp": {
+        "title": "按鍵和旋鈕如何運作？",
+        "key": "按下按鍵會點亮燈泡，並原樣套用上面選定的顏色。可以為常用的氛圍各放一個。",
+        "dial": "轉動旋鈕會改變色相，同時保持燈泡目前的亮度。按下旋鈕則開關燈。"
+      },
+      "scenarioHelp": {
+        "title": "它是怎麼運作的？",
+        "toggle": "按一次啟動情境，再按一次停止。燈泡隨後會準確回到原本的狀態：相同的顏色、相同的亮度、開或關。",
+        "second": "第二顆燈泡是選填的。目前只有警示燈會用到兩顆，讓它們以紅藍互相呼應。只有一顆時，會在同一顆燈泡上交替兩種顏色。",
+        "oneShot": "警報和日出會自行停止，分別在閃三下之後和五分鐘之後。其餘情境會一直執行，直到你再次按下。",
+        "safety": "動畫被刻意限制在每秒兩次交替：超過此頻率，閃爍可能誘發光敏感族群的癲癇發作。"
+      },
+      "scan": {
+        "note": "搜尋會先監聽燈泡自己廣播的通告；若沒有回應，再逐一敲擊網路上的每個位址。最壞情況約需二十秒。它能找到位址和識別碼，但永遠找不到金鑰：金鑰仍需為每顆燈泡手動貼上一次。",
+        "button": "搜尋網路",
+        "running": "正在搜尋…",
+        "none": "找不到裝置。請確認燈泡已通電，並與這台電腦位於同一網路。",
+        "found": "個裝置已找到",
+        "sweep": "（透過掃描網路找到：燈泡的廣播沒有傳到這裡，有線電腦與 Wi-Fi 燈泡之間很常見）"
+      },
+      "field": {
+        "id": "燈泡識別碼",
+        "name": "名稱（選填）— 例如：書桌",
+        "key": "本機金鑰",
+        "keyKept": "留空則保留原金鑰"
+      },
+      "found": {
+        "already": "已登記",
+        "device": "Tuya 裝置",
+        "noId": "識別碼未知"
+      },
+      "save": {
+        "button": "儲存",
+        "missingId": "缺少這顆燈泡的識別碼。",
+        "ok": "燈泡已儲存。請在上面的清單中選擇它。",
+        "failed": "儲存失敗。",
+        "needKey": "這顆燈泡需要本機金鑰才能被控制。"
+      }
+    }
+  }
+}

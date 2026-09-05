@@ -1,26 +1,26 @@
 {
   "Localization": {
-    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": "Pilotage local d'ampoules Tuya (compatibles Calex Smart) : allumage, intensite, couleur et blanc reglable, sans cloud, en une vingtaine de millisecondes.",
+    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": "Pilotage local d'ampoules Tuya (compatibles Calex Smart) : allumage, intensité, couleur et blanc réglable, sans cloud, en une vingtaine de millisecondes.",
     "Power": "Allumage",
-    "Brightness": "Intensite",
+    "Brightness": "Intensité",
     "Colour": "Couleur",
     "White": "Blanc",
-    "Scenario": "Scenario",
-    "Turns the bulb on or off.": "Allume ou eteint l'ampoule.",
-    "Adjusts brightness; the dial sweeps continuously.": "Regle l'intensite ; la molette balaie en continu.",
+    "Scenario": "Scénario",
+    "Turns the bulb on or off.": "Allume ou éteint l'ampoule.",
+    "Adjusts brightness; the dial sweeps continuously.": "Règle l'intensité ; la molette balaie en continu.",
     "Applies a colour; the dial rotates the hue.": "Applique une couleur ; la molette fait tourner la teinte.",
-    "Sets the white balance, from warm to cool.": "Regle le blanc, du chaud au froid.",
-    "Plays a light animation: blink, police lights, candle, storm...": "Joue une animation lumineuse : clignotement, gyrophare, bougie, orage...",
-    "Turn on / off": "Allumer / eteindre",
-    "Adjust brightness": "Regler l'intensite",
+    "Sets the white balance, from warm to cool.": "Règle le blanc, du chaud au froid.",
+    "Plays a light animation: blink, police lights, candle, storm...": "Joue une animation lumineuse : clignotement, gyrophare, bougie, orage…",
+    "Turn on / off": "Allumer / éteindre",
+    "Adjust brightness": "Régler l'intensité",
     "Rotate the hue": "Faire tourner la teinte",
-    "Adjust the white": "Regler le blanc",
-    "Start / stop the scenario": "Lancer / arreter le scenario",
+    "Adjust the white": "Régler le blanc",
+    "Start / stop the scenario": "Lancer / arrêter le scénario",
     "key": {
-      "toSet": "A regler",
+      "toSet": "À régler",
       "offline": "Hors ligne",
-      "on": "Allumee",
-      "off": "Eteinte",
+      "on": "Allumée",
+      "off": "Éteinte",
       "noColour": "Sans couleur",
       "noWhite": "Sans blanc"
     },
@@ -28,13 +28,13 @@
       "warm": "Chaud",
       "neutral": "Neutre",
       "cool": "Froid",
-      "daylight": "Lumiere du jour"
+      "daylight": "Lumière du jour"
     },
     "dial": {
-      "brightness": "Intensite",
+      "brightness": "Intensité",
       "colour": "Couleur",
       "white": "Blanc",
-      "scenario": "Scenario"
+      "scenario": "Scénario"
     },
     "hue": {
       "red": "Rouge",
@@ -49,23 +49,23 @@
     "scenario": {
       "clignotement": {
         "name": "Clignotement",
-        "description": "L'ampoule s'allume et s'eteint sans fin. Utile comme minuteur visible de loin."
+        "description": "L'ampoule s'allume et s'éteint sans fin. Utile comme minuteur visible de loin."
       },
       "gyrophare": {
         "name": "Gyrophare",
-        "description": "Rouge et bleu alternes, facon voiture de police. Avec deux ampoules, elles se repondent."
+        "description": "Rouge et bleu alternés, façon voiture de police. Avec deux ampoules, elles se répondent."
       },
       "respiration": {
         "name": "Respiration",
-        "description": "L'intensite monte et descend lentement, en gardant la couleur en place. Calme, pour travailler."
+        "description": "L'intensité monte et descend lentement, en gardant la couleur en place. Calme, pour travailler."
       },
       "bougie": {
         "name": "Bougie",
-        "description": "Une flamme chaude qui vacille, jamais deux fois pareil. Le meilleur rendu de la serie."
+        "description": "Une flamme chaude qui vacille, jamais deux fois pareil. Le plus joli de la série."
       },
       "orage": {
         "name": "Orage",
-        "description": "Une penombre bleutee, dechiree par des eclairs blancs a intervalles irreguliers."
+        "description": "Une pénombre bleutée, déchirée par des éclairs blancs à intervalles irréguliers."
       },
       "arc-en-ciel": {
         "name": "Arc-en-ciel",
@@ -73,11 +73,11 @@
       },
       "alerte": {
         "name": "Alerte",
-        "description": "Trois eclats rouges, puis la lampe revient exactement comme elle etait. Pour signaler un evenement."
+        "description": "Trois éclats rouges, puis la lampe revient exactement comme elle était. Pour signaler un événement."
       },
       "lever-de-soleil": {
         "name": "Lever de soleil",
-        "description": "Cinq minutes d'une braise sombre jusqu'au plein jour. A lancer pour se reveiller en douceur."
+        "description": "Cinq minutes d'une braise sombre jusqu'au plein jour. À lancer pour se réveiller en douceur."
       }
     },
     "pi": {
@@ -85,65 +85,65 @@
       "bulbPlaceholder": "Choisissez une ampoule",
       "secondBulb": "Seconde ampoule",
       "secondBulbPlaceholder": "Aucune (facultatif)",
-      "scenario": "Scenario",
-      "scenarioPlaceholder": "Choisissez un scenario",
+      "scenario": "Scénario",
+      "scenarioPlaceholder": "Choisissez un scénario",
       "colour": "Couleur",
       "step": "Pas",
       "hueStep": "Pas de teinte",
       "dialStep": "Pas de molette",
-      "temperature": "Temperature",
+      "temperature": "Température",
       "manage": "Ajouter ou modifier une ampoule",
       "shared": {
         "title": "Une ampoule, plusieurs touches",
-        "body": "Les ampoules se declarent une seule fois pour tout le plugin. Toutes vos touches piochent dans la meme liste : inutile de ressaisir la cle a chaque fois, et une cle changee ne se corrige qu'a un seul endroit."
+        "body": "Les ampoules se déclarent une seule fois pour tout le plugin. Toutes vos touches piochent dans la même liste : inutile de ressaisir la clé à chaque fois, et une clé changée ne se corrige qu'à un seul endroit."
       },
       "stepHelp": {
-        "title": "A quoi sert le pas ?",
-        "key": "Sur une touche, chaque appui applique ce pas. Une valeur negative fait une touche « baisser » : posez-en deux cote a cote, l'une a +10 et l'autre a -10.",
-        "dial": "Sur une molette, le pas est la valeur d'un cran ; son signe est ignore, c'est le sens de rotation qui decide."
+        "title": "À quoi sert le pas ?",
+        "key": "Sur une touche, chaque appui applique ce pas. Une valeur négative fait une touche « baisser » : posez-en deux côte à côte, l'une à +10 et l'autre à -10.",
+        "dial": "Sur une molette, le pas est la valeur d'un cran ; son signe est ignoré, c'est le sens de rotation qui décide."
       },
       "tempHelp": {
-        "title": "Reperes de temperature",
-        "scale": "2700 K correspond a une ampoule a incandescence, tres chaude. 4000 K est un blanc neutre. 6500 K est la lumiere du jour, froide et bleutee.",
-        "mode": "Appliquer une temperature fait passer l'ampoule en mode blanc : elle quitte donc la couleur. C'est l'ampoule qui l'impose, pas le plugin."
+        "title": "Repères de température",
+        "scale": "2700 K correspond à une ampoule à incandescence, très chaude. 4000 K est un blanc neutre. 6500 K est la lumière du jour, froide et bleutée.",
+        "mode": "Appliquer une température fait passer l'ampoule en mode blanc : elle quitte donc la couleur. C'est l'ampoule qui l'impose, pas le plugin."
       },
       "colourHelp": {
         "title": "Comment se comportent touche et molette ?",
         "key": "Sur une touche, un appui allume l'ampoule et applique exactement la couleur choisie ci-dessus. Posez-en plusieurs pour vos ambiances favorites.",
-        "dial": "Sur une molette, la rotation fait tourner la teinte en conservant l'intensite actuelle de l'ampoule. Un appui sur la molette allume ou eteint."
+        "dial": "Sur une molette, la rotation fait tourner la teinte en conservant l'intensité actuelle de l'ampoule. Un appui sur la molette allume ou éteint."
       },
       "scenarioHelp": {
-        "title": "Comment ca marche ?",
-        "toggle": "Un appui lance le scenario, un second l'arrete. La lampe revient alors exactement dans l'etat ou elle etait : meme couleur, meme intensite, allumee ou eteinte.",
-        "second": "La seconde ampoule est facultative. Seul le Gyrophare sait aujourd'hui en exploiter deux, pour qu'elles se repondent en rouge et bleu. Avec une seule, il alterne les deux couleurs sur la meme lampe.",
-        "oneShot": "Alerte et Lever de soleil s'arretent tout seuls, apres trois eclats pour le premier et cinq minutes pour le second. Les autres tournent jusqu'a ce que vous appuyiez de nouveau.",
-        "safety": "Les animations sont volontairement plafonnees a deux alternances par seconde : au-dela, un clignotement peut declencher une crise chez une personne photosensible."
+        "title": "Comment ça marche ?",
+        "toggle": "Un appui lance le scénario, un second l'arrête. La lampe revient alors exactement dans l'état où elle était : même couleur, même intensité, allumée ou éteinte.",
+        "second": "La seconde ampoule est facultative. Seul le Gyrophare sait aujourd'hui en exploiter deux, pour qu'elles se répondent en rouge et bleu. Avec une seule, il alterne les deux couleurs sur la même lampe.",
+        "oneShot": "Alerte et Lever de soleil s'arrêtent tout seuls, après trois éclats pour le premier et cinq minutes pour le second. Les autres tournent jusqu'à ce que vous appuyiez de nouveau.",
+        "safety": "Les animations sont volontairement plafonnées à deux alternances par seconde : au-delà, un clignotement peut déclencher une crise chez une personne photosensible."
       },
       "scan": {
-        "note": "La recherche ecoute d'abord les annonces que vos ampoules diffusent, puis, si rien n'arrive, frappe a chaque adresse du reseau. Comptez une vingtaine de secondes dans le pire cas. Elle trouve adresse et identifiant, mais jamais la cle : celle-ci reste a coller une fois par ampoule.",
-        "button": "Chercher sur le reseau",
-        "running": "Recherche en cours...",
-        "none": "Aucun appareil trouve. Verifiez que l'ampoule est alimentee et sur le meme reseau que cet ordinateur.",
-        "found": "appareil(s) trouve(s)",
-        "sweep": " (trouve par balayage du reseau : vos ampoules ne diffusent pas jusqu'ici, c'est frequent entre un ordinateur filaire et une ampoule en wifi)"
+        "note": "La recherche écoute d'abord les annonces que vos ampoules diffusent, puis, si rien n'arrive, frappe à chaque adresse du réseau. Comptez une vingtaine de secondes dans le pire cas. Elle trouve adresse et identifiant, mais jamais la clé : celle-ci reste à coller une fois par ampoule.",
+        "button": "Chercher sur le réseau",
+        "running": "Recherche en cours…",
+        "none": "Aucun appareil trouvé. Vérifiez que l'ampoule est alimentée et sur le même réseau que cet ordinateur.",
+        "found": "appareil(s) trouvé(s)",
+        "sweep": " (trouvé par balayage du réseau : vos ampoules ne diffusent pas jusqu'ici, c'est fréquent entre un ordinateur filaire et une ampoule en wifi)"
       },
       "field": {
         "id": "Identifiant de l'ampoule",
         "name": "Nom (facultatif) — ex. Bureau",
-        "key": "Cle locale",
-        "keyKept": "Cle inchangee si vide"
+        "key": "Clé locale",
+        "keyKept": "Clé inchangée si vide"
       },
       "found": {
-        "already": "deja enregistree",
-        "device": "Appareil Tuya a",
+        "already": "déjà enregistrée",
+        "device": "Appareil Tuya à",
         "noId": "identifiant inconnu"
       },
       "save": {
         "button": "Enregistrer",
         "missingId": "Il manque l'identifiant de cette ampoule.",
-        "ok": "Ampoule enregistree. Choisissez-la dans la liste ci-dessus.",
-        "failed": "Echec de l'enregistrement.",
-        "needKey": "Cette ampoule a besoin de sa cle locale pour etre pilotable."
+        "ok": "Ampoule enregistrée. Choisissez-la dans la liste ci-dessus.",
+        "failed": "Échec de l'enregistrement.",
+        "needKey": "Cette ampoule a besoin de sa clé locale pour être pilotable."
       }
     }
   }

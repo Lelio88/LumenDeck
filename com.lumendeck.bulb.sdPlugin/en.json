@@ -106,7 +106,7 @@
       "scan": {
         "note": "The search first listens for the announcements your bulbs broadcast, then, if nothing arrives, knocks at every address on the network. Allow about twenty seconds in the worst case. It finds address and identifier, but never the key: that one still has to be pasted once per bulb.",
         "button": "Search the network",
-        "running": "Searching...",
+        "running": "Searching…",
         "none": "No device found. Check that the bulb is powered and on the same network as this computer.",
         "found": "device(s) found",
         "sweep": " (found by sweeping the network: your bulbs do not broadcast this far, which is common between a wired computer and a Wi-Fi bulb)"

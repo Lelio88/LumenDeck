@@ -33,12 +33,18 @@
   // c'est la seule information dont dispose un panneau, qui est une page web.
   // Stream Deck, lui, ne connait pas l'italien — un panneau peut donc etre en
   // italien alors que l'application autour reste en anglais.
-  const LANGUES = ['en', 'fr', 'de', 'es', 'it'];
+  const LANGUES = ['en', 'fr', 'de', 'es', 'it', 'ja', 'ko'];
   let dico = {};
 
   const langue = () => {
-    const brut = (navigator.language || 'en').split('-')[0].toLowerCase();
-    return LANGUES.includes(brut) ? brut : 'en';
+    const brut = (navigator.language || 'en').toLowerCase();
+    // Le chinois ne se deduit pas d'un prefixe : Stream Deck distingue les deux
+    // ecritures (zh_CN, zh_TW), la ou le navigateur annonce tantot la region
+    // (zh-TW, zh-HK), tantot le systeme d'ecriture (zh-Hant), tantot rien du
+    // tout. « zh » seul vaut simplifie, c'est la convention de sdpi-components.
+    if (brut.startsWith('zh')) return /hant|tw|hk|mo/.test(brut) ? 'zh_TW' : 'zh_CN';
+    const court = brut.split('-')[0];
+    return LANGUES.includes(court) ? court : 'en';
   };
 
   /** Traduit une cle pointee, ou rend le texte anglais fourni en repli. */

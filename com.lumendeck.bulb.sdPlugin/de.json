@@ -1,20 +1,20 @@
 {
   "Localization": {
-    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": "Lokale Steuerung von Tuya-Lampen (Calex Smart und kompatible): Ein/Aus, Helligkeit, Farbe und Weissabgleich, ohne Cloud, in rund zwanzig Millisekunden.",
+    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": "Lokale Steuerung von Tuya-Lampen (Calex Smart und kompatible): Ein/Aus, Helligkeit, Farbe und Weißabgleich, ohne Cloud, in rund zwanzig Millisekunden.",
     "Power": "Ein/Aus",
     "Brightness": "Helligkeit",
     "Colour": "Farbe",
-    "White": "Weiss",
+    "White": "Weiß",
     "Scenario": "Szenario",
     "Turns the bulb on or off.": "Schaltet die Lampe ein oder aus.",
-    "Adjusts brightness; the dial sweeps continuously.": "Regelt die Helligkeit; der Drehknopf laeuft stufenlos.",
+    "Adjusts brightness; the dial sweeps continuously.": "Regelt die Helligkeit; der Drehknopf läuft stufenlos.",
     "Applies a colour; the dial rotates the hue.": "Setzt eine Farbe; der Drehknopf dreht den Farbton.",
-    "Sets the white balance, from warm to cool.": "Regelt das Weiss, von warm bis kalt.",
-    "Plays a light animation: blink, police lights, candle, storm...": "Spielt eine Lichtanimation: Blinken, Blaulicht, Kerze, Gewitter...",
+    "Sets the white balance, from warm to cool.": "Regelt das Weiß, von warm bis kalt.",
+    "Plays a light animation: blink, police lights, candle, storm...": "Spielt eine Lichtanimation: Blinken, Blaulicht, Kerze, Gewitter…",
     "Turn on / off": "Ein / aus",
     "Adjust brightness": "Helligkeit regeln",
     "Rotate the hue": "Farbton drehen",
-    "Adjust the white": "Weiss regeln",
+    "Adjust the white": "Weiß regeln",
     "Start / stop the scenario": "Szenario starten / stoppen",
     "key": {
       "toSet": "Einrichten",
@@ -22,7 +22,7 @@
       "on": "An",
       "off": "Aus",
       "noColour": "Keine Farbe",
-      "noWhite": "Kein Weiss"
+      "noWhite": "Kein Weiß"
     },
     "warmth": {
       "warm": "Warm",
@@ -33,14 +33,14 @@
     "dial": {
       "brightness": "Helligkeit",
       "colour": "Farbe",
-      "white": "Weiss",
+      "white": "Weiß",
       "scenario": "Szenario"
     },
     "hue": {
       "red": "Rot",
       "orange": "Orange",
       "yellow": "Gelb",
-      "green": "Gruen",
+      "green": "Grün",
       "cyan": "Cyan",
       "blue": "Blau",
       "violet": "Violett",
@@ -49,7 +49,7 @@
     "scenario": {
       "clignotement": {
         "name": "Blinken",
-        "description": "Die Lampe schaltet endlos ein und aus. Nuetzlich als von weitem sichtbarer Timer."
+        "description": "Die Lampe schaltet endlos ein und aus. Nützlich als von weitem sichtbarer Timer."
       },
       "gyrophare": {
         "name": "Blaulicht",
@@ -57,45 +57,45 @@
       },
       "respiration": {
         "name": "Atmen",
-        "description": "Die Helligkeit steigt und faellt langsam, die Farbe bleibt. Ruhig, zum Arbeiten."
+        "description": "Die Helligkeit steigt und fällt langsam, die Farbe bleibt. Ruhig, zum Arbeiten."
       },
       "bougie": {
         "name": "Kerze",
-        "description": "Eine warme Flamme, die flackert, nie zweimal gleich. Der schoenste der Reihe."
+        "description": "Eine warme Flamme, die flackert, nie zweimal gleich. Der schönste der Reihe."
       },
       "orage": {
         "name": "Gewitter",
-        "description": "Ein blaues Halbdunkel, zerrissen von weissen Blitzen in unregelmaessigen Abstaenden."
+        "description": "Ein blaues Halbdunkel, zerrissen von weißen Blitzen in unregelmäßigen Abständen."
       },
       "arc-en-ciel": {
         "name": "Regenbogen",
-        "description": "Der Farbton wandert sanft ueber den ganzen Farbkreis."
+        "description": "Der Farbton wandert sanft über den ganzen Farbkreis."
       },
       "alerte": {
         "name": "Alarm",
-        "description": "Drei rote Blitze, dann kehrt die Lampe genau in ihren Zustand zurueck. Um ein Ereignis zu melden."
+        "description": "Drei rote Blitze, dann kehrt die Lampe genau in ihren Zustand zurück. Um ein Ereignis zu melden."
       },
       "lever-de-soleil": {
         "name": "Sonnenaufgang",
-        "description": "Fuenf Minuten von dunkler Glut bis zum hellen Tag. Zum sanften Aufwachen."
+        "description": "Fünf Minuten von dunkler Glut bis zum hellen Tag. Zum sanften Aufwachen."
       }
     },
     "pi": {
       "bulb": "Lampe",
-      "bulbPlaceholder": "Lampe waehlen",
+      "bulbPlaceholder": "Lampe wählen",
       "secondBulb": "Zweite Lampe",
       "secondBulbPlaceholder": "Keine (optional)",
       "scenario": "Szenario",
-      "scenarioPlaceholder": "Szenario waehlen",
+      "scenarioPlaceholder": "Szenario wählen",
       "colour": "Farbe",
       "step": "Schritt",
       "hueStep": "Farbton-Schritt",
       "dialStep": "Drehknopf-Schritt",
       "temperature": "Temperatur",
-      "manage": "Lampe hinzufuegen oder bearbeiten",
+      "manage": "Lampe hinzufügen oder bearbeiten",
       "shared": {
         "title": "Eine Lampe, viele Tasten",
-        "body": "Lampen werden einmal fuer das ganze Plugin angelegt. Alle Tasten greifen auf dieselbe Liste zu: der Schluessel muss nicht jedes Mal neu eingegeben werden, und ein geaenderter Schluessel wird nur an einer Stelle korrigiert."
+        "body": "Lampen werden einmal für das ganze Plugin angelegt. Alle Tasten greifen auf dieselbe Liste zu: der Schlüssel muss nicht jedes Mal neu eingegeben werden, und ein geänderter Schlüssel wird nur an einer Stelle korrigiert."
       },
       "stepHelp": {
         "title": "Wozu dient der Schritt?",
@@ -104,46 +104,46 @@
       },
       "tempHelp": {
         "title": "Temperatur-Orientierung",
-        "scale": "2700 K entspricht einer Gluehlampe, sehr warm. 4000 K ist ein neutrales Weiss. 6500 K ist Tageslicht, kalt und blaeulich.",
-        "mode": "Eine Temperatur zu setzen schaltet die Lampe in den Weissmodus, sie verlaesst also die Farbe. Das gibt die Lampe vor, nicht das Plugin."
+        "scale": "2700 K entspricht einer Glühlampe, sehr warm. 4000 K ist ein neutrales Weiß. 6500 K ist Tageslicht, kalt und bläulich.",
+        "mode": "Eine Temperatur zu setzen schaltet die Lampe in den Weißmodus, sie verlässt also die Farbe. Das gibt die Lampe vor, nicht das Plugin."
       },
       "colourHelp": {
         "title": "Wie verhalten sich Taste und Drehknopf?",
-        "key": "Auf einer Taste schaltet ein Druck die Lampe ein und setzt genau die oben gewaehlte Farbe. Legen Sie mehrere fuer Ihre Lieblingsstimmungen an.",
-        "dial": "Am Drehknopf dreht die Rotation den Farbton und behaelt die aktuelle Helligkeit bei. Ein Druck schaltet ein oder aus."
+        "key": "Auf einer Taste schaltet ein Druck die Lampe ein und setzt genau die oben gewählte Farbe. Legen Sie mehrere für Ihre Lieblingsstimmungen an.",
+        "dial": "Am Drehknopf dreht die Rotation den Farbton und behält die aktuelle Helligkeit bei. Ein Druck schaltet ein oder aus."
       },
       "scenarioHelp": {
         "title": "Wie funktioniert das?",
-        "toggle": "Ein Druck startet das Szenario, ein zweiter stoppt es. Die Lampe kehrt dann genau in ihren vorherigen Zustand zurueck: gleiche Farbe, gleiche Helligkeit, ein oder aus.",
+        "toggle": "Ein Druck startet das Szenario, ein zweiter stoppt es. Die Lampe kehrt dann genau in ihren vorherigen Zustand zurück: gleiche Farbe, gleiche Helligkeit, ein oder aus.",
         "second": "Die zweite Lampe ist optional. Nur Blaulicht nutzt heute zwei, damit sie sich in Rot und Blau antworten. Mit einer wechselt es beide Farben auf derselben Lampe.",
-        "oneShot": "Alarm und Sonnenaufgang stoppen von selbst, nach drei Blitzen bzw. fuenf Minuten. Die anderen laufen, bis Sie erneut druecken.",
-        "safety": "Animationen sind bewusst auf zwei Wechsel pro Sekunde begrenzt: darueber hinaus kann Blinklicht bei photosensiblen Menschen einen Anfall ausloesen."
+        "oneShot": "Alarm und Sonnenaufgang stoppen von selbst, nach drei Blitzen bzw. fünf Minuten. Die anderen laufen, bis Sie erneut drücken.",
+        "safety": "Animationen sind bewusst auf zwei Wechsel pro Sekunde begrenzt: darüber hinaus kann Blinklicht bei photosensiblen Menschen einen Anfall auslösen."
       },
       "scan": {
-        "note": "Die Suche hoert zuerst auf die Ankuendigungen Ihrer Lampen und klopft dann, falls nichts eintrifft, an jede Adresse im Netzwerk. Rechnen Sie im schlimmsten Fall mit rund zwanzig Sekunden. Sie findet Adresse und Kennung, aber nie den Schluessel: den muss man weiterhin einmal pro Lampe einfuegen.",
+        "note": "Die Suche hört zuerst auf die Ankündigungen Ihrer Lampen und klopft dann, falls nichts eintrifft, an jede Adresse im Netzwerk. Rechnen Sie im schlimmsten Fall mit rund zwanzig Sekunden. Sie findet Adresse und Kennung, aber nie den Schlüssel: den muss man weiterhin einmal pro Lampe einfügen.",
         "button": "Netzwerk durchsuchen",
-        "running": "Suche laeuft...",
-        "none": "Kein Geraet gefunden. Pruefen Sie, ob die Lampe mit Strom versorgt ist und im selben Netzwerk wie dieser Rechner haengt.",
-        "found": "Geraet(e) gefunden",
-        "sweep": " (per Netzwerk-Scan gefunden: Ihre Lampen senden nicht bis hierher, haeufig zwischen einem kabelgebundenen Rechner und einer WLAN-Lampe)"
+        "running": "Suche läuft…",
+        "none": "Kein Gerät gefunden. Prüfen Sie, ob die Lampe mit Strom versorgt ist und im selben Netzwerk wie dieser Rechner hängt.",
+        "found": "Gerät(e) gefunden",
+        "sweep": " (per Netzwerk-Scan gefunden: Ihre Lampen senden nicht bis hierher, häufig zwischen einem kabelgebundenen Rechner und einer WLAN-Lampe)"
       },
       "field": {
         "id": "Lampen-Kennung",
         "name": "Name (optional) — z. B. Schreibtisch",
-        "key": "Lokaler Schluessel",
-        "keyKept": "Leer lassen, um den Schluessel zu behalten"
+        "key": "Lokaler Schlüssel",
+        "keyKept": "Leer lassen, um den Schlüssel zu behalten"
       },
       "found": {
         "already": "bereits gespeichert",
-        "device": "Tuya-Geraet an",
+        "device": "Tuya-Gerät an",
         "noId": "Kennung unbekannt"
       },
       "save": {
         "button": "Speichern",
         "missingId": "Die Kennung dieser Lampe fehlt.",
-        "ok": "Lampe gespeichert. Waehlen Sie sie in der Liste oben aus.",
+        "ok": "Lampe gespeichert. Wählen Sie sie in der Liste oben aus.",
         "failed": "Speichern fehlgeschlagen.",
-        "needKey": "Diese Lampe braucht ihren lokalen Schluessel, um steuerbar zu sein."
+        "needKey": "Diese Lampe braucht ihren lokalen Schlüssel, um steuerbar zu sein."
       }
     }
   }

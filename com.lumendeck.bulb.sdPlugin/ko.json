@@ -1,0 +1,150 @@
+{
+  "Localization": {
+    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": "Tuya 스마트 전구(Calex Smart 호환)를 로컬에서 제어합니다. 전원, 밝기, 색상, 백색 온도를 클라우드 없이 약 20밀리초 만에.",
+    "Power": "전원",
+    "Brightness": "밝기",
+    "Colour": "색상",
+    "White": "백색",
+    "Scenario": "시나리오",
+    "Turns the bulb on or off.": "전구를 켜거나 끕니다.",
+    "Adjusts brightness; the dial sweeps continuously.": "밝기를 조절합니다. 다이얼은 연속으로 변합니다.",
+    "Applies a colour; the dial rotates the hue.": "색상을 적용합니다. 다이얼로 색조를 돌립니다.",
+    "Sets the white balance, from warm to cool.": "백색 온도를 따뜻한 색에서 차가운 색까지 조절합니다.",
+    "Plays a light animation: blink, police lights, candle, storm...": "조명 연출을 재생합니다. 깜빡임, 경광등, 촛불, 폭풍 등.",
+    "Turn on / off": "켜기 / 끄기",
+    "Adjust brightness": "밝기 조절",
+    "Rotate the hue": "색조 회전",
+    "Adjust the white": "백색 온도 조절",
+    "Start / stop the scenario": "시나리오 시작 / 정지",
+    "key": {
+      "toSet": "설정 필요",
+      "offline": "오프라인",
+      "on": "켜짐",
+      "off": "꺼짐",
+      "noColour": "색상 미지원",
+      "noWhite": "백색 미지원"
+    },
+    "warmth": {
+      "warm": "따뜻함",
+      "neutral": "중간",
+      "cool": "차가움",
+      "daylight": "주광색"
+    },
+    "dial": {
+      "brightness": "밝기",
+      "colour": "색상",
+      "white": "백색",
+      "scenario": "시나리오"
+    },
+    "hue": {
+      "red": "빨강",
+      "orange": "주황",
+      "yellow": "노랑",
+      "green": "초록",
+      "cyan": "청록",
+      "blue": "파랑",
+      "violet": "보라",
+      "pink": "분홍"
+    },
+    "scenario": {
+      "clignotement": {
+        "name": "깜빡임",
+        "description": "전구가 끝없이 켜졌다 꺼집니다. 멀리서도 보이는 타이머로 유용합니다."
+      },
+      "gyrophare": {
+        "name": "경광등",
+        "description": "빨강과 파랑이 번갈아 빛나는 경찰차 연출. 전구가 둘이면 서로 주고받습니다."
+      },
+      "respiration": {
+        "name": "호흡",
+        "description": "색은 그대로 두고 밝기만 천천히 오르내립니다. 작업할 때 차분합니다."
+      },
+      "bougie": {
+        "name": "촛불",
+        "description": "따뜻한 불꽃이 흔들립니다. 같은 흔들림은 두 번 없습니다. 이 중에서 가장 예쁩니다."
+      },
+      "orage": {
+        "name": "폭풍",
+        "description": "푸르스름한 어스름을 흰 섬광이 불규칙하게 가릅니다."
+      },
+      "arc-en-ciel": {
+        "name": "무지개",
+        "description": "색조가 색상환을 천천히 한 바퀴 돕니다."
+      },
+      "alerte": {
+        "name": "알림",
+        "description": "빨갛게 세 번 번쩍인 뒤, 전구는 원래 상태로 정확히 돌아갑니다. 사건을 알릴 때 씁니다."
+      },
+      "lever-de-soleil": {
+        "name": "일출",
+        "description": "어두운 잉걸불에서 한낮까지 오 분에 걸쳐. 부드럽게 깨어나고 싶을 때."
+      }
+    },
+    "pi": {
+      "bulb": "전구",
+      "bulbPlaceholder": "전구 선택",
+      "secondBulb": "두 번째 전구",
+      "secondBulbPlaceholder": "없음(선택)",
+      "scenario": "시나리오",
+      "scenarioPlaceholder": "시나리오 선택",
+      "colour": "색상",
+      "step": "단계",
+      "hueStep": "색조 단계",
+      "dialStep": "다이얼 단계",
+      "temperature": "색온도",
+      "manage": "전구 추가 또는 편집",
+      "shared": {
+        "title": "전구 하나, 여러 키",
+        "body": "전구는 플러그인 전체에서 한 번만 등록합니다. 모든 키가 같은 목록에서 고르므로 매번 키를 다시 입력할 필요가 없고, 키가 바뀌어도 한 곳만 고치면 됩니다."
+      },
+      "stepHelp": {
+        "title": "단계는 무엇인가요?",
+        "key": "키에서는 누를 때마다 이 단계가 적용됩니다. 음수 값을 주면 «어둡게» 키가 됩니다. +10과 -10을 나란히 두면 편합니다.",
+        "dial": "다이얼에서는 단계가 한 눈금의 값입니다. 부호는 무시되고 돌리는 방향이 결정합니다."
+      },
+      "tempHelp": {
+        "title": "색온도 기준",
+        "scale": "2700 K는 백열전구에 해당하는 매우 따뜻한 빛입니다. 4000 K는 중간 백색. 6500 K는 주광색으로 푸르고 차가운 빛입니다.",
+        "mode": "색온도를 적용하면 전구가 백색 모드로 전환되어 색상을 벗어납니다. 플러그인이 아니라 전구가 정한 동작입니다."
+      },
+      "colourHelp": {
+        "title": "키와 다이얼의 동작",
+        "key": "키를 누르면 전구가 켜지고 위에서 고른 색이 그대로 적용됩니다. 좋아하는 분위기마다 여러 개 두면 좋습니다.",
+        "dial": "다이얼을 돌리면 현재 밝기를 유지한 채 색조가 바뀝니다. 누르면 켜짐과 꺼짐이 전환됩니다."
+      },
+      "scenarioHelp": {
+        "title": "어떻게 작동하나요?",
+        "toggle": "한 번 누르면 시나리오가 시작되고, 다시 누르면 멈춥니다. 전구는 원래 상태로 정확히 돌아갑니다. 색도 밝기도, 켜짐·꺼짐도 그대로입니다.",
+        "second": "두 번째 전구는 선택 사항입니다. 현재 두 개를 쓰는 것은 경광등뿐이며, 빨강과 파랑으로 서로 주고받습니다. 하나만 있으면 같은 전구에서 두 색을 번갈아 냅니다.",
+        "oneShot": "알림과 일출은 각각 세 번의 점멸 뒤와 오 분 뒤에 스스로 멈춥니다. 나머지는 다시 누를 때까지 계속됩니다.",
+        "safety": "연출은 초당 2회 전환으로 의도적으로 제한했습니다. 그 이상의 점멸은 광과민성이 있는 분에게 발작을 유발할 수 있습니다."
+      },
+      "scan": {
+        "note": "검색은 먼저 전구가 보내는 알림을 기다리고, 아무것도 오지 않으면 네트워크의 모든 주소를 차례로 두드립니다. 최악의 경우 20초쯤 걸립니다. 주소와 식별자는 찾지만 키는 결코 찾지 못합니다. 키는 전구마다 한 번씩 직접 붙여 넣어야 합니다.",
+        "button": "네트워크 검색",
+        "running": "검색 중…",
+        "none": "기기를 찾지 못했습니다. 전구에 전원이 들어와 있고 이 컴퓨터와 같은 네트워크에 있는지 확인하세요.",
+        "found": "대의 기기를 찾았습니다",
+        "sweep": "(네트워크 훑기로 발견: 전구의 알림이 여기까지 닿지 않습니다. 유선 컴퓨터와 Wi-Fi 전구 조합에서 흔한 일입니다)"
+      },
+      "field": {
+        "id": "전구 식별자",
+        "name": "이름(선택) — 예: 책상",
+        "key": "로컬 키",
+        "keyKept": "비워 두면 기존 키 유지"
+      },
+      "found": {
+        "already": "이미 등록됨",
+        "device": "Tuya 기기",
+        "noId": "식별자 알 수 없음"
+      },
+      "save": {
+        "button": "저장",
+        "missingId": "이 전구의 식별자가 없습니다.",
+        "ok": "전구를 저장했습니다. 위 목록에서 선택하세요.",
+        "failed": "저장하지 못했습니다.",
+        "needKey": "이 전구를 제어하려면 로컬 키가 필요합니다."
+      }
+    }
+  }
+}
