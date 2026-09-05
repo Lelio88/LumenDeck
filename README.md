@@ -43,23 +43,30 @@ couleur. C'est l'ampoule qui l'impose, pas le plugin.
 
 ## Installation
 
-LumenDeck n'est pas encore publié sur le Marketplace Elgato. En attendant, deux commandes depuis ce
-dossier :
+LumenDeck n'est pas encore publié sur le Marketplace Elgato. En attendant :
+
+**[➜ Télécharger la dernière version](https://github.com/Lelio88/LumenDeck/releases/latest)**
+
+Prenez le fichier `com.lumendeck.bulb.streamDeckPlugin` et **double-cliquez dessus** : Stream Deck
+l'installe. Rien d'autre à installer, pas de ligne de commande.
+
+Une catégorie **LumenDeck** apparaît alors dans Stream Deck avec ses cinq actions, à glisser sur une
+touche. Seul prérequis : l'application Stream Deck en **7.1 minimum**.
+
+<details>
+<summary>Construire le paquet soi-même</summary>
+
+Depuis ce dossier, avec **Node 24 ou plus** :
 
 ```bash
 npm install
 npm run pack
 ```
 
-Un fichier `dist/com.lumendeck.bulb.streamDeckPlugin` apparaît. **Double-cliquez dessus** : Stream
-Deck l'installe. Le dossier du dépôt n'a plus aucune utilité, vous pouvez le supprimer.
-
-Prérequis : **Node 24 ou plus** pour construire, et l'application Stream Deck en **7.1 minimum**.
-Node n'est nécessaire qu'à la construction — le plugin, lui, tourne sur le Node embarqué de Stream
-Deck.
-
-Une catégorie **LumenDeck** apparaît alors dans Stream Deck avec ses quatre actions, à glisser sur
-une touche.
+Le fichier apparaît dans `dist/`. Node n'est nécessaire qu'à la construction — le plugin, lui,
+tourne sur le Node embarqué de Stream Deck. Le dossier du dépôt n'a ensuite plus aucune utilité,
+vous pouvez le supprimer.
+</details>
 
 <details>
 <summary>Si vous comptez modifier le code</summary>
