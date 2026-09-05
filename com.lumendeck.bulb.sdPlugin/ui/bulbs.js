@@ -53,16 +53,32 @@
     return typeof valeur === 'string' ? valeur : repli;
   };
 
-  /** Remplace les textes portant un attribut de localisation. */
+  /**
+   * Remplace les textes portant un attribut de localisation.
+   *
+   * Les composants sdpi sont des elements Lit : poser l'ATTRIBUT ne suffit pas
+   * a les redessiner s'ils ont deja lu leur valeur. On ecrit donc aussi la
+   * PROPRIETE, qui declenche le rendu. Constate en conditions reelles : le
+   * libelle « Bulb » restait anglais dans un panneau par ailleurs traduit.
+   */
+  const poser = (el, nom, valeur) => {
+    el.setAttribute(nom, valeur);
+    try { el[nom] = valeur; } catch { /* element pas encore promu : l'attribut suffira */ }
+    // Le libelle de sdpi-item n'est pas une chaine mais un type qui resout
+    // lui-meme sa traduction, et il ne se relit pas quand l'attribut change.
+    // requestUpdate() est la porte que Lit laisse ouverte pour ce cas.
+    try { el.requestUpdate?.(); } catch { /* pas un element Lit */ }
+  };
+
   const localiser = (racine) => {
     racine.querySelectorAll('[data-i18n]').forEach((el) => {
       el.textContent = tr(el.dataset.i18n, el.textContent);
     });
     racine.querySelectorAll('[data-i18n-label]').forEach((el) => {
-      el.setAttribute('label', tr(el.dataset.i18nLabel, el.getAttribute('label') || ''));
+      poser(el, 'label', tr(el.dataset.i18nLabel, el.getAttribute('label') || ''));
     });
     racine.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
-      el.setAttribute('placeholder', tr(el.dataset.i18nPlaceholder, el.getAttribute('placeholder') || ''));
+      poser(el, 'placeholder', tr(el.dataset.i18nPlaceholder, el.getAttribute('placeholder') || ''));
     });
   };
 
@@ -297,6 +313,9 @@
     .then((json) => {
       dico = (json && json.Localization) || {};
       localiser(document);
+      // Seconde passe : les elements personnalises peuvent etre promus APRES
+      // notre premier parcours, et retrouveraient alors leur libelle d'origine.
+      setTimeout(() => localiser(document), 400);
     })
     .catch(() => { /* pas de dictionnaire : l'anglais du HTML fait foi */ });
 })();
