@@ -1,5 +1,8 @@
 # LumenDeck
 
+![LumenDeck](promo/hero.png)
+
+
 Pilotez vos ampoules connectées depuis votre Stream Deck. Une touche, et la lumière suit —
 instantanément.
 
