@@ -119,6 +119,18 @@
         "oneShot": "Allerta e Alba si fermano da soli, dopo tre lampi e cinque minuti rispettivamente. Gli altri proseguono finché non premi di nuovo.",
         "safety": "Le animazioni sono volutamente limitate a due alternanze al secondo: oltre, un lampeggio può scatenare una crisi in una persona fotosensibile."
       },
+      "cloud": {
+        "title": "Recupera le mie chiavi automaticamente",
+        "intro": "Scansiona un codice QR con l'app Calex o Smart Life e tutte le lampadine del tuo account vengono aggiunte, chiavi comprese. Niente da copiare.",
+        "userCode": "Codice utente",
+        "where": "Nell'app: Io → Impostazioni → Account e sicurezza → Codice utente",
+        "button": "Mostra il codice QR",
+        "scan": "Scansiona questo nell'app: + (in alto a destra) → Scansiona. Valido circa due minuti.",
+        "waiting": "In attesa della scansione…",
+        "added": "lampadina/e aggiunta/e",
+        "ignored": "altro/i dispositivo/i ignorato/i: non sono luci.",
+        "expired": "Il codice QR è scaduto prima della scansione. Riprova."
+      },
       "scan": {
         "note": "La ricerca ascolta prima gli annunci che le tue lampadine diffondono, poi, se non arriva nulla, bussa a ogni indirizzo della rete. Conta una ventina di secondi nel caso peggiore. Trova indirizzo e identificativo, ma mai la chiave: quella resta da incollare una volta per lampadina.",
         "button": "Cerca nella rete",

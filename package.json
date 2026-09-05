@@ -1,6 +1,6 @@
 {
   "name": "lumendeck",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "license": "MIT",
   "private": true,
   "description": "Pilotage local d'ampoules Tuya (Calex et compatibles) depuis un Stream Deck.",
@@ -11,7 +11,7 @@
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.lumendeck.bulb\"",
-    "test": "node --test src/driver/__tests__/codec.test.mjs src/driver/__tests__/color-format.test.mjs src/driver/__tests__/key-art.test.mjs src/driver/__tests__/scenarios.test.mjs",
+    "test": "node --test src/driver/__tests__/codec.test.mjs src/driver/__tests__/color-format.test.mjs src/driver/__tests__/key-art.test.mjs src/driver/__tests__/scenarios.test.mjs src/driver/__tests__/tuya-cloud.test.mjs",
     "test:live": "node src/driver/__tests__/live.integration.mjs",
     "probe": "node src/tools/probe.mjs",
     "deploy": "npm run build && streamdeck dev && streamdeck link com.lumendeck.bulb.sdPlugin && streamdeck restart com.lumendeck.bulb",
@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@elgato/streamdeck": "^2.1.2",
+    "qrcode": "^1.5.4",
     "tuyapi": "^7.7.1"
   },
   "devDependencies": {
@@ -30,6 +31,7 @@
     "@rollup/plugin-typescript": "^12.3.0",
     "@tsconfig/node20": "^20.1.10",
     "@types/node": "^26.4.1",
+    "@types/qrcode": "^1.5.6",
     "rollup": "^4.63.1",
     "tslib": "^2.8.1",
     "typescript": "^5.9.3"

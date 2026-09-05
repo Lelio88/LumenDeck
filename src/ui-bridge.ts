@@ -19,6 +19,11 @@
  *
  * Usage canonique : appeler installUiBridge() une fois, depuis plugin.ts.
  */
+import fs from 'node:fs';
+import path from 'node:path';
+
+import QRCode from 'qrcode';
+
 import { scenarioName } from './i18n.js';
 import { SCENARIOS } from './scenarios/catalogue.js';
 import streamDeck from '@elgato/streamdeck';
@@ -27,9 +32,20 @@ import * as bulbs from './bulbs.js';
 import { discover, sweep } from './discovery.js';
 import * as pool from './driver/pool.js';
 import { TuyaLanDriver } from './driver/tuya.js';
+import { fetchDevices, pollQrLogin, startQrLogin, TuyaCloudError } from './tuya-cloud.js';
 
 /** Duree d'ecoute du reseau. Les annonces Tuya tombent toutes les ~5 s. */
 const SCAN_MS = 6000;
+
+/**
+ * Categories Tuya que ce plugin sait piloter.
+ *
+ * Un compte contient souvent des prises, des capteurs, des telecommandes : les
+ * proposer dans une liste d'ampoules ne ferait qu'egarer. On retient les
+ * familles d'eclairage, et on dit combien d'appareils ont ete ecartes plutot
+ * que de les taire.
+ */
+const CATEGORIES_ECLAIRAGE = new Set(['dj', 'dc', 'dd', 'xdd', 'fwd', 'tgq', 'tyndj', 'gyd']);
 
 /** Une demande venue d'un panneau. Le champ `event` est le seul garanti. */
 type Request = { event: string } & Record<string, unknown>;
@@ -160,6 +176,91 @@ export function installUiBridge(): void {
 
     try {
       switch (request.event) {
+        case 'getLocale': {
+          // Le panneau ne lit PAS les fichiers lui-meme : la resolution d'un
+          // chemin relatif depuis sa page depend de la facon dont Stream Deck
+          // la sert, ce qui s'est revele instable d'une installation a l'autre.
+          // Le plugin, lui, sait ou il vit.
+          //
+          // La langue du systeme l'emporte quand nous la traduisons — c'est ce
+          // qui permet a l'italien d'exister, alors que Stream Deck ne le
+          // propose pas ; sinon on suit la langue de Stream Deck.
+          // La langue de STREAM DECK fait foi, pas celle du panneau. Releve en
+          // conditions reelles : le webview annonce « en » alors que
+          // l'application tourne en francais, et un panneau anglais dans une
+          // application francaise est pire qu'un panneau non traduit.
+          //
+          // L'indice du panneau ne sert donc qu'aux langues que Stream Deck ne
+          // sait PAS exprimer — l'italien, absent de ses huit langues. Sans
+          // cette exception, it.json ne servirait jamais a rien.
+          const HORS_STREAM_DECK = new Set(['it']);
+          const indice = text(request.hint) ?? '';
+          const candidats = HORS_STREAM_DECK.has(indice)
+            ? [indice, streamDeck.i18n.language, 'en']
+            : [streamDeck.i18n.language, indice, 'en'];
+          for (const langue of candidats) {
+            if (!/^[a-zA-Z_]{2,5}$/.test(langue)) continue;
+            const fichier = path.join(process.cwd(), langue + '.json');
+            if (!fs.existsSync(fichier)) continue;
+            const contenu = JSON.parse(fs.readFileSync(fichier, 'utf8')) as { Localization?: unknown };
+            await reply({ event: 'getLocale', language: langue, dictionary: contenu.Localization ?? {} });
+            break;
+          }
+          break;
+        }
+
+        case 'tuyaLoginStart': {
+          const code = text(request.userCode);
+          if (!code) { await reply({ event: 'tuyaLoginStart', ok: false, message: 'Code utilisateur manquant.' }); break; }
+          try {
+            const { token, qrContent } = await startQrLogin(code);
+            // Le QR part en image, pas en texte : le panneau n'a pas a savoir
+            // encoder un QR code, et le contenu ne sert a rien d'autre.
+            const qr = await QRCode.toDataURL(qrContent, { margin: 1, width: 240 });
+            await reply({ event: 'tuyaLoginStart', ok: true, token, qr });
+          } catch (error: unknown) {
+            const message = error instanceof TuyaCloudError ? error.message : 'Connexion a Tuya impossible.';
+            await reply({ event: 'tuyaLoginStart', ok: false, message });
+          }
+          break;
+        }
+
+        case 'tuyaLoginPoll': {
+          const token = text(request.token);
+          const code = text(request.userCode);
+          if (!token || !code) { await reply({ event: 'tuyaLoginPoll', ok: false, done: false }); break; }
+          try {
+            const session = await pollQrLogin(token, code);
+            // Pas encore scanne : ce n'est pas une erreur, c'est l'attente.
+            if (!session) { await reply({ event: 'tuyaLoginPoll', ok: true, done: false }); break; }
+
+            const tous = await fetchDevices(session);
+            const lampes = tous.filter((d) => CATEGORIES_ECLAIRAGE.has(d.category));
+            for (const lampe of lampes) {
+              await bulbs.remember({
+                id: lampe.id,
+                key: lampe.key,
+                ...(lampe.ip ? { ip: lampe.ip } : {}),
+                ...(lampe.name ? { name: lampe.name } : {}),
+              });
+            }
+            // Seuls des NOMS repartent vers le panneau. La cle vient d'entrer
+            // dans le registre et n'en ressortira jamais.
+            await reply({
+              event: 'tuyaLoginPoll',
+              ok: true,
+              done: true,
+              names: lampes.map((l) => l.name || l.id.slice(-6)),
+              ignored: tous.length - lampes.length,
+            });
+            await sendBulbList();
+          } catch (error: unknown) {
+            const message = error instanceof TuyaCloudError ? error.message : 'Recuperation des ampoules impossible.';
+            await reply({ event: 'tuyaLoginPoll', ok: false, done: false, message });
+          }
+          break;
+        }
+
         case 'getScenarios':
           await reply({
             event: 'getScenarios',

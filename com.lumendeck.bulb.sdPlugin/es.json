@@ -119,6 +119,18 @@
         "oneShot": "Alerta y Amanecer se detienen solos, tras tres destellos y cinco minutos respectivamente. Los demás siguen hasta que vuelva a pulsar.",
         "safety": "Las animaciones están limitadas a propósito a dos alternancias por segundo: más allá, un parpadeo puede provocar una crisis en una persona fotosensible."
       },
+      "cloud": {
+        "title": "Obtener mis claves automáticamente",
+        "intro": "Escanee un código QR con la app Calex o Smart Life y todas las bombillas de su cuenta se añaden, claves incluidas. Nada que copiar a mano.",
+        "userCode": "Código de usuario",
+        "where": "En la app: Yo → Ajustes → Cuenta y seguridad → Código de usuario",
+        "button": "Mostrar el código QR",
+        "scan": "Escanee esto en la app: + (arriba a la derecha) → Escanear. Válido unos dos minutos.",
+        "waiting": "Esperando el escaneo…",
+        "added": "bombilla(s) añadida(s)",
+        "ignored": "otro(s) dispositivo(s) ignorado(s): no son luces.",
+        "expired": "El código QR caducó antes de escanearse. Inténtelo de nuevo."
+      },
       "scan": {
         "note": "La búsqueda escucha primero los anuncios que emiten sus bombillas y luego, si no llega nada, llama a cada dirección de la red. Cuente unos veinte segundos en el peor caso. Encuentra dirección e identificador, pero nunca la clave: esa hay que pegarla una vez por bombilla.",
         "button": "Buscar en la red",

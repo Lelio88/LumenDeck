@@ -119,6 +119,18 @@
         "oneShot": "Alerte et Lever de soleil s'arrêtent tout seuls, après trois éclats pour le premier et cinq minutes pour le second. Les autres tournent jusqu'à ce que vous appuyiez de nouveau.",
         "safety": "Les animations sont volontairement plafonnées à deux alternances par seconde : au-delà, un clignotement peut déclencher une crise chez une personne photosensible."
       },
+      "cloud": {
+        "title": "Récupérer mes clés automatiquement",
+        "intro": "Scannez un QR code avec l'application Calex ou Smart Life, et toutes les ampoules de votre compte sont ajoutées, clés comprises. Rien à recopier.",
+        "userCode": "Code utilisateur",
+        "where": "Dans l'application : Moi → Paramètres → Compte et sécurité → Code utilisateur",
+        "button": "Afficher le QR code",
+        "scan": "Scannez ceci dans l'application : + (en haut à droite) → Scanner. Valable environ deux minutes.",
+        "waiting": "En attente du scan…",
+        "added": "ampoule(s) ajoutée(s)",
+        "ignored": "autre(s) appareil(s) ignoré(s) : ce ne sont pas des lampes.",
+        "expired": "Le QR code a expiré avant d'être scanné. Recommencez."
+      },
       "scan": {
         "note": "La recherche écoute d'abord les annonces que vos ampoules diffusent, puis, si rien n'arrive, frappe à chaque adresse du réseau. Comptez une vingtaine de secondes dans le pire cas. Elle trouve adresse et identifiant, mais jamais la clé : celle-ci reste à coller une fois par ampoule.",
         "button": "Chercher sur le réseau",

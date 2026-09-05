@@ -119,6 +119,18 @@
         "oneShot": "Alarm und Sonnenaufgang stoppen von selbst, nach drei Blitzen bzw. fünf Minuten. Die anderen laufen, bis Sie erneut drücken.",
         "safety": "Animationen sind bewusst auf zwei Wechsel pro Sekunde begrenzt: darüber hinaus kann Blinklicht bei photosensiblen Menschen einen Anfall auslösen."
       },
+      "cloud": {
+        "title": "Schlüssel automatisch holen",
+        "intro": "Scannen Sie einen QR-Code mit der Calex- oder Smart-Life-App, und alle Lampen Ihres Kontos werden samt Schlüssel hinzugefügt. Nichts abzutippen.",
+        "userCode": "Benutzercode",
+        "where": "In der App: Ich → Einstellungen → Konto und Sicherheit → Benutzercode",
+        "button": "QR-Code anzeigen",
+        "scan": "Scannen Sie dies in der App: + (oben rechts) → Scannen. Etwa zwei Minuten gültig.",
+        "waiting": "Warte auf den Scan…",
+        "added": "Lampe(n) hinzugefügt",
+        "ignored": "weitere(s) Gerät(e) ignoriert: keine Leuchten.",
+        "expired": "Der QR-Code ist abgelaufen, bevor er gescannt wurde. Bitte erneut versuchen."
+      },
       "scan": {
         "note": "Die Suche hört zuerst auf die Ankündigungen Ihrer Lampen und klopft dann, falls nichts eintrifft, an jede Adresse im Netzwerk. Rechnen Sie im schlimmsten Fall mit rund zwanzig Sekunden. Sie findet Adresse und Kennung, aber nie den Schlüssel: den muss man weiterhin einmal pro Lampe einfügen.",
         "button": "Netzwerk durchsuchen",

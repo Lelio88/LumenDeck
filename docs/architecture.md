@@ -85,10 +85,36 @@ l'existence de Tuya.
 | `src/settings.ts` | Formes des réglages d'une touche. Une touche ne retient que l'**identifiant** de l'ampoule qu'elle pilote, plus ce qui lui est propre. |
 | `src/plugin.ts` | Racine de composition. |
 | `src/tools/probe.mjs` | Sonde de diagnostic : relève les datapoints d'une ampoule. Vit sous `src/` parce qu'il a besoin des dépendances du projet. |
+| `src/tuya-cloud.ts` | Récupère les clés locales par **scan de QR code**. Seul module qui parle à un serveur, et seulement pour l'enrôlement : le pilotage n'y repasse jamais. |
 | `src/i18n.ts` | Raccourci unique vers le dictionnaire du SDK. Les clés y sont **structurées** (`key.off`), jamais des phrases : une phrase corrigée pour un détail de style ferait retomber toutes les traductions sur l'anglais, en silence. |
 | `tools/make_promo.mjs` | Compose les visuels de présentation. Les faces de touches y viennent de `key-art.ts`, **le module que le plugin appelle vraiment** : une image promotionnelle dessinée à part finit par mentir dès que le produit évolue. |
 | `tools/make_locales.py` | Produit les cinq `<langue>.json` depuis une table unique où chaque texte figure dans toutes les langues. Une entrée incomplète fait **échouer** la génération. |
 | `tools/make_icons.py` | Génère les 24 PNG du plugin. Hors chaîne Node, d'où son emplacement séparé. |
+
+## Le cloud, une seule fois
+
+La clé locale d'une ampoule est créée par l'application du fabricant à l'appairage, et n'existe
+nulle part ailleurs. Aucune ampoule ne la divulgue : la découverte UDP rapporte l'identifiant et
+l'adresse, **jamais la clé**. Il faut donc la demander à Tuya.
+
+`src/tuya-cloud.ts` le fait **une fois**, au moment de l'enrôlement, par le mécanisme officiel de
+partage d'appareils : l'utilisateur scanne un QR code dans son application, et le compte autorise le
+partage. On emprunte pour cela l'enregistrement applicatif public de l'intégration Home Assistant —
+ce n'est pas un contournement, c'est ce qui évite à l'utilisateur de créer un compte développeur.
+
+**Ce que le cloud ne fait jamais** : allumer, changer une couleur, jouer un scénario, lire un état.
+Tout cela passe par le réseau local. Le jour où Tuya fermerait cette porte, les ampoules déjà
+enregistrées continueraient de fonctionner — seul l'ajout d'une nouvelle ampoule reviendrait à la
+procédure manuelle.
+
+Deux régimes coexistent dans le protocole, relevés dans le SDK Python officiel de Tuya et non
+devinés : la connexion par QR code n'est ni signée ni chiffrée, tandis que la lecture des appareils
+est signée (HMAC-SHA256) **et** chiffrée (AES-128-GCM) avec un secret dérivé à chaque requête. Une
+erreur d'un octet ne produirait pas un bug visible mais un refus serveur laconique — d'où les tests
+qui vérifient l'algorithme contre des vecteurs calculés à part.
+
+**Invariant** : la clé ne quitte jamais le plugin. `fetchDevices` la rend au pont d'interface, qui
+l'écrit directement dans le registre ; le panneau, lui, n'apprend que des noms.
 
 ## Langues
 
@@ -111,6 +137,11 @@ La règle d'ASCII du projet vaut pour les commentaires de code, pas pour ce que 
 
 Le manifeste n'a pas le choix : Stream Deck y cherche la chaîne anglaise telle quelle. Partout
 ailleurs on préfère une clé structurée, qu'une retouche de style ne casse pas.
+
+**La langue de Stream Deck fait foi**, pas celle du panneau. Relevé en conditions réelles : le
+webview annonçait `en` alors que l'application tournait en français. Le plugin sert donc lui-même le
+dictionnaire, et l'indice envoyé par le panneau ne sert qu'à l'italien — la seule langue que Stream
+Deck ne sait pas exprimer.
 
 **Trois surfaces, trois mécanismes.** Le manifeste est localisé par Stream Deck lui-même. Les mots
 dessinés sur les touches passent par `src/i18n.ts` — et arrivent **déjà traduits** dans `key-art.ts`,

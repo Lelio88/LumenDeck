@@ -83,8 +83,12 @@ d'abord.
 ## La configuration, une bonne fois pour toutes
 
 Pour parler à votre ampoule sans passer par le cloud, LumenDeck a besoin de deux informations
-qu'elle seule détient : son identifiant et sa clé. Elles s'obtiennent en une seule opération, en
-scannant un QR code depuis votre application Calex ou Smart Life. Comptez cinq minutes.
+qu'elle seule détient : son identifiant et sa clé.
+
+**Tout se passe dans le panneau de réglages d'une touche.** Dépliez « Ajouter ou modifier une
+ampoule », collez le **code utilisateur** que votre application affiche (Moi → Paramètres → Compte
+et sécurité), cliquez sur « Afficher le QR code » et scannez-le avec l'application (**+** →
+**Scanner**). Toutes vos ampoules sont enregistrées d'un coup. Comptez deux minutes, une seule fois.
 
 Ces informations restent sur votre machine. La clé ne vaut que sur votre réseau : elle ne donne
 accès à rien d'autre, et elle se renouvelle si vous ré-appairez l'ampoule.

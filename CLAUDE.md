@@ -21,6 +21,7 @@ Topologie rapide :
 - `src/driver/` — contrat `LightDriver`, adaptateur Tuya, réservoir de connexions
 - `src/actions/` — une classe par action Stream Deck ; ne connaît que le contrat
 - `src/scenarios/` — catalogue d'animations en données pures, et moteur qui les déroule
+- `src/tuya-cloud.ts` — enrôlement par QR code ; **seul** module qui parle à un serveur
 - `src/plugin.ts` — composition : enregistre les actions, ouvre le dialogue Stream Deck
 - `com.lumendeck.bulb.sdPlugin/` — manifeste, images, panneaux de configuration (versionné)
 - `tools/` — génération des icônes ; `src/tools/` — sondes de diagnostic (ont besoin des deps)
@@ -48,7 +49,7 @@ Topologie rapide :
    transformer, et l'éviter permet de **tester le pilote sans étape de build**.
 5. **L'ampoule est seule maîtresse de son état.** Après une écriture, relire plutôt que déduire :
    elle peut avoir été changée depuis l'application Calex ou un assistant vocal.
-6. **Les secrets vivent dans `../.lumendeck-secrets/`**, jamais dans le dépôt.
+6. **Le cloud sert UNIQUEMENT à l'enrôlement** — aucune commande d'éclairage ne quitte le réseau local. Les secrets vivent dans `../.lumendeck-secrets/`, jamais dans le dépôt.
 7. **PNG et `<langue>.json` sont générés** — par `tools/make_icons.py` et `tools/make_locales.py`, jamais à la main.
 
 ## V. Flux de Travail (Explore → Plan → Code → Verify)
@@ -57,8 +58,7 @@ Topologie rapide :
 2. **Planification** — soumettre l'approche à l'utilisateur pour les changements non triviaux
 3. **TDD** — écrire le test en premier, vérifier qu'il échoue, **ne plus l'altérer**
 4. **Implémentation** — code minimal pour faire passer le test
-5. **Vérification** — `npm test && npm run build && npx streamdeck validate com.lumendeck.bulb.sdPlugin`
-   puis, si le pilote a changé, `npm run test:live` sur une ampoule réelle
+5. **Vérification** — `npm test && npm run build && npx streamdeck validate com.lumendeck.bulb.sdPlugin` ; puis `npm run test:live` si le pilote a changé
 
 **Auto-documentation (règle transverse)** — tout nouveau module publie en tête un commentaire-doc :
 ce qu'il fait en une phrase, les choix non-évidents **et leur motivation**, les invariants à préserver,

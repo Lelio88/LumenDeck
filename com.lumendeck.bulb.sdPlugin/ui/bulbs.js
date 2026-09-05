@@ -106,6 +106,13 @@
       font-family: inherit;
       font-size: inherit;
     }
+    #bulb-manager .bd-dim { opacity: .65; margin-top: -2px; }
+    #bulb-manager .bd-sep { border: 0; border-top: 1px solid var(--input-bg-color, #3a3a3a);
+                            margin: 14px 0 10px; }
+    /* Fond blanc impose : un QR code sombre sur fond sombre ne se scanne pas,
+       et le panneau suit le theme de Stream Deck, qui est noir par defaut. */
+    #bd-qr img { display: block; margin: 10px auto 4px; background: #fff;
+                 padding: 8px; border-radius: 6px; }
     #bulb-manager input::placeholder { color: var(--font-color, #d8d8d8); opacity: .45; }
     #bulb-manager input:focus { border-color: #ffb247; }
 
@@ -152,6 +159,19 @@
 
   anchor.innerHTML =
     '<style>' + css + '</style>' +
+    '<p class="bd-note" data-i18n="pi.cloud.intro">Scan a QR code with the Calex or ' +
+    'Smart Life app and every bulb on your account is added, keys included. Nothing to ' +
+    'copy by hand.</p>' +
+    '<div class="bd-row">' +
+    '<input type="text" id="bd-usercode" placeholder="User code" ' +
+    'data-i18n-placeholder="pi.cloud.userCode">' +
+    '<button type="button" id="bd-cloud" data-i18n="pi.cloud.button">Show the QR code' +
+    '</button></div>' +
+    '<p class="bd-note bd-dim" data-i18n="pi.cloud.where">In the app: Me &rarr; Settings ' +
+    '&rarr; Account and security &rarr; User code</p>' +
+    '<div id="bd-qr"></div>' +
+    '<div id="bd-cloud-status" class="bd-note"></div>' +
+    '<hr class="bd-sep">' +
     '<p class="bd-note" data-i18n="pi.scan.note">The search first listens for the ' +
     'announcements your bulbs broadcast, then, if nothing arrives, knocks at every address ' +
     'on the network. Allow about twenty seconds in the worst case. It finds address and ' +
@@ -160,6 +180,34 @@
     'Search the network</button></div>' +
     '<div id="bd-status" class="bd-note"></div>' +
     '<div id="bd-results"></div>';
+
+  // --- Recuperation des cles par QR code ----------------------------------
+  const cloudButton = anchor.querySelector('#bd-cloud');
+  const userCode = anchor.querySelector('#bd-usercode');
+  const qrZone = anchor.querySelector('#bd-qr');
+  const cloudStatus = anchor.querySelector('#bd-cloud-status');
+  let sondage = null;
+
+  const direCloud = (message, ton) => {
+    cloudStatus.textContent = message;
+    cloudStatus.className = 'bd-note' + (ton ? ' bd-' + ton : '');
+  };
+
+  /** Arrete l'attente, quelle qu'en soit la raison. Idempotent. */
+  const cesser = () => {
+    if (sondage) { clearInterval(sondage); sondage = null; }
+    cloudButton.disabled = false;
+  };
+
+  cloudButton.addEventListener('click', () => {
+    const code = userCode.value.trim();
+    if (!code) { userCode.focus(); return; }
+    cesser();
+    qrZone.innerHTML = '';
+    cloudButton.disabled = true;
+    direCloud(tr('pi.scan.running', 'Searching...'));
+    send({ event: 'tuyaLoginStart', userCode: code });
+  });
 
   const scanButton = anchor.querySelector('#bd-scan');
   const status = anchor.querySelector('#bd-status');
@@ -295,6 +343,59 @@
       return;
     }
 
+    if (payload.event === 'getLocale') {
+      dico = payload.dictionary || {};
+      localiser(document);
+      // Seconde passe : les elements personnalises peuvent etre promus APRES
+      // notre premier parcours, et retrouveraient alors leur libelle d'origine.
+      setTimeout(() => localiser(document), 400);
+      return;
+    }
+
+    if (payload.event === 'tuyaLoginStart') {
+      if (!payload.ok) { cesser(); direCloud(payload.message || '', 'err'); return; }
+      const img = document.createElement('img');
+      img.src = payload.qr;
+      img.alt = '';
+      qrZone.appendChild(img);
+      direCloud(tr('pi.cloud.scan', 'Scan this in the app: + (top right) -> Scan.'));
+
+      // Le jeton expire vers deux minutes et demie : on interroge toutes les
+      // deux secondes et on renonce a deux minutes, pour dire clairement que
+      // c'est perime plutot que de laisser tourner une attente muette.
+      const debut = Date.now();
+      sondage = setInterval(() => {
+        if (Date.now() - debut > 120000) {
+          cesser();
+          qrZone.innerHTML = '';
+          direCloud(tr('pi.cloud.expired', 'The QR code expired. Try again.'), 'err');
+          return;
+        }
+        send({ event: 'tuyaLoginPoll', token: payload.token, userCode: userCode.value.trim() });
+      }, 2000);
+      return;
+    }
+
+    if (payload.event === 'tuyaLoginPoll') {
+      if (!payload.ok) { cesser(); direCloud(payload.message || '', 'err'); return; }
+      if (!payload.done) {
+        if (cloudStatus.textContent !== tr('pi.cloud.waiting', 'Waiting for the scan...')) {
+          direCloud(tr('pi.cloud.waiting', 'Waiting for the scan...'));
+        }
+        return;
+      }
+      cesser();
+      qrZone.innerHTML = '';
+      const noms = Array.isArray(payload.names) ? payload.names : [];
+      let message = noms.length + ' ' + tr('pi.cloud.added', 'bulb(s) added');
+      if (noms.length) message += ' : ' + noms.join(', ');
+      if (payload.ignored > 0) {
+        message += '  ' + payload.ignored + ' ' + tr('pi.cloud.ignored', 'other device(s) ignored.');
+      }
+      direCloud(message, noms.length ? 'ok' : 'err');
+      return;
+    }
+
     if (payload.event === 'saveBulb') {
       if (payload.ok) {
         say(tr('pi.save.ok', 'Bulb saved. Choose it in the list above.'), 'ok');
@@ -308,14 +409,5 @@
   // Charge le dictionnaire APRES la construction de l'interface : la
   // substitution est imperceptible, et l'affichage ne depend jamais de ce
   // chargement pour aboutir.
-  fetch('../' + langue() + '.json')
-    .then((r) => (r.ok ? r.json() : null))
-    .then((json) => {
-      dico = (json && json.Localization) || {};
-      localiser(document);
-      // Seconde passe : les elements personnalises peuvent etre promus APRES
-      // notre premier parcours, et retrouveraient alors leur libelle d'origine.
-      setTimeout(() => localiser(document), 400);
-    })
-    .catch(() => { /* pas de dictionnaire : l'anglais du HTML fait foi */ });
+  send({ event: 'getLocale', hint: langue() });
 })();

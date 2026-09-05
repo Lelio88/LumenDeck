@@ -6,10 +6,13 @@ réseau ; elle est créée au moment où vous appairez l'ampoule dans l'applicat
 
 Comptez cinq minutes. Vous n'aurez à le faire qu'une fois par ampoule.
 
-> **Depuis la version 0.3, le plugin cherche vos ampoules tout seul.** Ouvrez le panneau de
-> réglages d'une touche, dépliez « Ajouter ou modifier une ampoule » et cliquez sur « Rechercher ».
-> L'identifiant et l'adresse se remplissent seuls ; seule la clé reste à coller, et une seule fois
-> pour toutes vos touches. La procédure ci-dessous ne sert plus qu'à obtenir cette clé.
+> **Depuis la version 0.14, tout se fait dans le panneau.** Dépliez « Ajouter ou modifier une
+> ampoule », collez votre **code utilisateur**, cliquez sur « Afficher le QR code » et scannez-le
+> avec l'application Calex ou Smart Life (**+** → **Scanner**). Toutes les ampoules du compte sont
+> enregistrées, clés comprises. Ni terminal, ni Python, ni copier-coller.
+>
+> La procédure manuelle ci-dessous reste documentée pour qui préfère la ligne de commande, ou si le
+> panneau échoue.
 >
 > Si la recherche ne trouve rien alors que l'ampoule fonctionne, c'est presque toujours le
 > **pare-feu** : les annonces arrivent en UDP entrant, et Windows les bloque tant que Stream Deck
