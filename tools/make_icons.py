@@ -190,6 +190,26 @@ def glyph_temperature(d: ImageDraw.ImageDraw, s: int, color, detailed: bool) -> 
 # --- Fabrication ------------------------------------------------------------
 
 
+def glyph_scenario(d: ImageDraw.ImageDraw, s: int, color, detailed: bool) -> None:
+    """Triangle de lecture : cette touche DECLENCHE un deroulement.
+
+    Une etoile ou une vague auraient ete plus decoratives, mais moins claires :
+    les quatre autres glyphes designent un objet (ampoule, jauge, goutte,
+    disque), celui-ci designe un acte. Le triangle est la seule forme que tout
+    le monde lit comme « jouer », et il tient a 20 px la ou un motif anime
+    n'aurait produit qu'une tache.
+    """
+    del detailed  # le contour se suffit a toutes les tailles
+    w = s * 0.088
+    cx, cy, r = s * 0.5, s * 0.5, s * 0.30
+    points = [
+        (cx - r * 0.70, cy - r * 0.92),
+        (cx + r * 0.96, cy),
+        (cx - r * 0.70, cy + r * 0.92),
+    ]
+    stroke(d, points + [points[0]], w, color)
+
+
 def fit(layer: Image.Image, size: int, content: float, center_y: float = 0.5) -> Image.Image:
     """Recadre sur le contenu reel, puis inscrit dans une boite de marge fixe.
 
@@ -252,6 +272,7 @@ def main() -> None:
         ("brightness", glyph_gauge),
         ("color", glyph_color),
         ("temperature", glyph_temperature),
+        ("scenario", glyph_scenario),
     )
     for size, suffix in ((20, ""), (40, "@2x")):
         for name, glyph in actions:

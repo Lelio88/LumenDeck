@@ -8,9 +8,11 @@
 import streamDeck from '@elgato/streamdeck';
 import { Brightness } from './actions/brightness.js';
 import { Color } from './actions/color.js';
+import { ScenarioAction } from './actions/scenario.js';
 import { Temperature } from './actions/temperature.js';
 import { ToggleBulb } from './actions/toggle.js';
 import { releaseAll } from './driver/pool.js';
+import { stopAll } from './scenarios/runner.js';
 import { installUiBridge } from './ui-bridge.js';
 
 // INFO plutot que TRACE : le mode trace journalise tous les echanges avec Stream
@@ -24,6 +26,7 @@ streamDeck.actions.registerAction(new ToggleBulb());
 streamDeck.actions.registerAction(new Brightness());
 streamDeck.actions.registerAction(new Color());
 streamDeck.actions.registerAction(new Temperature());
+streamDeck.actions.registerAction(new ScenarioAction());
 
 // Repond aux panneaux de configuration : liste, recherche et enregistrement
 // des ampoules connues.
@@ -33,7 +36,9 @@ installUiBridge();
 // ouverte empeche l'application Calex de reprendre la main sur l'ampoule.
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
-    void releaseAll().finally(() => process.exit(0));
+    // Couper les scenarios AVANT de fermer les connexions : le moteur a besoin
+    // des sessions Tuya pour remettre chaque lampe comme il l'a trouvee.
+    void stopAll().finally(() => releaseAll().finally(() => process.exit(0)));
   });
 }
 

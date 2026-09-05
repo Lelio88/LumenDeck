@@ -46,3 +46,16 @@ export type TemperatureSettings = BulbSettings & {
   /** Kelvins parcourus par cran de molette. Defaut 200. */
   step?: number;
 };
+
+/** Reglages de l'action de scenario. */
+export type ScenarioSettings = BulbSettings & {
+  /** Identifiant du scenario choisi dans le catalogue. */
+  scenarioId?: string;
+  /**
+   * Seconde ampoule, pour les scenarios qui savent en exploiter deux.
+   *
+   * Facultative : un scenario a deux roles reste jouable sur une seule lampe,
+   * il n'en joue alors que le premier role.
+   */
+  deviceId2?: string;
+};

@@ -19,6 +19,7 @@
  *
  * Usage canonique : appeler installUiBridge() une fois, depuis plugin.ts.
  */
+import { SCENARIOS } from './scenarios/catalogue.js';
 import streamDeck from '@elgato/streamdeck';
 
 import * as bulbs from './bulbs.js';
@@ -145,6 +146,13 @@ export function installUiBridge(): void {
 
     try {
       switch (request.event) {
+        case 'getScenarios':
+          await reply({
+            event: 'getScenarios',
+            items: SCENARIOS.map((sc) => ({ label: sc.name, value: sc.id })),
+          });
+          break;
+
         case 'getBulbs':
           await sendBulbList();
           break;

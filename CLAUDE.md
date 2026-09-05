@@ -21,6 +21,7 @@ couplage, anti-patterns, stratégie de test) : voir [`docs/architecture.md`](./d
 Topologie rapide :
 - `src/driver/` — contrat `LightDriver`, adaptateur Tuya, réservoir de connexions
 - `src/actions/` — une classe par action Stream Deck ; ne connaît que le contrat
+- `src/scenarios/` — catalogue d'animations en données pures, et moteur qui les déroule
 - `src/plugin.ts` — composition : enregistre les actions, ouvre le dialogue Stream Deck
 - `src/settings.ts` — réglages persistés par touche (identifiant, clé locale, adresse)
 - `com.lumendeck.bulb.sdPlugin/` — manifeste, images, panneaux de configuration (versionné)

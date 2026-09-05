@@ -172,3 +172,28 @@ export function temperatureKey(kelvin: number, on: boolean): string {
     + caption(on ? k + ' K' : 'Eteinte', on ? TEXT : DIM),
   );
 }
+
+/**
+ * Face d'un scenario : ce qu'il fait, et s'il tourne.
+ *
+ * Le glyphe dit l'ACTION QU'UN APPUI DECLENCHERA, pas l'etat courant : un
+ * triangle quand la touche lancera le scenario, un carre quand elle l'arretera.
+ * C'est la convention de tous les lecteurs, et elle evite l'ambiguite d'un
+ * temoin qui laisserait deviner ce que l'appui va faire.
+ *
+ * Le nom est tronque plutot que reduit : un texte qui retrecit selon sa longueur
+ * rend la serie de touches incoherente a l'oeil.
+ */
+export function scenarioKey(name: string, running: boolean): string {
+  const color = running ? AMBER : DIM;
+  const glyph = running
+    ? '<rect x="52" y="34" width="40" height="40" rx="6" fill="' + color + '"/>'
+    : '<path d="M 56 32 L 96 54 L 56 76 Z" fill="none" stroke="' + color + '" stroke-width="9" stroke-linejoin="round"/>';
+
+  const label = name.length > 13 ? name.slice(0, 12) + '…' : name;
+  return frame(
+    glyph
+    + '<text x="72" y="112" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif"'
+    + ' font-size="19" font-weight="600" fill="' + (running ? TEXT : DIM) + '">' + label + '</text>',
+  );
+}

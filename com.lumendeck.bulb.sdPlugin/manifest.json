@@ -1,6 +1,6 @@
 {
   "Name": "LumenDeck",
-  "Version": "0.8.0.0",
+  "Version": "0.9.0.0",
   "Author": "Lelio Buton",
   "Actions": [
     {
@@ -100,6 +100,30 @@
         "TriggerDescription": {
           "Push": "Allumer / eteindre",
           "Rotate": "Rechauffer ou refroidir"
+        }
+      }
+    },
+    {
+      "Name": "Scenario",
+      "UUID": "com.lumendeck.bulb.scenario",
+      "Icon": "imgs/actions/scenario/icon",
+      "Tooltip": "Joue une animation lumineuse : clignotement, gyrophare, bougie, orage...",
+      "PropertyInspectorPath": "ui/scenario.html",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/scenario/key",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Push": "Lancer / arreter le scenario",
+          "Rotate": ""
         }
       }
     }

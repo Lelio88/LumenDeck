@@ -31,9 +31,16 @@ adaptateur Zigbee ou Matter s'ajouterait sans toucher une seule ligne des action
                                     │
         ┌───────────────────────────▼──────────────────────────────┐
         │  src/actions/           PRÉSENTATION                     │
-        │  toggle · brightness · color · temperature               │
+        │  toggle · brightness · color · temperature · scenario    │
         │  traduit un événement en intention métier, peint la      │
         │  touche. Ne connaît NI Tuya NI les datapoints.           │
+        └───────────────────────────┬──────────────────────────────┘
+                                    │
+        ┌───────────────────────────▼──────────────────────────────┐
+        │  src/scenarios/         DÉROULEMENT DANS LE TEMPS        │
+        │  catalogue de données pures + moteur qui joue les images │
+        │  (traversée par la seule action « scénario » ; les       │
+        │  quatre autres descendent directement au réservoir)      │
         └───────────────────────────┬──────────────────────────────┘
                                     │  LightDriver (contrat)
         ┌───────────────────────────▼──────────────────────────────┐
@@ -67,6 +74,9 @@ l'existence de Tuya.
 | `src/actions/brightness.ts` | Action « intensité » : pas fixe sur touche, rotation continue sur molette, retour visuel sur l'écran de la molette. |
 | `src/actions/color.ts` | Action « couleur » : applique une couleur choisie, ou fait tourner la teinte à la molette en préservant l'intensité courante. |
 | `src/actions/temperature.ts` | Action « blanc chaud / froid », de 2700 K à 6500 K. |
+| `src/actions/scenario.ts` | Action « scénario » : un appui lance une animation, un second l'arrête. N'entretient aucun état local — elle interroge le moteur, ce qui garde deux touches d'accord sur la même ampoule. |
+| `src/scenarios/catalogue.ts` | Les scénarios eux-mêmes, en **données pures** : `frame(step)` rend une image, sans effet de bord. Testable sans ampoule ; en ajouter un ne touche pas au moteur. |
+| `src/scenarios/runner.ts` | Déroule les images dans le temps. Une exécution par ampoule, relevé de l'état avant la première image et restauration à l'arrêt. |
 | `src/key-art.ts` | Dessine les faces de touche **à la volée**, en SVG : jauge qui se remplit, goutte à la vraie couleur, disque teinté à la vraie température. N'importe rien — donc testable sans ampoule ni Stream Deck. |
 | `src/color-format.ts` | Conversions hexadécimal ↔ TSV et rotation de teinte. Vit côté présentation : l'hexadécimal est une convention d'interface web, pas un langage d'ampoule. |
 | `src/bulbs.ts` | **Registre des ampoules**, dans les réglages globaux du plugin. Une ampoule y est déclarée une fois ; `coordinatesFor()` est le point d'entrée unique des actions. |
@@ -267,9 +277,14 @@ parfaitement en TCP. Symptôme trompeur, cause bête.
 
 ## Ce qui n'existe pas encore
 
-Quatre actions couvrent l'allumage, l'intensité, la couleur et le blanc réglable. Restent hors du
-périmètre : les **scènes** de l'ampoule (datapoint 25, non exploité), le pilotage de **plusieurs
-ampoules par une même touche**, et tout **adaptateur autre que Tuya**.
+Cinq actions couvrent l'allumage, l'intensité, la couleur, le blanc réglable et les scénarios
+animés. Restent hors du périmètre : les **scènes internes de l'ampoule** (datapoint 25, non
+exploité — nos scénarios sont pilotés depuis le plugin, image par image) et tout **adaptateur autre
+que Tuya**.
+
+Le pilotage de plusieurs ampoules par une même touche n'existe que pour les scénarios, et se limite
+à deux rôles. Une animation à trois lampes demanderait de repenser la façon dont une touche désigne
+ses cibles, pas seulement d'élargir une boucle.
 
 Une contrainte matérielle à connaître plutôt qu'un manque : couleur et température **s'excluent
 mutuellement**. Écrire une température fait quitter le mode couleur, et c'est l'ampoule qui
