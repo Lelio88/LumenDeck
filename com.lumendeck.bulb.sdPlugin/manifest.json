@@ -2,7 +2,7 @@
   "Name": "LumenDeck",
   "Author": "Lelio Buton",
   "URL": "https://github.com/Lelio88/LumenDeck",
-  "Version": "0.12.0.0",
+  "Version": "0.13.0.0",
   "Description": "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.",
   "Category": "LumenDeck",
   "CategoryIcon": "imgs/plugin/category-icon",
