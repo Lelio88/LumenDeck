@@ -20,8 +20,11 @@ import TuyAPI from 'tuyapi';
 
 import { discover } from '../discovery.ts';
 
-const VAULT = process.env.LUMENDECK_VAULT
-  ?? 'C:/Users/buton/Documents/Projets/.lumendeck-secrets/tuya-devices.csv';
+// Coffre par defaut : le dossier `.lumendeck-secrets/` a cote du depot, comme
+// le veut la convention du projet. Chemin RELATIF, donc valable pour n'importe
+// qui : ces deux outils se lancent par `npm run`, depuis la racine du depot.
+// `LUMENDECK_VAULT` surcharge pour un rangement different.
+const VAULT = process.env.LUMENDECK_VAULT ?? '../.lumendeck-secrets/tuya-devices.csv';
 
 /** Analyse CSV minimale, suffisante pour l'inventaire (gere les champs quotes). */
 function parseCsv(text) {

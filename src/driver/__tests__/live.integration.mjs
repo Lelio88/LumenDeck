@@ -17,10 +17,11 @@ import { TuyaLanDriver } from '../tuya.ts';
 import { hexToHsv } from '../../color-format.ts';
 import { discover } from '../../discovery.ts';
 
-// Rien de personnel en dur : le coffre et l'adresse se surchargent par
-// l'environnement, et a defaut l'ampoule est cherchee sur le reseau.
-const VAULT = process.env.LUMENDECK_VAULT
-  ?? 'C:/Users/buton/Documents/Projets/.lumendeck-secrets/tuya-devices.csv';
+// Coffre par defaut : le dossier `.lumendeck-secrets/` a cote du depot, comme
+// le veut la convention du projet. Chemin RELATIF, donc valable pour n'importe
+// qui : ces deux outils se lancent par `npm run`, depuis la racine du depot.
+// `LUMENDECK_VAULT` surcharge pour un rangement different.
+const VAULT = process.env.LUMENDECK_VAULT ?? '../.lumendeck-secrets/tuya-devices.csv';
 
 /** Trouve l'adresse d'une ampoule en ecoutant ses annonces. */
 async function locate(id) {
