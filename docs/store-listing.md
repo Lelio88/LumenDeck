@@ -4,7 +4,8 @@ Contenu prêt à coller dans le portail Maker, dans les huit langues que Stream 
 affiche, plus l'italien.
 
 **Une décision de fond assumée dans tous ces textes** : la contrainte de la clé locale
-Tuya est annoncée **dès le début**, pas reléguée en bas de page. La cacher produirait
+Tuya est annoncée **dès le début**, pas reléguée en bas de page. Elle est décrite pour ce
+qu'elle est — cinq minutes, un QR code, aucun compte développeur — et non dramatisée. La cacher produirait
 exactement ce qu'on veut éviter — des installations enthousiastes, un panneau qui réclame
 une clé introuvable, et des avis à une étoile. Mieux vaut perdre l'utilisateur qui n'ira
 pas au bout que le décevoir après installation.
@@ -34,10 +35,10 @@ dials sweep continuously and the screen shows the value.
 
 **Before you install**
 
-LumenDeck speaks to Tuya bulbs directly, which requires each bulb's *local key*. Getting
-it means creating a free Tuya developer account and following a short procedure — count
-twenty minutes the first time. The README walks through it step by step. If that sounds
-like too much, this plugin is not for you, and that is fine.
+LumenDeck speaks to Tuya bulbs directly, which requires each bulb's *local key*. Getting it
+takes about five minutes per bulb: you scan a QR code from the Calex or Smart Life app with a
+small open-source tool. **No Tuya developer account is needed** — but you do need Python on
+your computer, and a few commands in a terminal. The README walks through it step by step.
 
 **Works with**
 Any bulb that pairs in the Smart Life or Tuya Smart app: Calex, Lidl (Livarno Home,
@@ -69,9 +70,10 @@ Stream Deck +, les molettes balaient en continu et l'écran affiche la valeur.
 **Avant d'installer**
 
 LumenDeck parle directement aux ampoules Tuya, ce qui exige la *clé locale* de chacune.
-L'obtenir suppose de créer un compte développeur Tuya gratuit et de suivre une courte
-procédure — comptez vingt minutes la première fois. Le README la détaille pas à pas. Si
-cela vous rebute, ce plugin n'est pas pour vous, et c'est très bien ainsi.
+L'obtenir prend environ cinq minutes par ampoule : un QR code à scanner depuis l'application
+Calex ou Smart Life, avec un petit outil libre. **Aucun compte développeur Tuya n'est
+nécessaire** — mais il vous faudra Python et quelques commandes dans un terminal. Le README
+détaille la procédure pas à pas.
 
 **Compatible avec**
 Toute ampoule qui se configure dans l'application Smart Life ou Tuya Smart : Calex, Lidl
@@ -103,10 +105,10 @@ Stream Deck + laufen die Drehknöpfe stufenlos und das Display zeigt den Wert.
 **Vor der Installation**
 
 LumenDeck spricht direkt mit Tuya-Lampen, wofür der *lokale Schlüssel* jeder Lampe nötig
-ist. Ihn zu bekommen bedeutet, ein kostenloses Tuya-Entwicklerkonto anzulegen und einer
-kurzen Anleitung zu folgen — rechnen Sie beim ersten Mal mit zwanzig Minuten. Die README
-führt Schritt für Schritt hindurch. Wenn Ihnen das zu viel ist, ist dieses Plugin nichts
-für Sie, und das ist völlig in Ordnung.
+ist. Ihn zu bekommen dauert etwa fünf Minuten pro Lampe: Sie scannen einen QR-Code aus der Calex-
+oder Smart-Life-App mit einem kleinen Open-Source-Werkzeug. **Ein Tuya-Entwicklerkonto ist
+nicht nötig** — wohl aber Python auf Ihrem Rechner und ein paar Befehle im Terminal. Die
+README führt Schritt für Schritt hindurch.
 
 **Kompatibel mit**
 Jede Lampe, die sich in der App Smart Life oder Tuya Smart einrichten lässt: Calex, Lidl
@@ -138,9 +140,10 @@ Stream Deck +, los diales recorren de forma continua y la pantalla muestra el va
 **Antes de instalar**
 
 LumenDeck habla directamente con las bombillas Tuya, lo que exige la *clave local* de cada
-una. Obtenerla implica crear una cuenta de desarrollador Tuya gratuita y seguir un
-procedimiento breve — cuenta veinte minutos la primera vez. El README lo explica paso a
-paso. Si te parece demasiado, este plugin no es para ti, y no pasa nada.
+una. Obtenerla lleva unos cinco minutos por bombilla: escaneas un código QR desde la app Calex o
+Smart Life con una pequeña herramienta libre. **No hace falta cuenta de desarrollador Tuya**,
+pero sí Python en tu ordenador y unos cuantos comandos en un terminal. El README lo explica
+paso a paso.
 
 **Compatible con**
 Cualquier bombilla que se configure en la app Smart Life o Tuya Smart: Calex, Lidl
@@ -172,9 +175,9 @@ Stream Deck +, le manopole scorrono in modo continuo e lo schermo mostra il valo
 **Prima di installare**
 
 LumenDeck parla direttamente alle lampadine Tuya, il che richiede la *chiave locale* di
-ciascuna. Ottenerla significa creare un account sviluppatore Tuya gratuito e seguire una
-breve procedura — conta venti minuti la prima volta. Il README la spiega passo passo. Se ti
-sembra troppo, questo plugin non fa per te, e va benissimo così.
+ciascuna. Ottenerla richiede circa cinque minuti per lampadina: si scansiona un codice QR dall'app Calex
+o Smart Life con un piccolo strumento libero. **Non serve un account sviluppatore Tuya**, ma
+servono Python sul computer e qualche comando in un terminale. Il README la spiega passo passo.
 
 **Compatibile con**
 Qualsiasi lampadina configurabile nell'app Smart Life o Tuya Smart: Calex, Lidl (Livarno
@@ -204,10 +207,9 @@ LumenDeck はキーを照明スイッチに変えます。押せば電球が約 
 
 **インストールの前に**
 
-LumenDeck は Tuya 電球と直接やり取りするため、各電球の「ローカルキー」が必要です。取得には
-無料の Tuya 開発者アカウントを作り、短い手順を踏む必要があります。初回は 20 分ほど見てくださ
-い。README に手順を一つずつ記載しています。それが煩わしければ、このプラグインはあなた向けで
-はありません。それで構いません。
+LumenDeck は Tuya 電球と直接やり取りするため、各電球の「ローカルキー」が必要です。取得は電球ごとに 5 分ほどです。Calex または Smart Life アプリで QR コードを読み取り、小さな
+オープンソースのツールを使います。**Tuya の開発者アカウントは不要です**。ただしパソコンに
+Python が必要で、ターミナルでいくつかコマンドを打ちます。README に手順を一つずつ記載しています。
 
 **対応機器**
 Smart Life または Tuya Smart アプリで設定できる電球すべて。Calex、Lidl（Livarno Home、
@@ -236,10 +238,9 @@ LumenDeck는 키를 조명 스위치로 바꿉니다. 누르면 전구가 약 20
 
 **설치 전에**
 
-LumenDeck는 Tuya 전구와 직접 통신하므로 전구마다 '로컬 키'가 필요합니다. 이를 얻으려면 무료
-Tuya 개발자 계정을 만들고 짧은 절차를 거쳐야 합니다. 처음에는 20분쯤 걸립니다. README에 단계별
-로 정리해 두었습니다. 번거롭게 느껴진다면 이 플러그인은 당신에게 맞지 않습니다. 그래도
-괜찮습니다.
+LumenDeck는 Tuya 전구와 직접 통신하므로 전구마다 '로컬 키'가 필요합니다. 전구당 5분쯤 걸립니다. Calex 또는 Smart Life 앱에서 QR 코드를 스캔하고, 작은 오픈소스 도구를
+사용합니다. **Tuya 개발자 계정은 필요 없습니다.** 다만 컴퓨터에 Python이 있어야 하고 터미널에서
+명령을 몇 줄 실행합니다. README에 단계별로 정리해 두었습니다.
 
 **호환 기기**
 Smart Life 또는 Tuya Smart 앱에서 설정되는 모든 전구: Calex, Lidl(Livarno Home,
@@ -266,9 +267,8 @@ LumenDeck 把一个按键变成灯的开关。按下去，灯泡在约二十毫�
 
 **安装之前**
 
-LumenDeck 直接与 Tuya 灯泡通信，因此需要每只灯泡的「本地密钥」。获取它需要注册一个免费的
-Tuya 开发者账号并完成一段简短流程——第一次大约需要二十分钟。README 里有逐步说明。如果你觉得
-太麻烦，这个插件就不适合你，这完全没问题。
+LumenDeck 直接与 Tuya 灯泡通信，因此需要每只灯泡的「本地密钥」。获取它每只灯泡约需五分钟：用一个小型开源工具，从 Calex 或 Smart Life 应用中扫描二维码即可。
+**无需 Tuya 开发者账号**，但需要电脑上装有 Python，并在终端里执行几条命令。README 里有逐步说明。
 
 **兼容设备**
 任何能在 Smart Life 或 Tuya Smart 应用中配置的灯泡：Calex、Lidl（Livarno Home、
@@ -295,9 +295,8 @@ LumenDeck 把一個按鍵變成燈的開關。按下去，燈泡在約二十毫�
 
 **安裝之前**
 
-LumenDeck 直接與 Tuya 燈泡通訊，因此需要每顆燈泡的「本機金鑰」。取得它需要註冊一個免費的
-Tuya 開發者帳號並完成一段簡短流程——第一次大約需要二十分鐘。README 裡有逐步說明。如果你覺得
-太麻煩，這個外掛就不適合你，這完全沒問題。
+LumenDeck 直接與 Tuya 燈泡通訊，因此需要每顆燈泡的「本機金鑰」。取得它每顆燈泡約需五分鐘：用一個小型開源工具，從 Calex 或 Smart Life 應用程式掃描 QR code 即可。
+**無需 Tuya 開發者帳號**，但需要電腦上裝有 Python，並在終端機執行幾條指令。README 裡有逐步說明。
 
 **相容裝置**
 任何能在 Smart Life 或 Tuya Smart 應用程式中設定的燈泡：Calex、Lidl（Livarno Home、
