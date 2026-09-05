@@ -19,6 +19,7 @@ import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 
 import { hexToHsv, hsvToHex, rotateHue } from '../color-format.js';
+import { t } from '../i18n.js';
 import { asImage, colorKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import type { Hsv } from '../driver/types.js';
@@ -67,11 +68,11 @@ function configured(settings: ColorSettings): Hsv {
 /** Nomme grossierement une teinte, pour que la touche dise autre chose qu'un nombre. */
 function hueName(h: number): string {
   const names = [
-    [15, 'Rouge'], [45, 'Orange'], [70, 'Jaune'], [160, 'Vert'],
-    [200, 'Cyan'], [255, 'Bleu'], [290, 'Violet'], [340, 'Rose'], [361, 'Rouge'],
+    [15, 'hue.red'], [45, 'hue.orange'], [70, 'hue.yellow'], [160, 'hue.green'],
+    [200, 'hue.cyan'], [255, 'hue.blue'], [290, 'hue.violet'], [340, 'hue.pink'], [361, 'hue.red'],
   ] as const;
-  for (const [limit, name] of names) if (h < limit) return name;
-  return 'Rouge';
+  for (const [limit, key] of names) if (h < limit) return t(key);
+  return t('hue.red');
 }
 
 @action({ UUID: 'com.lumendeck.bulb.color' })
@@ -79,7 +80,7 @@ export class Color extends SingletonAction<ColorSettings> {
   override async onWillAppear(ev: WillAppearEvent<ColorSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const coords = await coordinatesFor(ev.payload.settings);
-    if (!coords) { await reset(target, 'A regler'); return; }
+    if (!coords) { await reset(target, t('key.toSet')); return; }
     try {
       // On LIT l'ampoule plutot que de la supposer allumee : elle a pu etre
       // eteinte depuis l'application Calex, et une touche qui ment est pire
@@ -92,10 +93,10 @@ export class Color extends SingletonAction<ColorSettings> {
       // Une ampoule blanche seule n'expose pas le datapoint de couleur. Le dire
       // vaut mieux que d'echouer en silence : sans ce mot, l'utilisateur conclut
       // que le plugin est casse alors que c'est son materiel qui ne sait pas.
-      if (!snapshot.supported) { await reset(target, 'Sans couleur'); return; }
+      if (!snapshot.supported) { await reset(target, t('key.noColour')); return; }
       await paint(target, snapshot.state.color ?? configured(ev.payload.settings), snapshot.state.on);
     } catch {
-      await reset(target, 'Hors ligne');
+      await reset(target, t('key.offline'));
     }
   }
 
@@ -110,7 +111,7 @@ export class Color extends SingletonAction<ColorSettings> {
   override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<ColorSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    if (!(await coordinatesFor(settings))) { await reset(target, 'A regler'); return; }
+    if (!(await coordinatesFor(settings))) { await reset(target, t('key.toSet')); return; }
     await paint(target, configured(settings), true);
   }
 
@@ -118,7 +119,7 @@ export class Color extends SingletonAction<ColorSettings> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
     const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, 'A regler'); return; }
+    if (!coords) { await reset(target, t('key.toSet')); return; }
 
     const wanted = configured(settings);
     try {
@@ -130,7 +131,7 @@ export class Color extends SingletonAction<ColorSettings> {
         await bulb.setColor(wanted);
         return true;
       });
-      if (!supported) { await reset(target, 'Sans couleur'); return; }
+      if (!supported) { await reset(target, t('key.noColour')); return; }
       await paint(target, wanted);
     } catch {
       await target.showAlert();
@@ -141,7 +142,7 @@ export class Color extends SingletonAction<ColorSettings> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
     const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, 'A regler'); return; }
+    if (!coords) { await reset(target, t('key.toSet')); return; }
 
     const step = Math.abs(settings.step ?? DEFAULT_STEP);
     try {
@@ -179,8 +180,8 @@ async function paint(target: Paintable, color: Hsv, on: boolean = true): Promise
   await target.setTitle('');
   if (typeof target.setFeedback === 'function') {
     await target.setFeedback({
-      title: 'Couleur',
-      value: on ? hueName(color.h) : 'Eteinte',
+      title: t('dial.colour'),
+      value: on ? hueName(color.h) : t('key.off'),
       indicator: Math.round((color.h / 360) * 100),
     });
   }

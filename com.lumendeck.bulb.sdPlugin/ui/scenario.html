@@ -1,52 +1,39 @@
 <!DOCTYPE html>
 <html>
 
-<head lang="fr">
-    <title>Reglages du scenario</title>
+<head lang="en">
+    <title>Scenario settings</title>
     <meta charset="utf-8" />
     <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
 </head>
 
 <body>
-    <sdpi-item label="Ampoule">
-        <sdpi-select setting="deviceId" datasource="getBulbs" placeholder="Choisissez une ampoule"></sdpi-select>
+    <sdpi-item label="Bulb" data-i18n-label="pi.bulb">
+        <sdpi-select setting="deviceId" datasource="getBulbs" placeholder="Choose a bulb"
+                     data-i18n-placeholder="pi.bulbPlaceholder"></sdpi-select>
     </sdpi-item>
 
-    <sdpi-item label="Scenario">
-        <sdpi-select setting="scenarioId" datasource="getScenarios" placeholder="Choisissez un scenario"></sdpi-select>
+    <sdpi-item label="Scenario" data-i18n-label="pi.scenario">
+        <sdpi-select setting="scenarioId" datasource="getScenarios" placeholder="Choose a scenario"
+                     data-i18n-placeholder="pi.scenarioPlaceholder"></sdpi-select>
     </sdpi-item>
 
-    <sdpi-item label="Seconde ampoule">
-        <sdpi-select setting="deviceId2" datasource="getBulbs" placeholder="Aucune (facultatif)"></sdpi-select>
+    <sdpi-item label="Second bulb" data-i18n-label="pi.secondBulb">
+        <sdpi-select setting="deviceId2" datasource="getBulbs" placeholder="None (optional)"
+                     data-i18n-placeholder="pi.secondBulbPlaceholder"></sdpi-select>
     </sdpi-item>
 
     <details>
-        <summary>Ajouter ou modifier une ampoule</summary>
+        <summary data-i18n="pi.manage">Add or edit a bulb</summary>
         <div id="bulb-manager"></div>
     </details>
 
     <details>
-        <summary>Comment ca marche ?</summary>
-        <p>
-            Un appui lance le scenario, un second l'arrete. La lampe revient alors
-            exactement dans l'etat ou elle etait avant : meme couleur, meme intensite,
-            allumee ou eteinte.
-        </p>
-        <p>
-            La seconde ampoule est facultative. Seul le <strong>Gyrophare</strong> sait
-            aujourd'hui en exploiter deux, pour qu'elles se repondent en rouge et bleu.
-            Avec une seule, il alterne les deux couleurs sur la meme lampe.
-        </p>
-        <p>
-            <strong>Alerte</strong> et <strong>Lever de soleil</strong> s'arretent tout
-            seuls, apres trois eclats pour le premier et cinq minutes pour le second.
-            Les autres tournent jusqu'a ce que vous appuyiez de nouveau.
-        </p>
-        <p>
-            Les animations sont volontairement plafonnees a deux alternances par
-            seconde : au-dela, un clignotement peut declencher une crise chez une
-            personne photosensible.
-        </p>
+        <summary data-i18n="pi.scenarioHelp.title">How does it work?</summary>
+        <p data-i18n="pi.scenarioHelp.toggle">One press starts the scenario, a second stops it. The lamp then returns exactly to the state it was in: same colour, same brightness, on or off.</p>
+        <p data-i18n="pi.scenarioHelp.second">The second bulb is optional. Only Police lights uses two today, so they answer each other in red and blue. With one, it alternates both colours on the same lamp.</p>
+        <p data-i18n="pi.scenarioHelp.oneShot">Alert and Sunrise stop on their own, after three flashes and five minutes respectively. The others run until you press again.</p>
+        <p data-i18n="pi.scenarioHelp.safety">Animations are deliberately capped at two alternations per second: beyond that, flashing light can trigger a seizure in a photosensitive person.</p>
     </details>
 
     <script src="bulbs.js"></script>

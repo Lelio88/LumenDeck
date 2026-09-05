@@ -14,6 +14,10 @@
  * fond plein quasi noir, glyphe ambre remonte, valeur chiffree en bas. Les deux
  * doivent se ressembler, puisque l'une remplace l'autre a l'ecran.
  *
+ * Corollaire du meme principe : les MOTS arrivent deja traduits, en parametre.
+ * Un module de dessin ne consulte pas de dictionnaire — sinon il faudrait le
+ * charger pour tester un trace.
+ *
  * Invariant : ces fonctions sont PURES et n'importent RIEN. Elles ne lisent
  * rien, n'ecrivent rien, ne dependent d'aucun etat — ce qui les rend testables
  * sans ampoule ni Stream Deck, et c'est bien la moitie de leur interet.
@@ -116,7 +120,7 @@ function caption(text: string, color: string = TEXT): string {
  * l'information, et deux indicateurs pour une seule valeur se contredisent des
  * qu'ils se desynchronisent.
  */
-export function brightnessKey(percent: number, on: boolean): string {
+export function brightnessKey(percent: number, on: boolean, offLabel: string): string {
   const pct = clamp(Math.round(percent), 0, 100);
   const color = on ? AMBER : DIM;
   const START = 140;
@@ -130,7 +134,7 @@ export function brightnessKey(percent: number, on: boolean): string {
     + (pct > 0
       ? `<path d="${filled}" fill="none" stroke="${color}" stroke-width="13" stroke-linecap="round"/>`
       : '')
-    + caption(on ? pct + ' %' : 'Eteinte', on ? TEXT : DIM),
+    + caption(on ? pct + ' %' : offLabel, on ? TEXT : DIM),
   );
 }
 
@@ -161,7 +165,7 @@ export function colorKey(hex: string, on: boolean): string {
  * lieu de la lire. Le nombre reste, parce que 3800 et 4200 K se ressemblent
  * beaucoup a l'oeil alors qu'ils ne se choisissent pas au hasard.
  */
-export function temperatureKey(kelvin: number, on: boolean): string {
+export function temperatureKey(kelvin: number, on: boolean, offLabel: string): string {
   const k = clamp(Math.round(kelvin), 2700, 6500);
   const tint = on ? kelvinToRgb(k) : DIM;
   const ring = on ? AMBER : DIM;
@@ -169,7 +173,7 @@ export function temperatureKey(kelvin: number, on: boolean): string {
   return frame(
     `<circle cx="72" cy="58" r="38" fill="none" stroke="${ring}" stroke-width="10"/>`
     + `<path d="M 72 25 A 33 33 0 0 0 72 91 Z" fill="${tint}"/>`
-    + caption(on ? k + ' K' : 'Eteinte', on ? TEXT : DIM),
+    + caption(on ? k + ' K' : offLabel, on ? TEXT : DIM),
   );
 }
 

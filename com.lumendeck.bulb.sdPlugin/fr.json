@@ -1,0 +1,150 @@
+{
+  "Localization": {
+    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": "Pilotage local d'ampoules Tuya (compatibles Calex Smart) : allumage, intensite, couleur et blanc reglable, sans cloud, en une vingtaine de millisecondes.",
+    "Power": "Allumage",
+    "Brightness": "Intensite",
+    "Colour": "Couleur",
+    "White": "Blanc",
+    "Scenario": "Scenario",
+    "Turns the bulb on or off.": "Allume ou eteint l'ampoule.",
+    "Adjusts brightness; the dial sweeps continuously.": "Regle l'intensite ; la molette balaie en continu.",
+    "Applies a colour; the dial rotates the hue.": "Applique une couleur ; la molette fait tourner la teinte.",
+    "Sets the white balance, from warm to cool.": "Regle le blanc, du chaud au froid.",
+    "Plays a light animation: blink, police lights, candle, storm...": "Joue une animation lumineuse : clignotement, gyrophare, bougie, orage...",
+    "Turn on / off": "Allumer / eteindre",
+    "Adjust brightness": "Regler l'intensite",
+    "Rotate the hue": "Faire tourner la teinte",
+    "Adjust the white": "Regler le blanc",
+    "Start / stop the scenario": "Lancer / arreter le scenario",
+    "key": {
+      "toSet": "A regler",
+      "offline": "Hors ligne",
+      "on": "Allumee",
+      "off": "Eteinte",
+      "noColour": "Sans couleur",
+      "noWhite": "Sans blanc"
+    },
+    "warmth": {
+      "warm": "Chaud",
+      "neutral": "Neutre",
+      "cool": "Froid",
+      "daylight": "Lumiere du jour"
+    },
+    "dial": {
+      "brightness": "Intensite",
+      "colour": "Couleur",
+      "white": "Blanc",
+      "scenario": "Scenario"
+    },
+    "hue": {
+      "red": "Rouge",
+      "orange": "Orange",
+      "yellow": "Jaune",
+      "green": "Vert",
+      "cyan": "Cyan",
+      "blue": "Bleu",
+      "violet": "Violet",
+      "pink": "Rose"
+    },
+    "scenario": {
+      "clignotement": {
+        "name": "Clignotement",
+        "description": "L'ampoule s'allume et s'eteint sans fin. Utile comme minuteur visible de loin."
+      },
+      "gyrophare": {
+        "name": "Gyrophare",
+        "description": "Rouge et bleu alternes, facon voiture de police. Avec deux ampoules, elles se repondent."
+      },
+      "respiration": {
+        "name": "Respiration",
+        "description": "L'intensite monte et descend lentement, en gardant la couleur en place. Calme, pour travailler."
+      },
+      "bougie": {
+        "name": "Bougie",
+        "description": "Une flamme chaude qui vacille, jamais deux fois pareil. Le meilleur rendu de la serie."
+      },
+      "orage": {
+        "name": "Orage",
+        "description": "Une penombre bleutee, dechiree par des eclairs blancs a intervalles irreguliers."
+      },
+      "arc-en-ciel": {
+        "name": "Arc-en-ciel",
+        "description": "La teinte tourne doucement sur tout le cercle chromatique."
+      },
+      "alerte": {
+        "name": "Alerte",
+        "description": "Trois eclats rouges, puis la lampe revient exactement comme elle etait. Pour signaler un evenement."
+      },
+      "lever-de-soleil": {
+        "name": "Lever de soleil",
+        "description": "Cinq minutes d'une braise sombre jusqu'au plein jour. A lancer pour se reveiller en douceur."
+      }
+    },
+    "pi": {
+      "bulb": "Ampoule",
+      "bulbPlaceholder": "Choisissez une ampoule",
+      "secondBulb": "Seconde ampoule",
+      "secondBulbPlaceholder": "Aucune (facultatif)",
+      "scenario": "Scenario",
+      "scenarioPlaceholder": "Choisissez un scenario",
+      "colour": "Couleur",
+      "step": "Pas",
+      "hueStep": "Pas de teinte",
+      "dialStep": "Pas de molette",
+      "temperature": "Temperature",
+      "manage": "Ajouter ou modifier une ampoule",
+      "shared": {
+        "title": "Une ampoule, plusieurs touches",
+        "body": "Les ampoules se declarent une seule fois pour tout le plugin. Toutes vos touches piochent dans la meme liste : inutile de ressaisir la cle a chaque fois, et une cle changee ne se corrige qu'a un seul endroit."
+      },
+      "stepHelp": {
+        "title": "A quoi sert le pas ?",
+        "key": "Sur une touche, chaque appui applique ce pas. Une valeur negative fait une touche « baisser » : posez-en deux cote a cote, l'une a +10 et l'autre a -10.",
+        "dial": "Sur une molette, le pas est la valeur d'un cran ; son signe est ignore, c'est le sens de rotation qui decide."
+      },
+      "tempHelp": {
+        "title": "Reperes de temperature",
+        "scale": "2700 K correspond a une ampoule a incandescence, tres chaude. 4000 K est un blanc neutre. 6500 K est la lumiere du jour, froide et bleutee.",
+        "mode": "Appliquer une temperature fait passer l'ampoule en mode blanc : elle quitte donc la couleur. C'est l'ampoule qui l'impose, pas le plugin."
+      },
+      "colourHelp": {
+        "title": "Comment se comportent touche et molette ?",
+        "key": "Sur une touche, un appui allume l'ampoule et applique exactement la couleur choisie ci-dessus. Posez-en plusieurs pour vos ambiances favorites.",
+        "dial": "Sur une molette, la rotation fait tourner la teinte en conservant l'intensite actuelle de l'ampoule. Un appui sur la molette allume ou eteint."
+      },
+      "scenarioHelp": {
+        "title": "Comment ca marche ?",
+        "toggle": "Un appui lance le scenario, un second l'arrete. La lampe revient alors exactement dans l'etat ou elle etait : meme couleur, meme intensite, allumee ou eteinte.",
+        "second": "La seconde ampoule est facultative. Seul le Gyrophare sait aujourd'hui en exploiter deux, pour qu'elles se repondent en rouge et bleu. Avec une seule, il alterne les deux couleurs sur la meme lampe.",
+        "oneShot": "Alerte et Lever de soleil s'arretent tout seuls, apres trois eclats pour le premier et cinq minutes pour le second. Les autres tournent jusqu'a ce que vous appuyiez de nouveau.",
+        "safety": "Les animations sont volontairement plafonnees a deux alternances par seconde : au-dela, un clignotement peut declencher une crise chez une personne photosensible."
+      },
+      "scan": {
+        "note": "La recherche ecoute d'abord les annonces que vos ampoules diffusent, puis, si rien n'arrive, frappe a chaque adresse du reseau. Comptez une vingtaine de secondes dans le pire cas. Elle trouve adresse et identifiant, mais jamais la cle : celle-ci reste a coller une fois par ampoule.",
+        "button": "Chercher sur le reseau",
+        "running": "Recherche en cours...",
+        "none": "Aucun appareil trouve. Verifiez que l'ampoule est alimentee et sur le meme reseau que cet ordinateur.",
+        "found": "appareil(s) trouve(s)",
+        "sweep": " (trouve par balayage du reseau : vos ampoules ne diffusent pas jusqu'ici, c'est frequent entre un ordinateur filaire et une ampoule en wifi)"
+      },
+      "field": {
+        "id": "Identifiant de l'ampoule",
+        "name": "Nom (facultatif) — ex. Bureau",
+        "key": "Cle locale",
+        "keyKept": "Cle inchangee si vide"
+      },
+      "found": {
+        "already": "deja enregistree",
+        "device": "Appareil Tuya a",
+        "noId": "identifiant inconnu"
+      },
+      "save": {
+        "button": "Enregistrer",
+        "missingId": "Il manque l'identifiant de cette ampoule.",
+        "ok": "Ampoule enregistree. Choisissez-la dans la liste ci-dessus.",
+        "failed": "Echec de l'enregistrement.",
+        "needKey": "Cette ampoule a besoin de sa cle locale pour etre pilotable."
+      }
+    }
+  }
+}

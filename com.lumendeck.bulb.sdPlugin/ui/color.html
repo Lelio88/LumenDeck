@@ -1,40 +1,35 @@
 <!DOCTYPE html>
 <html>
 
-<head lang="fr">
-    <title>Reglages de la couleur</title>
+<head lang="en">
+    <title>Colour settings</title>
     <meta charset="utf-8" />
     <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
 </head>
 
 <body>
-    <sdpi-item label="Ampoule">
-        <sdpi-select setting="deviceId" datasource="getBulbs" placeholder="Choisissez une ampoule"></sdpi-select>
+    <sdpi-item label="Bulb" data-i18n-label="pi.bulb">
+        <sdpi-select setting="deviceId" datasource="getBulbs" placeholder="Choose a bulb"
+                     data-i18n-placeholder="pi.bulbPlaceholder"></sdpi-select>
     </sdpi-item>
 
-    <sdpi-item label="Couleur">
+    <sdpi-item label="Colour" data-i18n-label="pi.colour">
         <sdpi-color setting="color" default="#ff8800"></sdpi-color>
     </sdpi-item>
 
-    <sdpi-item label="Pas de teinte">
+    <sdpi-item label="Hue step" data-i18n-label="pi.hueStep">
         <sdpi-range setting="step" min="5" max="60" step="5" default="15" showlabels></sdpi-range>
     </sdpi-item>
 
     <details>
-        <summary>Ajouter ou modifier une ampoule</summary>
+        <summary data-i18n="pi.manage">Add or edit a bulb</summary>
         <div id="bulb-manager"></div>
     </details>
 
     <details>
-        <summary>Comment se comportent touche et molette ?</summary>
-        <p>
-            Sur une touche, un appui allume l'ampoule et applique exactement la couleur choisie
-            ci-dessus. Posez-en plusieurs pour vos ambiances favorites.
-        </p>
-        <p>
-            Sur une molette, la rotation fait tourner la teinte en conservant l'intensite
-            actuelle de l'ampoule. Un appui sur la molette allume ou eteint.
-        </p>
+        <summary data-i18n="pi.colourHelp.title">How do key and dial behave?</summary>
+        <p data-i18n="pi.colourHelp.key">On a key, one press turns the bulb on and applies exactly the colour chosen above. Place several for your favourite moods.</p>
+        <p data-i18n="pi.colourHelp.dial">On a dial, rotating turns the hue while keeping the bulb's current brightness. Pressing the dial toggles power.</p>
     </details>
 
     <script src="bulbs.js"></script>

@@ -15,15 +15,13 @@ centaines via l'API cloud Tuya — c'est cette réactivité qui justifie le proj
 du protocole ; un seul adaptateur existe aujourd'hui (Tuya LAN), d'autres (Zigbee, Matter) se
 brancheraient sans toucher aux actions.
 
-**Détails complets** (diagramme des couches, flux d'un appui, catalogue des datapoints, règles de
-couplage, anti-patterns, stratégie de test) : voir [`docs/architecture.md`](./docs/architecture.md).
+**Détails complets** (couches, flux, datapoints, couplage, compatibilité, langues, tests) : voir [`docs/architecture.md`](./docs/architecture.md).
 
 Topologie rapide :
 - `src/driver/` — contrat `LightDriver`, adaptateur Tuya, réservoir de connexions
 - `src/actions/` — une classe par action Stream Deck ; ne connaît que le contrat
 - `src/scenarios/` — catalogue d'animations en données pures, et moteur qui les déroule
 - `src/plugin.ts` — composition : enregistre les actions, ouvre le dialogue Stream Deck
-- `src/settings.ts` — réglages persistés par touche (identifiant, clé locale, adresse)
 - `com.lumendeck.bulb.sdPlugin/` — manifeste, images, panneaux de configuration (versionné)
 - `tools/` — génération des icônes ; `src/tools/` — sondes de diagnostic (ont besoin des deps)
 
@@ -51,7 +49,7 @@ Topologie rapide :
 5. **L'ampoule est seule maîtresse de son état.** Après une écriture, relire plutôt que déduire :
    elle peut avoir été changée depuis l'application Calex ou un assistant vocal.
 6. **Les secrets vivent dans `../.lumendeck-secrets/`**, jamais dans le dépôt.
-7. **Les PNG ne s'éditent pas à la main** — ils sont produits par `tools/make_icons.py`.
+7. **PNG et `<langue>.json` sont générés** — par `tools/make_icons.py` et `tools/make_locales.py`, jamais à la main.
 
 ## V. Flux de Travail (Explore → Plan → Code → Verify)
 
@@ -62,10 +60,9 @@ Topologie rapide :
 5. **Vérification** — `npm test && npm run build && npx streamdeck validate com.lumendeck.bulb.sdPlugin`
    puis, si le pilote a changé, `npm run test:live` sur une ampoule réelle
 
-**Auto-documentation des packages (règle transverse)** — tout nouveau module publie en tête un
-commentaire-doc couvrant : ce qu'il fait en une phrase, les choix non-évidents **et leur motivation**,
-les invariants à préserver, un exemple d'usage canonique si l'API n'est pas évidente. C'est ce qui
-permet de reconstruire la rationale sans dépendre de docs externes périssables.
+**Auto-documentation (règle transverse)** — tout nouveau module publie en tête un commentaire-doc :
+ce qu'il fait en une phrase, les choix non-évidents **et leur motivation**, les invariants à préserver,
+un exemple d'usage si l'API n'est pas évidente. La rationale doit survivre au refactor.
 
 ## VI. Commandes de Développement
 
@@ -75,7 +72,8 @@ npm run watch          # reconstruit et redémarre le plugin à chaque sauvegard
 npm test               # tests unitaires purs (aucune ampoule requise)
 npm run test:live      # test d'intégration sur ampoule réelle, restaure son état
 npm run probe          # relève les datapoints d'une ampoule (diagnostic)
-py -3.11 tools/make_icons.py                        # régénère les 12 icônes
+py -3.11 tools/make_icons.py                        # régénère les icônes
+py -3.11 tools/make_locales.py                      # régénère les 5 dictionnaires
 npx streamdeck validate com.lumendeck.bulb.sdPlugin # contrôle manifeste + images
 npx streamdeck link com.lumendeck.bulb.sdPlugin     # installe dans Stream Deck
 npx streamdeck restart com.lumendeck.bulb           # recharge après build
@@ -92,6 +90,7 @@ npx streamdeck restart com.lumendeck.bulb           # recharge après build
 | Nouveau réglage d'action | `src/settings.ts` + le panneau `ui/*.html` correspondant |
 | Nouvel adaptateur (Zigbee, Matter) | Section « Adaptateurs » de `docs/architecture.md` |
 | Retouche d'icône | `tools/make_icons.py` — **jamais** le PNG |
+| Nouveau texte affiché à l'utilisateur | `tools/make_locales.py` — **jamais** un `<langue>.json` |
 | Nouvel anti-pattern découvert | Section « Anti-patterns » de `docs/architecture.md` |
 | Changement de dépendance critique | Section III ci-dessus + `package.json` |
 

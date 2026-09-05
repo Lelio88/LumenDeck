@@ -1,0 +1,150 @@
+{
+  "Localization": {
+    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": "Control local de bombillas Tuya (Calex Smart y compatibles): encendido, intensidad, color y blanco regulable, sin nube, en unos veinte milisegundos.",
+    "Power": "Encendido",
+    "Brightness": "Intensidad",
+    "Colour": "Color",
+    "White": "Blanco",
+    "Scenario": "Escenario",
+    "Turns the bulb on or off.": "Enciende o apaga la bombilla.",
+    "Adjusts brightness; the dial sweeps continuously.": "Ajusta la intensidad; el dial recorre de forma continua.",
+    "Applies a colour; the dial rotates the hue.": "Aplica un color; el dial gira el tono.",
+    "Sets the white balance, from warm to cool.": "Ajusta el blanco, de calido a frio.",
+    "Plays a light animation: blink, police lights, candle, storm...": "Reproduce una animacion luminosa: parpadeo, luces de policia, vela, tormenta...",
+    "Turn on / off": "Encender / apagar",
+    "Adjust brightness": "Ajustar intensidad",
+    "Rotate the hue": "Girar el tono",
+    "Adjust the white": "Ajustar el blanco",
+    "Start / stop the scenario": "Iniciar / detener el escenario",
+    "key": {
+      "toSet": "Configurar",
+      "offline": "Sin conexion",
+      "on": "Encendida",
+      "off": "Apagada",
+      "noColour": "Sin color",
+      "noWhite": "Sin blanco"
+    },
+    "warmth": {
+      "warm": "Calido",
+      "neutral": "Neutro",
+      "cool": "Frio",
+      "daylight": "Luz de dia"
+    },
+    "dial": {
+      "brightness": "Intensidad",
+      "colour": "Color",
+      "white": "Blanco",
+      "scenario": "Escenario"
+    },
+    "hue": {
+      "red": "Rojo",
+      "orange": "Naranja",
+      "yellow": "Amarillo",
+      "green": "Verde",
+      "cyan": "Cian",
+      "blue": "Azul",
+      "violet": "Violeta",
+      "pink": "Rosa"
+    },
+    "scenario": {
+      "clignotement": {
+        "name": "Parpadeo",
+        "description": "La bombilla se enciende y se apaga sin fin. Util como temporizador visible de lejos."
+      },
+      "gyrophare": {
+        "name": "Luces de policia",
+        "description": "Rojo y azul alternos, como un coche de policia. Con dos bombillas, se responden."
+      },
+      "respiration": {
+        "name": "Respiracion",
+        "description": "La intensidad sube y baja lentamente, manteniendo el color. Tranquilo, para trabajar."
+      },
+      "bougie": {
+        "name": "Vela",
+        "description": "Una llama calida que titila, nunca dos veces igual. El mejor de la serie."
+      },
+      "orage": {
+        "name": "Tormenta",
+        "description": "Una penumbra azulada, rasgada por destellos blancos a intervalos irregulares."
+      },
+      "arc-en-ciel": {
+        "name": "Arcoiris",
+        "description": "El tono gira suavemente por todo el circulo cromatico."
+      },
+      "alerte": {
+        "name": "Alerta",
+        "description": "Tres destellos rojos, luego la lampara vuelve exactamente a su estado. Para senalar un evento."
+      },
+      "lever-de-soleil": {
+        "name": "Amanecer",
+        "description": "Cinco minutos de brasa oscura hasta la plena luz del dia. Para despertar suavemente."
+      }
+    },
+    "pi": {
+      "bulb": "Bombilla",
+      "bulbPlaceholder": "Elija una bombilla",
+      "secondBulb": "Segunda bombilla",
+      "secondBulbPlaceholder": "Ninguna (opcional)",
+      "scenario": "Escenario",
+      "scenarioPlaceholder": "Elija un escenario",
+      "colour": "Color",
+      "step": "Paso",
+      "hueStep": "Paso de tono",
+      "dialStep": "Paso del dial",
+      "temperature": "Temperatura",
+      "manage": "Anadir o editar una bombilla",
+      "shared": {
+        "title": "Una bombilla, varias teclas",
+        "body": "Las bombillas se declaran una sola vez para todo el plugin. Todas las teclas toman de la misma lista: no hay que reescribir la clave cada vez, y una clave cambiada se corrige en un solo sitio."
+      },
+      "stepHelp": {
+        "title": "Para que sirve el paso?",
+        "key": "En una tecla, cada pulsacion aplica este paso. Un valor negativo crea una tecla de «bajar»: coloque dos juntas, una a +10 y otra a -10.",
+        "dial": "En un dial, el paso es el valor de una muesca; su signo se ignora, decide el sentido de giro."
+      },
+      "tempHelp": {
+        "title": "Referencias de temperatura",
+        "scale": "2700 K corresponde a una bombilla incandescente, muy calida. 4000 K es un blanco neutro. 6500 K es luz de dia, fria y azulada.",
+        "mode": "Aplicar una temperatura pasa la bombilla a modo blanco, por lo que abandona el color. Lo impone la bombilla, no el plugin."
+      },
+      "colourHelp": {
+        "title": "Como se comportan tecla y dial?",
+        "key": "En una tecla, una pulsacion enciende la bombilla y aplica exactamente el color elegido arriba. Ponga varias para sus ambientes favoritos.",
+        "dial": "En un dial, girar cambia el tono conservando la intensidad actual. Pulsar el dial enciende o apaga."
+      },
+      "scenarioHelp": {
+        "title": "Como funciona?",
+        "toggle": "Una pulsacion inicia el escenario, otra lo detiene. La lampara vuelve exactamente al estado en que estaba: mismo color, misma intensidad, encendida o apagada.",
+        "second": "La segunda bombilla es opcional. Solo Luces de policia usa dos hoy, para que se respondan en rojo y azul. Con una, alterna ambos colores en la misma lampara.",
+        "oneShot": "Alerta y Amanecer se detienen solos, tras tres destellos y cinco minutos respectivamente. Los demas siguen hasta que vuelva a pulsar.",
+        "safety": "Las animaciones estan limitadas a proposito a dos alternancias por segundo: mas alla, un parpadeo puede provocar una crisis en una persona fotosensible."
+      },
+      "scan": {
+        "note": "La busqueda escucha primero los anuncios que emiten sus bombillas y luego, si no llega nada, llama a cada direccion de la red. Cuente unos veinte segundos en el peor caso. Encuentra direccion e identificador, pero nunca la clave: esa hay que pegarla una vez por bombilla.",
+        "button": "Buscar en la red",
+        "running": "Buscando...",
+        "none": "No se encontro ningun dispositivo. Compruebe que la bombilla tiene corriente y esta en la misma red que este ordenador.",
+        "found": "dispositivo(s) encontrado(s)",
+        "sweep": " (encontrado por barrido de red: sus bombillas no difunden hasta aqui, algo frecuente entre un ordenador por cable y una bombilla wifi)"
+      },
+      "field": {
+        "id": "Identificador de la bombilla",
+        "name": "Nombre (opcional) — p. ej. Escritorio",
+        "key": "Clave local",
+        "keyKept": "Dejar vacio para conservar la clave"
+      },
+      "found": {
+        "already": "ya guardada",
+        "device": "Dispositivo Tuya en",
+        "noId": "identificador desconocido"
+      },
+      "save": {
+        "button": "Guardar",
+        "missingId": "Falta el identificador de esta bombilla.",
+        "ok": "Bombilla guardada. Eligela en la lista de arriba.",
+        "failed": "Error al guardar.",
+        "needKey": "Esta bombilla necesita su clave local para poder controlarse."
+      }
+    }
+  }
+}

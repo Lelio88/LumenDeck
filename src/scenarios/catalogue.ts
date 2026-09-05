@@ -55,12 +55,18 @@ export type Frame = {
 };
 
 export type Scenario = {
-  /** Identifiant stable, memorise dans les reglages de la touche. */
+  /**
+   * Identifiant stable, memorise dans les reglages de la touche.
+   *
+   * Sert AUSSI de cle de traduction : le nom et la description vivent dans les
+   * dictionnaires, sous `scenario.<id>.name` et `.description`. Un catalogue qui
+   * porterait ses libelles devrait consulter un dictionnaire, et cesserait
+   * d'etre verifiable sans charger le plugin entier.
+   *
+   * Les identifiants restent en francais : ce sont des cles deja enregistrees
+   * dans les reglages des utilisateurs, les renommer casserait leurs touches.
+   */
   readonly id: string;
-  /** Nom affiche dans la liste et sur la touche. */
-  readonly name: string;
-  /** Une phrase, affichee dans le panneau de reglages. */
-  readonly description: string;
   /** Nombre d'ampoules que le scenario sait exploiter. */
   readonly roles: 1 | 2;
   /** Rejoue indefiniment, ou s'arrete tout seul au bout de `steps` images. */
@@ -80,16 +86,12 @@ const between = (min: number, max: number) => min + Math.round(Math.random() * (
 export const SCENARIOS: readonly Scenario[] = [
   {
     id: 'clignotement',
-    name: 'Clignotement',
-    description: "L'ampoule s'allume et s'eteint sans fin. Utile comme minuteur visible de loin.",
     roles: 1,
     loops: true,
     frame: (step) => ({ cues: [{ on: step % 2 === 0 }], holdMs: 400 }),
   },
   {
     id: 'gyrophare',
-    name: 'Gyrophare',
-    description: 'Rouge et bleu alternes, facon voiture de police. Avec deux ampoules, elles se repondent.',
     roles: 2,
     loops: true,
     // Les deux roles sont TOUJOURS en opposition : avec deux ampoules on obtient
@@ -104,8 +106,6 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     id: 'respiration',
-    name: 'Respiration',
-    description: "L'intensite monte et descend lentement, en gardant la couleur en place. Calme, pour travailler.",
     roles: 1,
     loops: true,
     // On ne touche QUE l'intensite : la teinte reste celle que l'utilisateur
@@ -119,8 +119,6 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     id: 'bougie',
-    name: 'Bougie',
-    description: 'Une flamme chaude qui vacille, jamais deux fois pareil. Le meilleur rendu de la serie.',
     roles: 1,
     loops: true,
     // Aleatoire ASSUME : une bougie reguliere ne ressemble a rien. Teinte et
@@ -133,8 +131,6 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     id: 'orage',
-    name: 'Orage',
-    description: 'Une penombre bleutee, dechiree par des eclairs blancs a intervalles irreguliers.',
     roles: 1,
     loops: true,
     // Deux periodes premieres entre elles (7 et 11) suffisent a produire des
@@ -146,8 +142,6 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     id: 'arc-en-ciel',
-    name: 'Arc-en-ciel',
-    description: 'La teinte tourne doucement sur tout le cercle chromatique.',
     roles: 1,
     loops: true,
     frame: (step) => ({
@@ -157,8 +151,6 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     id: 'alerte',
-    name: 'Alerte',
-    description: 'Trois eclats rouges, puis la lampe revient exactement comme elle etait. Pour signaler un evenement.',
     roles: 1,
     loops: false,
     steps: 6,
@@ -168,8 +160,6 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     id: 'lever-de-soleil',
-    name: 'Lever de soleil',
-    description: "Cinq minutes d'une braise sombre jusqu'au plein jour. A lancer pour se reveiller en douceur.",
     roles: 1,
     loops: false,
     steps: 60,

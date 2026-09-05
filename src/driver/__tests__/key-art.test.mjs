@@ -11,40 +11,48 @@ import { test } from 'node:test';
 
 import { arcPath, asImage, brightnessKey, colorKey, kelvinToRgb, temperatureKey } from '../../key-art.ts';
 
+/**
+ * Libelle d'extinction, passe en parametre depuis l'action.
+ *
+ * Le module de dessin ne consulte aucun dictionnaire : il recoit des mots deja
+ * traduits. C'est ce qui permet de le tester sans charger le plugin.
+ */
+const OFF = 'Eteinte';
+
 const wellFormed = (svg) => svg.startsWith('<svg') && svg.endsWith('</svg>');
 
 test('les trois faces produisent un SVG bien forme', () => {
-  assert.ok(wellFormed(brightnessKey(40, true)), 'intensite');
+  assert.ok(wellFormed(brightnessKey(40, true, OFF)), 'intensite');
   assert.ok(wellFormed(colorKey('#ff8800', true)), 'couleur');
-  assert.ok(wellFormed(temperatureKey(4000, true)), 'temperature');
+  assert.ok(wellFormed(temperatureKey(4000, true, OFF)), 'temperature');
 });
 
 test('la jauge affiche la valeur demandee', () => {
-  assert.match(brightnessKey(40, true), /40 %/);
-  assert.match(brightnessKey(7, true), /7 %/);
+  assert.match(brightnessKey(40, true, OFF), /40 %/);
+  assert.match(brightnessKey(7, true, OFF), /7 %/);
 });
 
 test('la jauge borne les valeurs aberrantes au lieu de les dessiner', () => {
-  assert.match(brightnessKey(999, true), /100 %/, 'au-dessus du maximum');
-  assert.match(brightnessKey(-50, true), /0 %/, 'en dessous du minimum');
+  assert.match(brightnessKey(999, true, OFF), /100 %/, 'au-dessus du maximum');
+  assert.match(brightnessKey(-50, true, OFF), /0 %/, 'en dessous du minimum');
 });
 
 test('a zero pour cent, aucun arc de remplissage n est trace', () => {
   // Deux traces = piste + remplissage ; un seul = piste nue.
-  const empty = (brightnessKey(0, true).match(/<path/g) ?? []).length;
-  const half = (brightnessKey(50, true).match(/<path/g) ?? []).length;
+  const empty = (brightnessKey(0, true, OFF).match(/<path/g) ?? []).length;
+  const half = (brightnessKey(50, true, OFF).match(/<path/g) ?? []).length;
   assert.equal(empty, 1, 'a zero, seule la piste');
   assert.equal(half, 2, 'a cinquante, piste et remplissage');
 });
 
 test('une ampoule eteinte se dessine en gris et le dit', () => {
-  for (const svg of [brightnessKey(50, false), colorKey('#ff0000', false), temperatureKey(4000, false)]) {
+  for (const svg of [brightnessKey(50, false, OFF), colorKey('#ff0000', false), temperatureKey(4000, false, OFF)]) {
     assert.ok(!svg.includes('#ffb247'), 'aucun ambre sur une ampoule eteinte');
     assert.match(svg, /#5c6470/, 'la teinte grise doit apparaitre');
   }
   // La goutte se passe de legende : sa couleur suffit, et le mot encombrait.
   assert.ok(!colorKey('#ff0000', false).includes('Eteinte'), 'pas de legende sur la goutte');
-  assert.match(brightnessKey(50, false), /Eteinte/, 'la jauge, elle, garde son mot');
+  assert.match(brightnessKey(50, false, OFF), /Eteinte/, 'la jauge, elle, garde son mot');
 });
 
 test('la goutte prend exactement la couleur demandee', () => {
@@ -64,8 +72,8 @@ test('la temperature va bien du chaud vers le froid', () => {
 });
 
 test('la temperature est bornee a la plage de l ampoule', () => {
-  assert.match(temperatureKey(99999, true), /6500 K/);
-  assert.match(temperatureKey(10, true), /2700 K/);
+  assert.match(temperatureKey(99999, true, OFF), /6500 K/);
+  assert.match(temperatureKey(10, true, OFF), /2700 K/);
 });
 
 test('l arc prend le grand chemin au-dela d un demi-tour', () => {
@@ -80,12 +88,12 @@ test('aucun dessin n emploie une couleur que QSvg refuserait', () => {
   // bug indetectable a la lecture du code, d'ou ce garde-fou.
   const interdits = /rgba\(|hsla?\(|color-mix\(|var\(--/;
   const dessins = [
-    ['intensite allumee', brightnessKey(55, true)],
-    ['intensite eteinte', brightnessKey(55, false)],
+    ['intensite allumee', brightnessKey(55, true, OFF)],
+    ['intensite eteinte', brightnessKey(55, false, OFF)],
     ['couleur allumee', colorKey('#8b5cf6', true)],
     ['couleur eteinte', colorKey('#8b5cf6', false)],
-    ['temperature allumee', temperatureKey(4000, true)],
-    ['temperature eteinte', temperatureKey(4000, false)],
+    ['temperature allumee', temperatureKey(4000, true, OFF)],
+    ['temperature eteinte', temperatureKey(4000, false, OFF)],
   ];
   for (const [nom, svg] of dessins) {
     const trouve = svg.match(interdits);

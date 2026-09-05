@@ -1,36 +1,31 @@
 <!DOCTYPE html>
 <html>
 
-<head lang="fr">
-    <title>Reglages de l'intensite</title>
+<head lang="en">
+    <title>Brightness settings</title>
     <meta charset="utf-8" />
     <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
 </head>
 
 <body>
-    <sdpi-item label="Ampoule">
-        <sdpi-select setting="deviceId" datasource="getBulbs" placeholder="Choisissez une ampoule"></sdpi-select>
+    <sdpi-item label="Bulb" data-i18n-label="pi.bulb">
+        <sdpi-select setting="deviceId" datasource="getBulbs" placeholder="Choose a bulb"
+                     data-i18n-placeholder="pi.bulbPlaceholder"></sdpi-select>
     </sdpi-item>
 
-    <sdpi-item label="Pas">
+    <sdpi-item label="Step" data-i18n-label="pi.step">
         <sdpi-range setting="step" min="-25" max="25" step="5" default="10" showlabels></sdpi-range>
     </sdpi-item>
 
     <details>
-        <summary>Ajouter ou modifier une ampoule</summary>
+        <summary data-i18n="pi.manage">Add or edit a bulb</summary>
         <div id="bulb-manager"></div>
     </details>
 
     <details>
-        <summary>A quoi sert le pas ?</summary>
-        <p>
-            Sur une touche, chaque appui applique ce pas. Une valeur negative fait une touche
-            « baisser » : posez-en deux cote a cote, l'une a +10 et l'autre a -10.
-        </p>
-        <p>
-            Sur une molette, le pas est la valeur d'un cran ; son signe est ignore, c'est le
-            sens de rotation qui decide.
-        </p>
+        <summary data-i18n="pi.stepHelp.title">What is the step for?</summary>
+        <p data-i18n="pi.stepHelp.key">On a key, each press applies this step. A negative value makes a &ldquo;dim&rdquo; key: place two side by side, one at +10 and one at -10.</p>
+        <p data-i18n="pi.stepHelp.dial">On a dial, the step is the value of one detent; its sign is ignored, the direction of rotation decides.</p>
     </details>
 
     <script src="bulbs.js"></script>

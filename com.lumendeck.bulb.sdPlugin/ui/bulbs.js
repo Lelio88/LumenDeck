@@ -24,6 +24,42 @@
   const anchor = document.getElementById('bulb-manager');
   if (!client || !anchor) return;
 
+  // --- Traduction ---------------------------------------------------------
+  // Les panneaux sont ECRITS en anglais ; le dictionnaire ne fait que
+  // remplacer. Consequence voulue : si le chargement echoue, l'interface reste
+  // lisible en anglais au lieu d'afficher des cles nues.
+  //
+  // La langue vient de navigator.language, comme le fait sdpi-components :
+  // c'est la seule information dont dispose un panneau, qui est une page web.
+  // Stream Deck, lui, ne connait pas l'italien — un panneau peut donc etre en
+  // italien alors que l'application autour reste en anglais.
+  const LANGUES = ['en', 'fr', 'de', 'es', 'it'];
+  let dico = {};
+
+  const langue = () => {
+    const brut = (navigator.language || 'en').split('-')[0].toLowerCase();
+    return LANGUES.includes(brut) ? brut : 'en';
+  };
+
+  /** Traduit une cle pointee, ou rend le texte anglais fourni en repli. */
+  const tr = (cle, repli) => {
+    const valeur = cle.split('.').reduce((n, p) => (n == null ? undefined : n[p]), dico);
+    return typeof valeur === 'string' ? valeur : repli;
+  };
+
+  /** Remplace les textes portant un attribut de localisation. */
+  const localiser = (racine) => {
+    racine.querySelectorAll('[data-i18n]').forEach((el) => {
+      el.textContent = tr(el.dataset.i18n, el.textContent);
+    });
+    racine.querySelectorAll('[data-i18n-label]').forEach((el) => {
+      el.setAttribute('label', tr(el.dataset.i18nLabel, el.getAttribute('label') || ''));
+    });
+    racine.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+      el.setAttribute('placeholder', tr(el.dataset.i18nPlaceholder, el.getAttribute('placeholder') || ''));
+    });
+  };
+
   // Les couleurs viennent des variables de sdpi-components, jamais de valeurs en
   // dur : le panneau suit ainsi le theme de Stream Deck au lieu de jurer avec.
   // Les champs bruts heritaient sinon des defauts du navigateur — texte sombre
@@ -94,11 +130,12 @@
 
   anchor.innerHTML =
     '<style>' + css + '</style>' +
-    '<p class="bd-note">La recherche ecoute d\'abord les annonces que vos ampoules ' +
-    'diffusent, puis, si rien n\'arrive, frappe a chaque adresse du reseau. Comptez ' +
-    'une vingtaine de secondes dans le pire cas. Elle trouve adresse et identifiant, ' +
-    'mais jamais la cle : celle-ci reste a coller une fois par ampoule.</p>' +
-    '<div class="bd-row"><button type="button" id="bd-scan">Rechercher mes ampoules</button></div>' +
+    '<p class="bd-note" data-i18n="pi.scan.note">The search first listens for the ' +
+    'announcements your bulbs broadcast, then, if nothing arrives, knocks at every address ' +
+    'on the network. Allow about twenty seconds in the worst case. It finds address and ' +
+    'identifier, but never the key: that one still has to be pasted once per bulb.</p>' +
+    '<div class="bd-row"><button type="button" id="bd-scan" data-i18n="pi.scan.button">' +
+    'Search the network</button></div>' +
     '<div id="bd-status" class="bd-note"></div>' +
     '<div id="bd-results"></div>';
 
@@ -128,26 +165,30 @@
     const head = document.createElement('div');
     head.className = 'bd-id';
     head.textContent = bulb.id
-      ? bulb.id + '  ·  ' + bulb.ip + (bulb.known ? '  ·  deja enregistree' : '')
-      : 'Appareil Tuya a ' + bulb.ip + '  ·  identifiant inconnu';
+      ? bulb.id + '  ·  ' + bulb.ip
+        + (bulb.known ? '  ·  ' + tr('pi.found.already', 'already saved') : '')
+      : tr('pi.found.device', 'Tuya device at') + ' ' + bulb.ip
+        + '  ·  ' + tr('pi.found.noId', 'unknown identifier');
     row.appendChild(head);
 
     // Trouve par balayage : l'identifiant n'a pas pu etre lu, il faut le fournir.
-    const idInput = bulb.id ? null : field('text', 'Identifiant de l\'ampoule');
-    const name = field('text', 'Nom (facultatif) — ex. Bureau');
-    const key = field('password', bulb.known ? 'Cle inchangee si vide' : 'Cle locale');
+    const idInput = bulb.id ? null : field('text', tr('pi.field.id', 'Bulb identifier'));
+    const name = field('text', tr('pi.field.name', 'Name (optional) — e.g. Desk'));
+    const key = field('password', bulb.known
+      ? tr('pi.field.keyKept', 'Leave empty to keep the key')
+      : tr('pi.field.key', 'Local key'));
 
     const save = document.createElement('button');
     save.type = 'button';
-    save.textContent = 'Enregistrer';
+    save.textContent = tr('pi.save.button', 'Save');
     save.addEventListener('click', () => {
       const id = bulb.id ?? idInput.value.trim();
       if (!id) {
-        say('Il manque l\'identifiant de cette ampoule.', 'err');
+        say(tr('pi.save.missingId', "This bulb's identifier is missing."), 'err');
         return;
       }
       if (!bulb.known && !key.value.trim()) {
-        say('Cette ampoule a besoin de sa cle locale pour etre pilotable.', 'err');
+        say(tr('pi.save.needKey', 'This bulb needs its local key to be controllable.'), 'err');
         return;
       }
       // La version du protocole est relevee pendant la recherche et n'est
@@ -185,7 +226,7 @@
   scanButton.addEventListener('click', () => {
     results.innerHTML = '';
     scanButton.disabled = true;
-    say('Recherche en cours...');
+    say(tr('pi.scan.running', 'Searching...'));
     send({ event: 'discoverBulbs' });
   });
 
@@ -198,16 +239,16 @@
       const items = Array.isArray(payload.items) ? payload.items : [];
 
       if (items.length === 0) {
-        say('Aucun appareil trouve. Verifiez que l\'ampoule est alimentee et sur le meme ' +
-            'reseau que cet ordinateur.', 'err');
+        say(tr('pi.scan.none', 'No device found. Check that the bulb is powered and on the '
+          + 'same network as this computer.'), 'err');
         return;
       }
 
       const how = payload.method === 'balayage'
-        ? ' (trouve par balayage du reseau : vos ampoules ne diffusent pas jusqu\'ici, ' +
-          'c\'est frequent entre un ordinateur filaire et une ampoule en wifi)'
+        ? tr('pi.scan.sweep', ' (found by sweeping the network: your bulbs do not broadcast '
+            + 'this far, which is common between a wired computer and a Wi-Fi bulb)')
         : '';
-      say(items.length + ' appareil(s) trouve(s)' + how, 'ok');
+      say(items.length + ' ' + tr('pi.scan.found', 'device(s) found') + how, 'ok');
       items.forEach((bulb) => results.appendChild(renderFound(bulb)));
       return;
     }
@@ -234,11 +275,22 @@
 
     if (payload.event === 'saveBulb') {
       if (payload.ok) {
-        say('Ampoule enregistree. Choisissez-la dans la liste ci-dessus.', 'ok');
+        say(tr('pi.save.ok', 'Bulb saved. Choose it in the list above.'), 'ok');
         results.innerHTML = '';
       } else {
-        say(payload.message || 'Echec de l\'enregistrement.', 'err');
+        say(payload.message || tr('pi.save.failed', 'Could not save.'), 'err');
       }
     }
   });
+
+  // Charge le dictionnaire APRES la construction de l'interface : la
+  // substitution est imperceptible, et l'affichage ne depend jamais de ce
+  // chargement pour aboutir.
+  fetch('../' + langue() + '.json')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((json) => {
+      dico = (json && json.Localization) || {};
+      localiser(document);
+    })
+    .catch(() => { /* pas de dictionnaire : l'anglais du HTML fait foi */ });
 })();

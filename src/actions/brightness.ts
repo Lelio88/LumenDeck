@@ -13,6 +13,7 @@
  */
 import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
+import { t } from '../i18n.js';
 import { asImage, brightnessKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
@@ -56,12 +57,12 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
   /** Lit l'ampoule et reporte son etat REEL, jamais un etat suppose. */
   private async refresh(target: Paintable, settings: BrightnessSettings): Promise<void> {
     const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, 'A regler'); return; }
+    if (!coords) { await reset(target, t('key.toSet')); return; }
     try {
       const state = await withRetry(coords, (bulb) => bulb.read());
       await paint(target, state.brightness, state.on);
     } catch {
-      await reset(target, 'Hors ligne');
+      await reset(target, t('key.offline'));
     }
   }
 
@@ -80,7 +81,7 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
     const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, 'A regler'); return; }
+    if (!coords) { await reset(target, t('key.toSet')); return; }
     try {
       const state = await withRetry(coords, async (bulb) => {
         await bulb.togglePower();
@@ -94,7 +95,7 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
 
   private async nudge(target: Paintable, settings: BrightnessSettings, delta: number): Promise<void> {
     const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, 'A regler'); return; }
+    if (!coords) { await reset(target, t('key.toSet')); return; }
     try {
       const level = await withRetry(coords, (bulb) => bulb.nudgeBrightness(delta));
       await paint(target, level, true);
@@ -109,10 +110,10 @@ async function paint(target: Paintable, percent: number, on: boolean): Promise<v
   // L'image PORTE la valeur : une jauge qui se remplit, avec le pourcentage
   // dessine dedans. Le titre ferait doublon, et Stream Deck l'ecrirait par
   // dessus le dessin.
-  await target.setImage?.(asImage(brightnessKey(percent, on)));
+  await target.setImage?.(asImage(brightnessKey(percent, on, t('key.off'))));
   await target.setTitle('');
   if (typeof target.setFeedback === 'function') {
-    const label = on ? String(percent) + ' %' : 'Eteinte';
-    await target.setFeedback({ title: 'Intensite', value: label, indicator: on ? percent : 0 });
+    const label = on ? String(percent) + ' %' : t('key.off');
+    await target.setFeedback({ title: t('dial.brightness'), value: label, indicator: on ? percent : 0 });
   }
 }

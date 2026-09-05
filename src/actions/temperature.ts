@@ -18,6 +18,7 @@
 import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 
+import { t } from '../i18n.js';
 import { asImage, temperatureKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
@@ -55,10 +56,10 @@ const clamp = (n: number) => Math.min(KELVIN_MAX, Math.max(KELVIN_MIN, n));
 
 /** Qualifie une temperature, pour que la touche dise plus qu'un nombre. */
 function warmth(kelvin: number): string {
-  if (kelvin < 3200) return 'Chaud';
-  if (kelvin < 4600) return 'Neutre';
-  if (kelvin < 5600) return 'Froid';
-  return 'Lumiere du jour';
+  if (kelvin < 3200) return t('warmth.warm');
+  if (kelvin < 4600) return t('warmth.neutral');
+  if (kelvin < 5600) return t('warmth.cool');
+  return t('warmth.daylight');
 }
 
 @action({ UUID: 'com.lumendeck.bulb.temperature' })
@@ -67,7 +68,7 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
     const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, 'A regler'); return; }
+    if (!coords) { await reset(target, t('key.toSet')); return; }
     try {
       // Idem : l'etat reel prime sur le reglage memorise.
       const snapshot = await withRetry(coords, async (bulb) => ({
@@ -76,10 +77,10 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
       }));
       // Certaines ampoules couleur n'ont pas de blanc reglable. Meme raison que
       // pour la couleur : mieux vaut l'ecrire que laisser croire a une panne.
-      if (!snapshot.supported) { await reset(target, 'Sans blanc'); return; }
+      if (!snapshot.supported) { await reset(target, t('key.noWhite')); return; }
       await paint(target, snapshot.state.temperatureK ?? clamp(settings.kelvin ?? DEFAULT_KELVIN), snapshot.state.on);
     } catch {
-      await reset(target, 'Hors ligne');
+      await reset(target, t('key.offline'));
     }
   }
 
@@ -87,7 +88,7 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
   override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<TemperatureSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    if (!(await coordinatesFor(settings))) { await reset(target, 'A regler'); return; }
+    if (!(await coordinatesFor(settings))) { await reset(target, t('key.toSet')); return; }
     await paint(target, clamp(settings.kelvin ?? DEFAULT_KELVIN), true);
   }
 
@@ -95,7 +96,7 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
     const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, 'A regler'); return; }
+    if (!coords) { await reset(target, t('key.toSet')); return; }
 
     const wanted = clamp(settings.kelvin ?? DEFAULT_KELVIN);
     try {
@@ -107,7 +108,7 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
         await bulb.setTemperature(wanted);
         return true;
       });
-      if (!supported) { await reset(target, 'Sans blanc'); return; }
+      if (!supported) { await reset(target, t('key.noWhite')); return; }
       await paint(target, wanted);
     } catch {
       await target.showAlert();
@@ -118,7 +119,7 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
     const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, 'A regler'); return; }
+    if (!coords) { await reset(target, t('key.toSet')); return; }
 
     const step = Math.abs(settings.step ?? DEFAULT_STEP);
     try {
@@ -153,7 +154,7 @@ async function paint(target: Paintable, kelvin: number, on: boolean = true): Pro
   // Le demi-disque prend la teinte reelle du blanc demande : on VOIT la chaleur.
   // Le nombre reste dessine dedans, parce que 3800 et 4200 K se ressemblent
   // beaucoup a l'oeil alors qu'ils ne se choisissent pas au hasard.
-  await target.setImage?.(asImage(temperatureKey(kelvin, on)));
+  await target.setImage?.(asImage(temperatureKey(kelvin, on, t('key.off'))));
   await target.setTitle('');
   if (typeof target.setFeedback === 'function') {
     const pct = Math.round(((kelvin - KELVIN_MIN) / (KELVIN_MAX - KELVIN_MIN)) * 100);

@@ -20,6 +20,7 @@ import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 
 import { coordinatesFor, resolve } from '../bulbs.js';
+import { scenarioName, t } from '../i18n.js';
 import { asImage, scenarioKey } from '../key-art.js';
 import { byId } from '../scenarios/catalogue.js';
 import { runningOn, start, stop, type Target } from '../scenarios/runner.js';
@@ -87,7 +88,7 @@ export class ScenarioAction extends SingletonAction<ScenarioSettings> {
     const primary = targets[0];
 
     if (!scenario || !primary) {
-      await reset(target, 'A regler');
+      await reset(target, t('key.toSet'));
       return;
     }
 
@@ -103,7 +104,7 @@ export class ScenarioAction extends SingletonAction<ScenarioSettings> {
   /** Redessine d'apres l'etat reel du moteur. */
   private async repaint(target: Paintable, settings: ScenarioSettings): Promise<void> {
     if (!byId(settings.scenarioId) || !(await coordinatesFor(settings))) {
-      await reset(target, 'A regler');
+      await reset(target, t('key.toSet'));
       return;
     }
     await this.paint(target, settings);
@@ -116,12 +117,12 @@ export class ScenarioAction extends SingletonAction<ScenarioSettings> {
     const coords = await coordinatesFor(settings);
     const running = runningOn(coords?.id) === scenario.id;
 
-    await target.setImage?.(asImage(scenarioKey(scenario.name, running)));
+    await target.setImage?.(asImage(scenarioKey(scenarioName(scenario.id), running)));
     await target.setTitle('');
     if (typeof target.setFeedback === 'function') {
       await target.setFeedback({
-        title: 'Scenario',
-        value: scenario.name,
+        title: t('dial.scenario'),
+        value: scenarioName(scenario.id),
         indicator: running ? 100 : 0,
       });
     }

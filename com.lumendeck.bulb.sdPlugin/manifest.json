@@ -1,13 +1,13 @@
 {
   "Name": "LumenDeck",
-  "Version": "0.10.0.0",
+  "Version": "0.11.0.0",
   "Author": "Lelio Buton",
   "Actions": [
     {
-      "Name": "Allumer / eteindre",
+      "Name": "Power",
       "UUID": "com.lumendeck.bulb.toggle",
       "Icon": "imgs/actions/toggle/icon",
-      "Tooltip": "Bascule l'ampoule, en local, sans passer par le cloud.",
+      "Tooltip": "Turns the bulb on or off.",
       "PropertyInspectorPath": "ui/bulb.html",
       "Controllers": [
         "Keypad",
@@ -26,16 +26,16 @@
       "Encoder": {
         "layout": "$A1",
         "TriggerDescription": {
-          "Push": "Allumer / eteindre",
+          "Push": "Turn on / off",
           "Rotate": ""
         }
       }
     },
     {
-      "Name": "Intensite",
+      "Name": "Brightness",
       "UUID": "com.lumendeck.bulb.brightness",
       "Icon": "imgs/actions/brightness/icon",
-      "Tooltip": "Regle l'intensite, quel que soit le mode de l'ampoule.",
+      "Tooltip": "Adjusts brightness; the dial sweeps continuously.",
       "PropertyInspectorPath": "ui/brightness.html",
       "Controllers": [
         "Keypad",
@@ -50,16 +50,16 @@
       "Encoder": {
         "layout": "$B1",
         "TriggerDescription": {
-          "Push": "Allumer / eteindre",
-          "Rotate": "Regler l'intensite"
+          "Push": "Turn on / off",
+          "Rotate": "Adjust brightness"
         }
       }
     },
     {
-      "Name": "Couleur",
+      "Name": "Colour",
       "UUID": "com.lumendeck.bulb.color",
       "Icon": "imgs/actions/color/icon",
-      "Tooltip": "Applique une couleur ; la molette fait tourner la teinte.",
+      "Tooltip": "Applies a colour; the dial rotates the hue.",
       "PropertyInspectorPath": "ui/color.html",
       "Controllers": [
         "Keypad",
@@ -74,16 +74,16 @@
       "Encoder": {
         "layout": "$B1",
         "TriggerDescription": {
-          "Push": "Allumer / eteindre",
-          "Rotate": "Faire tourner la teinte"
+          "Push": "Turn on / off",
+          "Rotate": "Rotate the hue"
         }
       }
     },
     {
-      "Name": "Blanc chaud / froid",
+      "Name": "White",
       "UUID": "com.lumendeck.bulb.temperature",
       "Icon": "imgs/actions/temperature/icon",
-      "Tooltip": "Regle la temperature de blanc, de 2700 K a 6500 K.",
+      "Tooltip": "Sets the white balance, from warm to cool.",
       "PropertyInspectorPath": "ui/temperature.html",
       "Controllers": [
         "Keypad",
@@ -98,8 +98,8 @@
       "Encoder": {
         "layout": "$B1",
         "TriggerDescription": {
-          "Push": "Allumer / eteindre",
-          "Rotate": "Rechauffer ou refroidir"
+          "Push": "Turn on / off",
+          "Rotate": "Adjust the white"
         }
       }
     },
@@ -107,7 +107,7 @@
       "Name": "Scenario",
       "UUID": "com.lumendeck.bulb.scenario",
       "Icon": "imgs/actions/scenario/icon",
-      "Tooltip": "Joue une animation lumineuse : clignotement, gyrophare, bougie, orage...",
+      "Tooltip": "Plays a light animation: blink, police lights, candle, storm...",
       "PropertyInspectorPath": "ui/scenario.html",
       "Controllers": [
         "Keypad",
@@ -122,7 +122,7 @@
       "Encoder": {
         "layout": "$B1",
         "TriggerDescription": {
-          "Push": "Lancer / arreter le scenario",
+          "Push": "Start / stop the scenario",
           "Rotate": ""
         }
       }
@@ -131,7 +131,7 @@
   "Category": "LumenDeck",
   "CategoryIcon": "imgs/plugin/category-icon",
   "CodePath": "bin/plugin.js",
-  "Description": "Pilotage local d'ampoules Tuya (compatibles Calex Smart) : allumage, intensite, couleur et blanc reglable, sans cloud, en une vingtaine de millisecondes.",
+  "Description": "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.",
   "Icon": "imgs/plugin/marketplace",
   "SDKVersion": 3,
   "Software": {

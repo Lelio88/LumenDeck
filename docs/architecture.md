@@ -85,7 +85,38 @@ l'existence de Tuya.
 | `src/settings.ts` | Formes des réglages d'une touche. Une touche ne retient que l'**identifiant** de l'ampoule qu'elle pilote, plus ce qui lui est propre. |
 | `src/plugin.ts` | Racine de composition. |
 | `src/tools/probe.mjs` | Sonde de diagnostic : relève les datapoints d'une ampoule. Vit sous `src/` parce qu'il a besoin des dépendances du projet. |
+| `src/i18n.ts` | Raccourci unique vers le dictionnaire du SDK. Les clés y sont **structurées** (`key.off`), jamais des phrases : une phrase corrigée pour un détail de style ferait retomber toutes les traductions sur l'anglais, en silence. |
+| `tools/make_locales.py` | Produit les cinq `<langue>.json` depuis une table unique où chaque texte figure dans toutes les langues. Une entrée incomplète fait **échouer** la génération. |
 | `tools/make_icons.py` | Génère les 24 PNG du plugin. Hors chaîne Node, d'où son emplacement séparé. |
+
+## Langues
+
+Le plugin est écrit **en anglais**, et traduit en français, allemand, espagnol et italien. Les
+dictionnaires sont générés par `tools/make_locales.py` — jamais édités à la main, pour la même
+raison que les PNG : cinq fichiers parallèles divergent dès la première correction, et l'écart ne
+se voit qu'en changeant la langue de Stream Deck.
+
+**Deux espaces de noms**, parce que deux consommateurs différents lisent ces fichiers :
+
+| Espace | Consommateur | Forme de la clé |
+|---|---|---|
+| Plat | Stream Deck, pour le **manifeste** | la chaîne anglaise elle-même, ponctuation comprise |
+| Arborescent | le plugin (`streamDeck.i18n`) et les panneaux | chemin pointé : `key.off`, `scenario.orage.name` |
+
+Le manifeste n'a pas le choix : Stream Deck y cherche la chaîne anglaise telle quelle. Partout
+ailleurs on préfère une clé structurée, qu'une retouche de style ne casse pas.
+
+**Trois surfaces, trois mécanismes.** Le manifeste est localisé par Stream Deck lui-même. Les mots
+dessinés sur les touches passent par `src/i18n.ts` — et arrivent **déjà traduits** dans `key-art.ts`,
+qui reste ainsi pur et testable sans dictionnaire. Les panneaux sont écrits en anglais dans le HTML
+et localisés à l'affichage par `ui/bulbs.js`, qui remplace les éléments portant `data-i18n`,
+`data-i18n-label` ou `data-i18n-placeholder`. Si le dictionnaire ne se charge pas, l'anglais du HTML
+reste affiché : jamais de clés nues à l'écran.
+
+**L'italien est un cas particulier.** Stream Deck ne connaît que huit langues — `de, en, es, fr, ja,
+ko, zh_CN, zh_TW`. `it.json` n'est donc lu que par les **panneaux**, qui se calent sur la langue du
+système via `navigator.language`. Les noms d'actions et les mots sur les touches, eux, suivent la
+langue de Stream Deck et resteront en anglais tant qu'Elgato n'ajoutera pas l'italien.
 
 ## Compatibilité matérielle
 

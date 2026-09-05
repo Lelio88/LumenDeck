@@ -14,6 +14,7 @@ import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
+import { t } from '../i18n.js';
 import type { BulbSettings } from '../settings.js';
 
 type Paintable = {
@@ -37,7 +38,7 @@ async function paint(target: Paintable, on: boolean): Promise<void> {
     await target.setTitle('');
     return;
   }
-  await target.setTitle(on ? 'Allumee' : 'Eteinte');
+  await target.setTitle(on ? t('key.on') : t('key.off'));
 }
 
 @action({ UUID: 'com.lumendeck.bulb.toggle' })
@@ -68,7 +69,7 @@ export class ToggleBulb extends SingletonAction<BulbSettings> {
   /** Bascule l'ampoule puis reporte l'etat REEL sur la touche. */
   private async toggle(target: Paintable, settings: BulbSettings): Promise<void> {
     const coords = await coordinatesFor(settings);
-    if (!coords) { await target.setTitle('A regler'); return; }
+    if (!coords) { await target.setTitle(t('key.toSet')); return; }
     try {
       const on = await withRetry(coords, (bulb) => bulb.togglePower());
       await paint(target, on);
@@ -80,12 +81,12 @@ export class ToggleBulb extends SingletonAction<BulbSettings> {
   /** Lit l'etat courant sans le modifier, pour l'affichage initial. */
   private async refresh(target: Paintable, settings: BulbSettings): Promise<void> {
     const coords = await coordinatesFor(settings);
-    if (!coords) { await target.setTitle('A regler'); return; }
+    if (!coords) { await target.setTitle(t('key.toSet')); return; }
     try {
       const state = await withRetry(coords, (bulb) => bulb.read());
       await paint(target, state.on);
     } catch {
-      await target.setTitle('Hors ligne');
+      await target.setTitle(t('key.offline'));
     }
   }
 }

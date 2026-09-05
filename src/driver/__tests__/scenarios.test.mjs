@@ -21,7 +21,7 @@ test('chaque scenario a un identifiant unique', () => {
 });
 
 test('on retrouve un scenario par son identifiant, et rien d autre', () => {
-  assert.equal(byId('gyrophare')?.name, 'Gyrophare');
+  assert.equal(byId('gyrophare')?.id, 'gyrophare');
   assert.equal(byId('inconnu'), undefined);
   assert.equal(byId(undefined), undefined);
 });
