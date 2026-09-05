@@ -87,6 +87,22 @@ export async function remember(bulb: Partial<KnownBulb> & { id: string }): Promi
   await writeAll(bulbs);
 }
 
+/**
+ * L'unique ampoule declaree, quand il n'y en a qu'une.
+ *
+ * Sert de repli a une touche qui n'en designe aucune : avec un seul appareil au
+ * registre, la question « laquelle ? » n'a qu'une reponse, et l'exiger n'apporte
+ * rien. C'est le cas de la grande majorite des installations.
+ *
+ * Rend undefined des qu'il y en a zero ou plusieurs. Avec plusieurs, il n'existe
+ * pas de reponse evidente, et en inventer une ferait piloter la mauvaise lampe —
+ * mieux vaut alors afficher « A regler » et laisser choisir.
+ */
+export async function soleBulb(): Promise<KnownBulb | undefined> {
+  const all = await readAll();
+  return all.length === 1 ? all[0] : undefined;
+}
+
 /** Retire une ampoule du registre. Les touches qui la designaient afficheront « A regler ». */
 export async function forget(id: string): Promise<void> {
   await writeAll((await readAll()).filter((b) => b.id !== id));
@@ -129,7 +145,7 @@ export async function coordinatesFor(
 ): Promise<{ id: string; key: string; ip?: string } | null> {
   await adoptLegacy(settings);
 
-  const bulb = await resolve(settings.deviceId);
+  const bulb = (await resolve(settings.deviceId)) ?? (await soleBulb());
   if (!bulb || !bulb.key) return null;
 
   return bulb.ip

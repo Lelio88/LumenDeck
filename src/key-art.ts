@@ -76,6 +76,27 @@ export function kelvinToRgb(kelvin: number): string {
   return '#' + byte(red) + byte(green) + byte(blue);
 }
 
+/**
+ * Emballe un dessin pour `setImage`.
+ *
+ * Stream Deck documente accepter une chaine SVG brute, mais la forme data-URI
+ * est celle qu'il traite depuis toujours, PNG comme SVG. On encode donc
+ * systematiquement : c'est la forme la plus conservatrice, et elle ne coute rien.
+ *
+ * L'encodage n'est PAS cosmetique. Un dessin de touche est truffe de couleurs
+ * `#rrggbb` ; dans une URI, le premier `#` ouvre le fragment et tout ce qui suit
+ * est jete. Envoyee nue, l'image se retrouve tronquee des sa premiere couleur —
+ * en silence, sans erreur ni journal, la touche gardant simplement son image
+ * precedente. C'est exactement le symptome qu'on a passe deux correctifs a
+ * chercher ailleurs.
+ *
+ * Usage canonique :
+ *   await action.setImage(asImage(colorKey('#8b5cf6', true)));
+ */
+export function asImage(svg: string): string {
+  return 'data:image/svg+xml;charset=utf8,' + encodeURIComponent(svg);
+}
+
 function frame(content: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">`
     + `<rect width="${SIZE}" height="${SIZE}" fill="${INK}"/>`

@@ -202,6 +202,26 @@
       return;
     }
 
+    // Une seule ampoule au registre : la liste deroulante n'a qu'une reponse
+    // possible, on la choisit d'office plutot que d'exiger un clic sans
+    // alternative. Le plugin applique deja ce repli de son cote ; ceci sert a ce
+    // que la liste MONTRE l'ampoule retenue, au lieu de paraitre vide alors que
+    // la touche fonctionne.
+    if (payload.event === 'getBulbs') {
+      const items = Array.isArray(payload.items) ? payload.items : [];
+      if (items.length !== 1) return;
+      // Le composant se peuple juste apres ce message : on laisse passer un tour
+      // de boucle avant de lire sa valeur, sinon on ecraserait un choix existant
+      // par une lecture prematuree.
+      setTimeout(() => {
+        try {
+          const select = document.querySelector('sdpi-select[setting="deviceId"]');
+          if (select && !select.value) select.value = items[0].value;
+        } catch { /* le repli cote plugin suffit : ne jamais casser le panneau */ }
+      }, 0);
+      return;
+    }
+
     if (payload.event === 'saveBulb') {
       if (payload.ok) {
         say('Ampoule enregistree. Choisissez-la dans la liste ci-dessus.', 'ok');

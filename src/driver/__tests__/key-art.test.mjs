@@ -9,7 +9,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { arcPath, brightnessKey, colorKey, kelvinToRgb, temperatureKey } from '../../key-art.ts';
+import { arcPath, asImage, brightnessKey, colorKey, kelvinToRgb, temperatureKey } from '../../key-art.ts';
 
 const wellFormed = (svg) => svg.startsWith('<svg') && svg.endsWith('</svg>');
 
@@ -91,4 +91,18 @@ test('aucun dessin n emploie une couleur que QSvg refuserait', () => {
     const trouve = svg.match(interdits);
     assert.equal(trouve, null, nom + ' emploie ' + (trouve ? trouve[0] : ''));
   }
+});
+
+test('un dessin emballe pour setImage survit a ses propres dieses', () => {
+  // Un dessin est truffe de couleurs #rrggbb. Dans une URI, le premier # ouvre
+  // le fragment et tout ce qui suit est jete : envoye nu, le SVG arrivait
+  // tronque des sa premiere couleur, sans erreur ni journal.
+  const svg = colorKey('#8b5cf6', true);
+  const prefixe = 'data:image/svg+xml;charset=utf8,';
+  const uri = asImage(svg);
+
+  assert.ok(uri.startsWith(prefixe), 'prefixe data-URI attendu');
+  const charge = uri.slice(prefixe.length);
+  assert.ok(!charge.includes('#'), 'aucun diese ne doit subsister dans la charge');
+  assert.equal(decodeURIComponent(charge), svg, "l'aller-retour doit rendre le dessin intact");
 });

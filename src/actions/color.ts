@@ -19,7 +19,7 @@ import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 
 import { hexToHsv, hsvToHex, rotateHue } from '../color-format.js';
-import { colorKey } from '../key-art.js';
+import { asImage, colorKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import type { Hsv } from '../driver/types.js';
 import { coordinatesFor } from '../bulbs.js';
@@ -164,7 +164,7 @@ export class Color extends SingletonAction<ColorSettings> {
 async function paint(target: Paintable, color: Hsv, on: boolean = true): Promise<void> {
   // La goutte prend la couleur reellement appliquee : aucun mot ne decrit une
   // teinte aussi bien que la teinte elle-meme.
-  await target.setImage?.(colorKey(hsvToHex(color), on));
+  await target.setImage?.(asImage(colorKey(hsvToHex(color), on)));
   await target.setTitle('');
   if (typeof target.setFeedback === 'function') {
     await target.setFeedback({

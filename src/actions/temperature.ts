@@ -18,7 +18,7 @@
 import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 
-import { temperatureKey } from '../key-art.js';
+import { asImage, temperatureKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
 import type { TemperatureSettings } from '../settings.js';
@@ -144,7 +144,7 @@ async function paint(target: Paintable, kelvin: number, on: boolean = true): Pro
   // Le demi-disque prend la teinte reelle du blanc demande : on VOIT la chaleur.
   // Le nombre reste dessine dedans, parce que 3800 et 4200 K se ressemblent
   // beaucoup a l'oeil alors qu'ils ne se choisissent pas au hasard.
-  await target.setImage?.(temperatureKey(kelvin, on));
+  await target.setImage?.(asImage(temperatureKey(kelvin, on)));
   await target.setTitle('');
   if (typeof target.setFeedback === 'function') {
     const pct = Math.round(((kelvin - KELVIN_MIN) / (KELVIN_MAX - KELVIN_MIN)) * 100);

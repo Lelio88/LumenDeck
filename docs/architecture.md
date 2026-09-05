@@ -186,10 +186,13 @@ partage et réessai.
   le test matériel sans build.
 - ❌ Retoucher un PNG à la main plutôt que `tools/make_icons.py`.
 - ❌ Arrondir un PNG de touche : Stream Deck arrondit lui-même, on obtient des coins morts.
-- ❌ Écrire `rgba()`, `hsl()` ou une variable CSS dans un SVG de touche. Stream Deck rend le SVG
-  avec QSvg (SVG Tiny 1.2, aligné sur CSS2), qui rejette le document **entier** — sans erreur ni
-  journal. La touche garde alors l'image du manifeste et paraît figée, ce que ni la relecture du
-  code ni les journaux ne révèlent. N'employer que `#rrggbb` et `*-opacity`.
+- ❌ Passer un SVG **nu** à `setImage`. Toujours l'emballer avec `asImage()`, qui produit un
+  data-URI encodé. Un dessin de touche est truffé de couleurs `#rrggbb` ; dans une URI, le premier
+  `#` ouvre le fragment et tout ce qui suit est jeté. Envoyée nue, l'image arrive tronquée dès sa
+  première couleur — **en silence** : pas d'erreur, pas de journal, la touche garde simplement son
+  image précédente et paraît figée.
+- ❌ Écrire `rgba()`, `hsl()` ou une variable CSS dans un SVG de touche. Le moteur SVG de Stream
+  Deck est aligné sur CSS2 et ne connaît que `rgb()`. N'employer que `#rrggbb` et `*-opacity`.
 
 ## Stratégie de test
 

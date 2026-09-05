@@ -13,7 +13,7 @@
  */
 import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
-import { brightnessKey } from '../key-art.js';
+import { asImage, brightnessKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
 import type { BrightnessSettings } from '../settings.js';
@@ -109,7 +109,7 @@ async function paint(target: Paintable, percent: number, on: boolean): Promise<v
   // L'image PORTE la valeur : une jauge qui se remplit, avec le pourcentage
   // dessine dedans. Le titre ferait doublon, et Stream Deck l'ecrirait par
   // dessus le dessin.
-  await target.setImage?.(brightnessKey(percent, on));
+  await target.setImage?.(asImage(brightnessKey(percent, on)));
   await target.setTitle('');
   if (typeof target.setFeedback === 'function') {
     const label = on ? String(percent) + ' %' : 'Eteinte';
