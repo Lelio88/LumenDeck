@@ -18,8 +18,8 @@
  *   await bulb.togglePower();
  */
 import type { LightDriver } from './types.js';
-import { asLightError } from './errors.js';
-import { TuyaLanDriver, type TuyaLanConfig } from './tuya.js';
+import { asLightError } from './errors.ts';
+import { TuyaLanDriver, type TuyaLanConfig } from './tuya.ts';
 
 /** Connexions vivantes, indexees par identifiant d'ampoule. */
 const pool = new Map<string, Promise<LightDriver>>();
