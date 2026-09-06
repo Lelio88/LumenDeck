@@ -9,7 +9,12 @@
     "node": ">=24"
   },
   "scripts": {
+    "preflight": "node tools/preflight.mjs",
+    "pretest": "node tools/preflight.mjs",
+    "prebuild": "node tools/preflight.mjs rollup",
     "build": "rollup -c",
+    "predeploy": "node tools/preflight.mjs streamdeck",
+    "prewatch": "node tools/preflight.mjs rollup streamdeck",
     "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.lumendeck.bulb\"",
     "test": "node --test src/driver/__tests__/codec.test.mjs src/driver/__tests__/color-format.test.mjs src/driver/__tests__/errors.test.mjs src/driver/__tests__/key-art.test.mjs src/driver/__tests__/scenarios.test.mjs src/driver/__tests__/tuya-cloud.test.mjs",
     "test:live": "node src/driver/__tests__/live.integration.mjs",

@@ -92,6 +92,7 @@ l'existence de Tuya.
 | `tools/make_promo.mjs` | Compose les visuels de présentation. Les faces de touches y viennent de `key-art.ts`, **le module que le plugin appelle vraiment** : une image promotionnelle dessinée à part finit par mentir dès que le produit évolue. |
 | `tools/make_locales.py` | Produit les cinq `<langue>.json` depuis une table unique où chaque texte figure dans toutes les langues. Une entrée incomplète fait **échouer** la génération. |
 | `tools/make_icons.py` | Génère les 24 PNG du plugin. Hors chaîne Node, d'où son emplacement séparé. |
+| `tools/preflight.mjs` | Contrôle la chaîne de développement avant `test`, `build`, `watch` et `deploy` : dépendances installées, binaire présent, **et `node_modules/.bin` réellement dans le PATH**. Silencieux quand tout va bien. N'importe que des modules natifs — il doit tourner quand les dépendances manquent. |
 
 ## Le cloud, une seule fois
 
