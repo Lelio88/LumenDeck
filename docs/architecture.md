@@ -246,7 +246,7 @@ Une panne traverse trois étages, chacun avec une responsabilité unique.
 | Étage | Responsabilité |
 |---|---|
 | `driver/tuya.ts` | Absorbe l'événement `'error'` du device, **qualifie** l'échec et le lève. |
-| `driver/pool.ts` | Rejoue une fois, puis remonte la cause la plus précise des deux tentatives. |
+| `driver/pool.ts` | Rejoue une fois **si la cause est réparable par une reconnexion**, puis remonte la cause la plus précise. |
 | `actions/failure.ts` | Journalise une fois, écrit un mot sur la touche. **Seul étage qui journalise.** |
 
 ### Les quatre causes
@@ -257,6 +257,11 @@ Une panne traverse trois étages, chacun avec une responsabilité unique.
 | `unreachable` | `find() timed out`, `connection timed out`, `Error from socket`, codes `ECONN*`/`EHOST*` | « Hors ligne » | Vérifier l'alimentation et le réseau ; `npm run diagnose`. |
 | `unresponsive` | `Timeout waiting for status response` | « Erreur » | Attendre : le réseau va bien, l'ampoule non. |
 | `unknown` | tout le reste | « Erreur » | Lire le journal. |
+
+La reprise de `withRetry` dépend de cette même colonne : `badKey` et `unreachable` ne sont **pas**
+rejouées, puisqu'une session neuve n'y change rien — le délai de connexion de `tuyapi` étant de cinq
+secondes, les rejouer faisait patienter dix secondes devant une touche muette. `unresponsive` et
+`unknown` le sont, la première décrivant exactement ce qu'une session neuve répare.
 
 `badKey` est la seule qui se distingue à l'écran, parce que c'est la seule que l'utilisateur répare
 seul. Trois mots pour quatre causes : multiplier les libellés ferait deviner une nuance qui ne

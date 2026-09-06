@@ -18,8 +18,18 @@
  *   await bulb.togglePower();
  */
 import type { LightDriver } from './types.js';
-import { asLightError } from './errors.ts';
+import { asLightError, type LightFailure } from './errors.ts';
 import { TuyaLanDriver, type TuyaLanConfig } from './tuya.ts';
+
+/**
+ * Causes qu'une reconnexion ne peut pas reparer.
+ *
+ * `unresponsive` et `unknown` en sont absents a dessein : la premiere decrit une
+ * session etablie mais muette — precisement ce qu'une session neuve repare — et
+ * la seconde est un repli dont on ignore la nature, ou la reprise reste le pari
+ * le plus sur.
+ */
+const SANS_REPRISE: readonly LightFailure[] = ['badKey', 'unreachable'];
 
 /** Connexions vivantes, indexees par identifiant d'ampoule. */
 const pool = new Map<string, Promise<LightDriver>>();
@@ -68,10 +78,15 @@ export async function releaseAll(): Promise<void> {
  * d'inactivite : la premiere commande echoue alors sans que rien ne soit casse.
  * Retenter une fois evite d'imposer a l'utilisateur un appui « pour rien ».
  *
- * En cas de double echec, la cause remontee est CLASSEE et jamais perdue : la
- * version precedente avalait l'erreur de la premiere tentative, si bien qu'une
- * cle refusee — qu'aucune reouverture ne repare — ressortait sous les traits
- * d'un simple incident reseau.
+ * La reprise est CONDITIONNELLE : rouvrir une session ne repare qu'une session.
+ * Une ampoule hors tension ou une cle refusee resteront exactement ce qu'elles
+ * sont a la seconde tentative — on ne fait alors qu'ajouter une attente a une
+ * panne deja acquise. Le cas le plus visible est l'ampoule debranchee : le delai
+ * de connexion de tuyapi etant de cinq secondes, la reprise systematique faisait
+ * patienter DIX secondes devant une touche qui semblait figee.
+ *
+ * En cas de double echec, la cause remontee est classee et jamais perdue : la
+ * premiere tentative reste la reference si la seconde n'a rien su dire.
  */
 export async function withRetry<T>(
   config: TuyaLanConfig,
@@ -80,14 +95,21 @@ export async function withRetry<T>(
   try {
     return await operation(await acquire(config));
   } catch (first) {
+    // Toujours relacher, meme sans reprise : l'entree du reservoir pointe une
+    // session morte, et la garder condamnerait aussi la commande suivante —
+    // y compris apres que l'utilisateur a corrige la cle ou rebranche la lampe.
     await release(config.id);
+
+    const cause = asLightError(first);
+    if (SANS_REPRISE.includes(cause.failure)) throw cause;
+
     try {
       return await operation(await acquire(config));
     } catch (second) {
       // La SECONDE tentative decrit l'etat present et prime donc a egalite ;
       // on ne retombe sur la premiere que si la seconde n'a rien su dire.
       const retry = asLightError(second);
-      throw retry.failure === 'unknown' ? asLightError(first) : retry;
+      throw retry.failure === 'unknown' ? cause : retry;
     }
   }
 }
