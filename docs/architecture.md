@@ -72,6 +72,7 @@ l'existence de Tuya.
 | `src/driver/pool.ts` | Réservoir de connexions indexé par ampoule, plus `withRetry` qui rejoue une fois après reconnexion, en conservant la cause la plus précise des deux tentatives. |
 | `src/driver/errors.ts` | Vocabulaire des pannes : `LightFailure` (quatre causes), `LightError`, `classify()`. Traduit les messages de `tuyapi` en causes que l'utilisateur peut distinguer. N'importe rien. |
 | `src/actions/failure.ts` | Report d'une panne : un mot sur la touche, la cause complète au journal. Point de passage unique des cinq actions. |
+| `src/actions/face.ts` | Tranche entre la valeur de la touche et celle de la lampe, selon le contrôleur. N'importe rien — la règle est vérifiable sans Stream Deck ni ampoule. |
 | `src/actions/recovery.ts` | Cycle de reprise des touches en panne : relecture replanifiée avec attente croissante, éteinte dès que ça repart. N'importe rien — testable avec des minuteries simulées. |
 | `src/actions/toggle.ts` | Action « allumer / éteindre », touche et molette. |
 | `src/actions/brightness.ts` | Action « intensité » : pas fixe sur touche, rotation continue sur molette, retour visuel sur l'écran de la molette. |
@@ -471,6 +472,10 @@ sait plus laquelle fait quoi — et le doute naît précisément après en avoir
 deux se mettent alors à afficher la même chose. Sur une **molette**, l'écran suit la lampe : la
 rotation part de sa valeur courante, et la contredire priverait le geste de sens. L'état allumé /
 éteint, lui, vient toujours de la lampe dans les deux cas — c'est lui qui assombrit le dessin.
+
+Cette règle vit dans `src/actions/face.ts`, seule et sans dépendance, plutôt qu'en double au fond de
+`color.ts` et de `temperature.ts` : c'est ce qui la rend vérifiable, et le test porte le cas qui l'a
+révélée — une lampe verte, deux touches, dont une réglée sur violet.
 
 ## Le registre des ampoules
 

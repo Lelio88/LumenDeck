@@ -16,7 +16,7 @@
     "predeploy": "node tools/preflight.mjs streamdeck",
     "prewatch": "node tools/preflight.mjs rollup streamdeck",
     "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.lumendeck.bulb\"",
-    "test": "node --test src/driver/__tests__/codec.test.mjs src/driver/__tests__/color-format.test.mjs src/driver/__tests__/errors.test.mjs src/driver/__tests__/key-art.test.mjs src/driver/__tests__/recovery.test.mjs src/driver/__tests__/scenarios.test.mjs src/driver/__tests__/tuya-cloud.test.mjs",
+    "test": "node --test src/driver/__tests__/codec.test.mjs src/driver/__tests__/color-format.test.mjs src/driver/__tests__/errors.test.mjs src/driver/__tests__/face.test.mjs src/driver/__tests__/key-art.test.mjs src/driver/__tests__/recovery.test.mjs src/driver/__tests__/scenarios.test.mjs src/driver/__tests__/tuya-cloud.test.mjs",
     "test:live": "node src/driver/__tests__/live.integration.mjs",
     "probe": "node src/tools/probe.mjs",
     "deploy": "npm run build && streamdeck dev && streamdeck link com.lumendeck.bulb.sdPlugin && streamdeck restart com.lumendeck.bulb",
