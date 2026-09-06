@@ -17,10 +17,11 @@
  * moteur, lui, coupe tout a l'extinction du plugin.
  */
 import { action, SingletonAction } from '@elgato/streamdeck';
-import type { DialDownEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
+import type { DialDownEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent, WillDisappearEvent } from '@elgato/streamdeck';
 
 import { coordinatesFor, resolve } from '../bulbs.js';
 import { reportFailure } from './failure.js';
+import { cancelRecovery } from './recovery.js';
 import { scenarioName, t } from '../i18n.js';
 import { asImage, scenarioKey } from '../key-art.js';
 import { byId } from '../scenarios/catalogue.js';
@@ -28,6 +29,8 @@ import { runningOn, start, stop, type Target } from '../scenarios/runner.js';
 import type { ScenarioSettings } from '../settings.js';
 
 type Paintable = {
+  /** Identifiant d'instance de la touche, cle du cycle de reprise. */
+  readonly id: string;
   setTitle(title: string): Promise<void>;
   showAlert(): Promise<void>;
   setImage?: (image?: string) => Promise<void>;
@@ -65,6 +68,17 @@ async function targetsFor(settings: ScenarioSettings): Promise<Target[]> {
 
 @action({ UUID: 'com.lumendeck.bulb.scenario' })
 export class ScenarioAction extends SingletonAction<ScenarioSettings> {
+  /**
+   * La touche quitte l'ecran : on coupe son cycle de reprise.
+   *
+   * Sans cela, une page qu'on quitte laisserait une relecture programmee
+   * interroger l'ampoule pour repeindre un ecran que plus personne ne regarde,
+   * en consommant au passage une des rares connexions qu'elle accepte.
+   */
+  override onWillDisappear(ev: WillDisappearEvent<ScenarioSettings>): void {
+    cancelRecovery(ev.action.id);
+  }
+
   override async onWillAppear(ev: WillAppearEvent<ScenarioSettings>): Promise<void> {
     await this.repaint(ev.action as unknown as Paintable, ev.payload.settings);
   }
@@ -99,7 +113,7 @@ export class ScenarioAction extends SingletonAction<ScenarioSettings> {
     } catch (error) {
       // On NE repeint PAS derriere : paint() remet un titre vide, et le mot
       // d'explication disparaitrait aussitot ecrit.
-      await reportFailure(target, error, { where: 'scenario', deviceId: primary.id, alert: true });
+      await reportFailure(target, error, { where: 'scenario', deviceId: primary.id, alert: true, recover: () => this.repaint(target, settings) });
       return;
     }
     await this.paint(target, settings);

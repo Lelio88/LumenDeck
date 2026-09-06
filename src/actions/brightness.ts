@@ -12,12 +12,13 @@
  * qui evite la molette qui « ne fait rien » des que l'ampoule est en couleur.
  */
 import { action, SingletonAction } from '@elgato/streamdeck';
-import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
+import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent, WillDisappearEvent } from '@elgato/streamdeck';
 import { t } from '../i18n.js';
 import { asImage, brightnessKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
 import { reportFailure } from './failure.js';
+import { cancelRecovery } from './recovery.js';
 import type { BrightnessSettings } from '../settings.js';
 
 /** Pas par defaut, en points de pourcentage. */
@@ -25,6 +26,8 @@ const DEFAULT_STEP = 10;
 
 /** Surface commune aux touches et aux molettes ; setFeedback n'existe que sur ces dernieres. */
 type Paintable = {
+  /** Identifiant d'instance de la touche, cle du cycle de reprise. */
+  readonly id: string;
   setTitle(title: string): Promise<void>;
   showAlert(): Promise<void>;
   /** Remplace l'image de la touche. `undefined` restaure celle du manifeste. */
@@ -46,6 +49,17 @@ async function reset(target: Paintable, label: string): Promise<void> {
 
 @action({ UUID: 'com.lumendeck.bulb.brightness' })
 export class Brightness extends SingletonAction<BrightnessSettings> {
+  /**
+   * La touche quitte l'ecran : on coupe son cycle de reprise.
+   *
+   * Sans cela, une page qu'on quitte laisserait une relecture programmee
+   * interroger l'ampoule pour repeindre un ecran que plus personne ne regarde,
+   * en consommant au passage une des rares connexions qu'elle accepte.
+   */
+  override onWillDisappear(ev: WillDisappearEvent<BrightnessSettings>): void {
+    cancelRecovery(ev.action.id);
+  }
+
   override async onWillAppear(ev: WillAppearEvent<BrightnessSettings>): Promise<void> {
     await this.refresh(ev.action as unknown as Paintable, ev.payload.settings);
   }
@@ -63,7 +77,7 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
       const state = await withRetry(coords, (bulb) => bulb.read());
       await paint(target, state.brightness, state.on);
     } catch (error) {
-      await reportFailure(target, error, { where: 'brightness.refresh', deviceId: coords.id });
+      await reportFailure(target, error, { where: 'brightness.refresh', deviceId: coords.id, recover: () => this.refresh(target, settings) });
     }
   }
 
@@ -90,7 +104,7 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
       });
       await paint(target, state.brightness, state.on);
     } catch (error) {
-      await reportFailure(target, error, { where: 'brightness.toggle', deviceId: coords.id, alert: true });
+      await reportFailure(target, error, { where: 'brightness.toggle', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
     }
   }
 
@@ -101,7 +115,7 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
       const level = await withRetry(coords, (bulb) => bulb.nudgeBrightness(delta));
       await paint(target, level, true);
     } catch (error) {
-      await reportFailure(target, error, { where: 'brightness.nudge', deviceId: coords.id, alert: true });
+      await reportFailure(target, error, { where: 'brightness.nudge', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
     }
   }
 }

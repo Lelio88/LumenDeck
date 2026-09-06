@@ -29,9 +29,12 @@
 import streamDeck from '@elgato/streamdeck';
 import { asLightError, type LightError, type LightFailure } from '../driver/errors.js';
 import { t } from '../i18n.js';
+import { scheduleRecovery, type Recover } from './recovery.js';
 
 /** Surface minimale d'une touche ou d'une molette, vue du report. */
 export type Reportable = {
+  /** Identifiant d'instance de la touche. Sert de cle au cycle de reprise. */
+  readonly id: string;
   setTitle(title: string): Promise<void>;
   showAlert(): Promise<void>;
   /** N'existe que sur une touche. `undefined` restaure l'image du manifeste. */
@@ -46,6 +49,16 @@ export type Report = {
   readonly deviceId?: string | undefined;
   /** Fait clignoter la touche. RESERVE aux echecs qui suivent un geste de l'utilisateur. */
   readonly alert?: boolean;
+  /**
+   * Comment la touche retente sa chance, plus tard, toute seule.
+   *
+   * DOIT etre une simple RELECTURE, jamais la commande qui vient d'echouer :
+   * rejouer un allumage a l'insu de l'utilisateur ferait s'animer une lampe
+   * plusieurs minutes apres son geste. Omise, la touche garde son message
+   * jusqu'au prochain appui — c'est le bon choix quand aucune relecture ne
+   * dirait quoi que ce soit d'utile.
+   */
+  readonly recover?: Recover;
 };
 
 /**
@@ -103,4 +116,8 @@ export async function reportFailure(target: Reportable, error: unknown, report: 
   await target.setImage?.(undefined);
   await target.setTitle(titleFor(failure.failure));
   if (report.alert) await target.showAlert();
+
+  // Sans cela, le mot resterait affiche jusqu'au prochain appui ou changement
+  // de page, longtemps apres le retour de l'ampoule — une touche qui ment.
+  if (report.recover) scheduleRecovery(target.id, report.recover);
 }

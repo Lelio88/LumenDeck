@@ -16,13 +16,14 @@
  * poursuivre le reglage en cours.
  */
 import { action, SingletonAction } from '@elgato/streamdeck';
-import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
+import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent, WillDisappearEvent } from '@elgato/streamdeck';
 
 import { t } from '../i18n.js';
 import { asImage, temperatureKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
 import { reportFailure } from './failure.js';
+import { cancelRecovery } from './recovery.js';
 import type { TemperatureSettings } from '../settings.js';
 
 /** Plage atteignable par les ampoules Calex a blanc reglable. */
@@ -34,6 +35,8 @@ const DEFAULT_KELVIN = 4000;
 const DEFAULT_STEP = 200;
 
 type Paintable = {
+  /** Identifiant d'instance de la touche, cle du cycle de reprise. */
+  readonly id: string;
   setTitle(title: string): Promise<void>;
   showAlert(): Promise<void>;
   /** Remplace l'image de la touche. `undefined` restaure celle du manifeste. */
@@ -65,9 +68,23 @@ function warmth(kelvin: number): string {
 
 @action({ UUID: 'com.lumendeck.bulb.temperature' })
 export class Temperature extends SingletonAction<TemperatureSettings> {
+  /**
+   * La touche quitte l'ecran : on coupe son cycle de reprise.
+   *
+   * Sans cela, une page qu'on quitte laisserait une relecture programmee
+   * interroger l'ampoule pour repeindre un ecran que plus personne ne regarde,
+   * en consommant au passage une des rares connexions qu'elle accepte.
+   */
+  override onWillDisappear(ev: WillDisappearEvent<TemperatureSettings>): void {
+    cancelRecovery(ev.action.id);
+  }
+
   override async onWillAppear(ev: WillAppearEvent<TemperatureSettings>): Promise<void> {
-    const target = ev.action as unknown as Paintable;
-    const { settings } = ev.payload;
+    await this.refresh(ev.action as unknown as Paintable, ev.payload.settings);
+  }
+
+  /** Lit l'ampoule et reporte son etat REEL. Sert aussi de point de reprise. */
+  private async refresh(target: Paintable, settings: TemperatureSettings): Promise<void> {
     const coords = await coordinatesFor(settings);
     if (!coords) { await reset(target, t('key.toSet')); return; }
     try {
@@ -81,7 +98,7 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
       if (!snapshot.supported) { await reset(target, t('key.noWhite')); return; }
       await paint(target, snapshot.state.temperatureK ?? clamp(settings.kelvin ?? DEFAULT_KELVIN), snapshot.state.on);
     } catch (error) {
-      await reportFailure(target, error, { where: 'temperature.refresh', deviceId: coords.id });
+      await reportFailure(target, error, { where: 'temperature.refresh', deviceId: coords.id, recover: () => this.refresh(target, settings) });
     }
   }
 
@@ -112,7 +129,7 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
       if (!supported) { await reset(target, t('key.noWhite')); return; }
       await paint(target, wanted);
     } catch (error) {
-      await reportFailure(target, error, { where: 'temperature.apply', deviceId: coords.id, alert: true });
+      await reportFailure(target, error, { where: 'temperature.apply', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
     }
   }
 
@@ -133,7 +150,7 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
       });
       await paint(target, applied);
     } catch (error) {
-      await reportFailure(target, error, { where: 'temperature.rotate', deviceId: coords.id, alert: true });
+      await reportFailure(target, error, { where: 'temperature.rotate', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
     }
   }
 
@@ -146,7 +163,7 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
       const on = await withRetry(coords, (bulb) => bulb.togglePower());
       await paint(target, clamp(settings.kelvin ?? DEFAULT_KELVIN), on);
     } catch (error) {
-      await reportFailure(target, error, { where: 'temperature.toggle', deviceId: coords.id, alert: true });
+      await reportFailure(target, error, { where: 'temperature.toggle', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
     }
   }
 }

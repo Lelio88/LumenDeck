@@ -11,14 +11,17 @@
  * sans etat.
  */
 import { action, SingletonAction } from '@elgato/streamdeck';
-import type { DialDownEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
+import type { DialDownEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent, WillDisappearEvent } from '@elgato/streamdeck';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
 import { reportFailure } from './failure.js';
+import { cancelRecovery } from './recovery.js';
 import { t } from '../i18n.js';
 import type { BulbSettings } from '../settings.js';
 
 type Paintable = {
+  /** Identifiant d'instance de la touche, cle du cycle de reprise. */
+  readonly id: string;
   setTitle(title: string): Promise<void>;
   showAlert(): Promise<void>;
   /** N'existe que sur une touche : une molette n'a pas d'etats. */
@@ -44,6 +47,17 @@ async function paint(target: Paintable, on: boolean): Promise<void> {
 
 @action({ UUID: 'com.lumendeck.bulb.toggle' })
 export class ToggleBulb extends SingletonAction<BulbSettings> {
+  /**
+   * La touche quitte l'ecran : on coupe son cycle de reprise.
+   *
+   * Sans cela, une page qu'on quitte laisserait une relecture programmee
+   * interroger l'ampoule pour repeindre un ecran que plus personne ne regarde,
+   * en consommant au passage une des rares connexions qu'elle accepte.
+   */
+  override onWillDisappear(ev: WillDisappearEvent<BulbSettings>): void {
+    cancelRecovery(ev.action.id);
+  }
+
   override async onWillAppear(ev: WillAppearEvent<BulbSettings>): Promise<void> {
     await this.refresh(ev.action as unknown as Paintable, ev.payload.settings);
   }
@@ -75,7 +89,7 @@ export class ToggleBulb extends SingletonAction<BulbSettings> {
       const on = await withRetry(coords, (bulb) => bulb.togglePower());
       await paint(target, on);
     } catch (error) {
-      await reportFailure(target, error, { where: 'toggle', deviceId: coords.id, alert: true });
+      await reportFailure(target, error, { where: 'toggle', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
     }
   }
 
@@ -87,7 +101,7 @@ export class ToggleBulb extends SingletonAction<BulbSettings> {
       const state = await withRetry(coords, (bulb) => bulb.read());
       await paint(target, state.on);
     } catch (error) {
-      await reportFailure(target, error, { where: 'toggle.refresh', deviceId: coords.id });
+      await reportFailure(target, error, { where: 'toggle.refresh', deviceId: coords.id, recover: () => this.refresh(target, settings) });
     }
   }
 }

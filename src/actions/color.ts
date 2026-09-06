@@ -16,7 +16,7 @@
  * donne un point de depart previsible plutot qu'un rouge arbitraire.
  */
 import { action, SingletonAction } from '@elgato/streamdeck';
-import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
+import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent, WillDisappearEvent } from '@elgato/streamdeck';
 
 import { hexToHsv, hsvToHex, rotateHue } from '../color-format.js';
 import { t } from '../i18n.js';
@@ -25,6 +25,7 @@ import { withRetry } from '../driver/pool.js';
 import type { Hsv } from '../driver/types.js';
 import { coordinatesFor } from '../bulbs.js';
 import { reportFailure } from './failure.js';
+import { cancelRecovery } from './recovery.js';
 import type { ColorSettings } from '../settings.js';
 
 /**
@@ -42,6 +43,8 @@ const FALLBACK: Hsv = hexToHsv(FALLBACK_HEX) ?? { h: 32, s: 100, v: 100 };
 const DEFAULT_STEP = 15;
 
 type Paintable = {
+  /** Identifiant d'instance de la touche, cle du cycle de reprise. */
+  readonly id: string;
   setTitle(title: string): Promise<void>;
   showAlert(): Promise<void>;
   /** Remplace l'image de la touche. `undefined` restaure celle du manifeste. */
@@ -78,9 +81,24 @@ function hueName(h: number): string {
 
 @action({ UUID: 'com.lumendeck.bulb.color' })
 export class Color extends SingletonAction<ColorSettings> {
+  /**
+   * La touche quitte l'ecran : on coupe son cycle de reprise.
+   *
+   * Sans cela, une page qu'on quitte laisserait une relecture programmee
+   * interroger l'ampoule pour repeindre un ecran que plus personne ne regarde,
+   * en consommant au passage une des rares connexions qu'elle accepte.
+   */
+  override onWillDisappear(ev: WillDisappearEvent<ColorSettings>): void {
+    cancelRecovery(ev.action.id);
+  }
+
   override async onWillAppear(ev: WillAppearEvent<ColorSettings>): Promise<void> {
-    const target = ev.action as unknown as Paintable;
-    const coords = await coordinatesFor(ev.payload.settings);
+    await this.refresh(ev.action as unknown as Paintable, ev.payload.settings);
+  }
+
+  /** Lit l'ampoule et reporte son etat REEL. Sert aussi de point de reprise. */
+  private async refresh(target: Paintable, settings: ColorSettings): Promise<void> {
+    const coords = await coordinatesFor(settings);
     if (!coords) { await reset(target, t('key.toSet')); return; }
     try {
       // On LIT l'ampoule plutot que de la supposer allumee : elle a pu etre
@@ -95,9 +113,9 @@ export class Color extends SingletonAction<ColorSettings> {
       // vaut mieux que d'echouer en silence : sans ce mot, l'utilisateur conclut
       // que le plugin est casse alors que c'est son materiel qui ne sait pas.
       if (!snapshot.supported) { await reset(target, t('key.noColour')); return; }
-      await paint(target, snapshot.state.color ?? configured(ev.payload.settings), snapshot.state.on);
+      await paint(target, snapshot.state.color ?? configured(settings), snapshot.state.on);
     } catch (error) {
-      await reportFailure(target, error, { where: 'color.refresh', deviceId: coords.id });
+      await reportFailure(target, error, { where: 'color.refresh', deviceId: coords.id, recover: () => this.refresh(target, settings) });
     }
   }
 
@@ -135,7 +153,7 @@ export class Color extends SingletonAction<ColorSettings> {
       if (!supported) { await reset(target, t('key.noColour')); return; }
       await paint(target, wanted);
     } catch (error) {
-      await reportFailure(target, error, { where: 'color.apply', deviceId: coords.id, alert: true });
+      await reportFailure(target, error, { where: 'color.apply', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
     }
   }
 
@@ -156,7 +174,7 @@ export class Color extends SingletonAction<ColorSettings> {
       });
       await paint(target, applied);
     } catch (error) {
-      await reportFailure(target, error, { where: 'color.rotate', deviceId: coords.id, alert: true });
+      await reportFailure(target, error, { where: 'color.rotate', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
     }
   }
 
@@ -169,7 +187,7 @@ export class Color extends SingletonAction<ColorSettings> {
       const on = await withRetry(coords, (bulb) => bulb.togglePower());
       await paint(target, configured(settings), on);
     } catch (error) {
-      await reportFailure(target, error, { where: 'color.toggle', deviceId: coords.id, alert: true });
+      await reportFailure(target, error, { where: 'color.toggle', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
     }
   }
 }

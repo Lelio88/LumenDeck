@@ -72,6 +72,7 @@ l'existence de Tuya.
 | `src/driver/pool.ts` | Réservoir de connexions indexé par ampoule, plus `withRetry` qui rejoue une fois après reconnexion, en conservant la cause la plus précise des deux tentatives. |
 | `src/driver/errors.ts` | Vocabulaire des pannes : `LightFailure` (quatre causes), `LightError`, `classify()`. Traduit les messages de `tuyapi` en causes que l'utilisateur peut distinguer. N'importe rien. |
 | `src/actions/failure.ts` | Report d'une panne : un mot sur la touche, la cause complète au journal. Point de passage unique des cinq actions. |
+| `src/actions/recovery.ts` | Cycle de reprise des touches en panne : relecture replanifiée avec attente croissante, éteinte dès que ça repart. N'importe rien — testable avec des minuteries simulées. |
 | `src/actions/toggle.ts` | Action « allumer / éteindre », touche et molette. |
 | `src/actions/brightness.ts` | Action « intensité » : pas fixe sur touche, rotation continue sur molette, retour visuel sur l'écran de la molette. |
 | `src/actions/color.ts` | Action « couleur » : applique une couleur choisie, ou fait tourner la teinte à la molette en préservant l'intensité courante. |
@@ -285,6 +286,32 @@ clé régénérée depuis l'application Calex — s'afficherait « Erreur », et
 raison d'aller la ressaisir. Aucun test unitaire ne peut révéler cette nuance : elle tient au
 comportement d'une bibliothèque tierce face à du vrai matériel, et seul `live.integration.mjs` §5
 la vérifie.
+
+### Une touche en panne se répare toute seule
+
+Les actions sont purement événementielles : `onWillAppear`, un réglage, un geste. **Aucune minuterie
+n'interroge l'ampoule de son propre chef**, et c'est voulu — une ampoule Tuya n'accepte qu'une
+poignée de connexions simultanées, qu'un sondage général gaspillerait à confirmer que tout va bien.
+
+Conséquence, sans traitement : une touche ayant affiché « Hors ligne » gardait ce mot longtemps après
+le retour du courant. C'est le défaut que condamne l'en-tête de `toggle.ts` — *une touche qui ment
+est pire qu'une touche sans état* — simplement pris à l'envers.
+
+`recovery.ts` corrige cela sans rien sonder : **seule une touche en échec** se replanifie une
+relecture, à 15 s, 30 s, 60 s puis 5 min, la dernière valeur se rejouant indéfiniment. Le cycle
+s'éteint dès qu'une relecture n'a plus rien à signaler, et `onWillDisappear` l'annule — inutile de
+repeindre un écran que personne ne regarde.
+
+Deux propriétés qui ne se devinent pas à la lecture :
+
+- **Le succès est déduit, pas déclaré.** Chaque échec incrémente un compteur ; une relecture qui se
+  termine sans l'avoir incrémenté a forcément réussi. Les chemins nominaux des cinq actions n'ont
+  donc pas une ligne à ajouter — ce qui supprime la classe de bugs où l'on oublie de clore le cycle
+  dans l'une d'elles.
+- **`recover` est toujours une relecture, jamais la commande qui a échoué.** Rejouer un allumage à
+  l'insu de l'utilisateur ferait s'animer une lampe plusieurs minutes après son geste. C'est aussi
+  ce qui fait que la reprise ne fait jamais clignoter la touche : le report d'une relecture ne
+  demande pas d'alerte.
 
 ### L'écouteur `'error'`, non négociable
 

@@ -90,7 +90,7 @@ npx streamdeck restart com.lumendeck.bulb           # recharge après build
 | Nouvel adaptateur (Zigbee, Matter) | Section « Adaptateurs » de `docs/architecture.md` |
 | Retouche d'icône | `tools/make_icons.py` — **jamais** le PNG |
 | Nouveau texte affiché à l'utilisateur | `tools/make_locales.py` — **jamais** un `<langue>.json` |
-| Nouvelle cause de panne, ou signature `tuyapi` reclassée | `src/driver/errors.ts` + `errors.test.mjs` + tableau des causes de `docs/architecture.md` |
+| Nouvelle cause de panne, signature `tuyapi` reclassée, ou délai de reprise | `src/driver/errors.ts` ou `src/actions/recovery.ts`, leur test, + `docs/architecture.md` |
 | Nouvel anti-pattern découvert | Section « Anti-patterns » de `docs/architecture.md` |
 | Changement de dépendance critique | Section III ci-dessus + `package.json` |
 
