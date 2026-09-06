@@ -19,6 +19,8 @@
     "key": {
       "toSet": "待设置",
       "offline": "离线",
+      "badKey": "密钥错误",
+      "error": "错误",
       "on": "开",
       "off": "关",
       "noColour": "不支持颜色",

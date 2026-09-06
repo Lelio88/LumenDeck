@@ -24,6 +24,7 @@ import { asImage, colorKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import type { Hsv } from '../driver/types.js';
 import { coordinatesFor } from '../bulbs.js';
+import { reportFailure } from './failure.js';
 import type { ColorSettings } from '../settings.js';
 
 /**
@@ -95,8 +96,8 @@ export class Color extends SingletonAction<ColorSettings> {
       // que le plugin est casse alors que c'est son materiel qui ne sait pas.
       if (!snapshot.supported) { await reset(target, t('key.noColour')); return; }
       await paint(target, snapshot.state.color ?? configured(ev.payload.settings), snapshot.state.on);
-    } catch {
-      await reset(target, t('key.offline'));
+    } catch (error) {
+      await reportFailure(target, error, { where: 'color.refresh', deviceId: coords.id });
     }
   }
 
@@ -133,8 +134,8 @@ export class Color extends SingletonAction<ColorSettings> {
       });
       if (!supported) { await reset(target, t('key.noColour')); return; }
       await paint(target, wanted);
-    } catch {
-      await target.showAlert();
+    } catch (error) {
+      await reportFailure(target, error, { where: 'color.apply', deviceId: coords.id, alert: true });
     }
   }
 
@@ -154,8 +155,8 @@ export class Color extends SingletonAction<ColorSettings> {
         return next;
       });
       await paint(target, applied);
-    } catch {
-      await target.showAlert();
+    } catch (error) {
+      await reportFailure(target, error, { where: 'color.rotate', deviceId: coords.id, alert: true });
     }
   }
 
@@ -167,8 +168,8 @@ export class Color extends SingletonAction<ColorSettings> {
     try {
       const on = await withRetry(coords, (bulb) => bulb.togglePower());
       await paint(target, configured(settings), on);
-    } catch {
-      await target.showAlert();
+    } catch (error) {
+      await reportFailure(target, error, { where: 'color.toggle', deviceId: coords.id, alert: true });
     }
   }
 }

@@ -13,9 +13,8 @@ centaines via l'API cloud Tuya — c'est cette réactivité qui justifie le proj
 
 **Modèle** : hexagonal léger. Un contrat métier neutre (`LightDriver`) isole les actions Stream Deck
 du protocole ; un seul adaptateur existe aujourd'hui (Tuya LAN), d'autres (Zigbee, Matter) se
-brancheraient sans toucher aux actions.
-
-**Détails complets** (couches, flux, datapoints, couplage, compatibilité, langues, tests) : voir [`docs/architecture.md`](./docs/architecture.md).
+brancheraient sans toucher aux actions. **Détails complets** (couches, flux, datapoints, pannes,
+couplage, compatibilité, langues, tests) : voir [`docs/architecture.md`](./docs/architecture.md).
 
 Topologie rapide :
 - `src/driver/` — contrat `LightDriver`, adaptateur Tuya, réservoir de connexions
@@ -91,6 +90,7 @@ npx streamdeck restart com.lumendeck.bulb           # recharge après build
 | Nouvel adaptateur (Zigbee, Matter) | Section « Adaptateurs » de `docs/architecture.md` |
 | Retouche d'icône | `tools/make_icons.py` — **jamais** le PNG |
 | Nouveau texte affiché à l'utilisateur | `tools/make_locales.py` — **jamais** un `<langue>.json` |
+| Nouvelle cause de panne, ou signature `tuyapi` reclassée | `src/driver/errors.ts` + `errors.test.mjs` + tableau des causes de `docs/architecture.md` |
 | Nouvel anti-pattern découvert | Section « Anti-patterns » de `docs/architecture.md` |
 | Changement de dépendance critique | Section III ci-dessus + `package.json` |
 

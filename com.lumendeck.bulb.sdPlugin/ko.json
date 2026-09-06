@@ -19,6 +19,8 @@
     "key": {
       "toSet": "설정 필요",
       "offline": "오프라인",
+      "badKey": "키 오류",
+      "error": "오류",
       "on": "켜짐",
       "off": "꺼짐",
       "noColour": "색상 미지원",

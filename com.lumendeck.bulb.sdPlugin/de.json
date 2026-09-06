@@ -19,6 +19,8 @@
     "key": {
       "toSet": "Einrichten",
       "offline": "Offline",
+      "badKey": "Key falsch",
+      "error": "Fehler",
       "on": "An",
       "off": "Aus",
       "noColour": "Keine Farbe",

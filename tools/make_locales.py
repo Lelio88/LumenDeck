@@ -166,6 +166,18 @@ ARBRE = {
         "en": "Offline", "fr": "Hors ligne", "de": "Offline", "es": "Sin conexión", "it": "Non in linea",
         "ja": "オフライン", "ko": "오프라인", "zh_CN": "离线", "zh_TW": "離線",
     },
+    # La SEULE panne que l'utilisateur repare seul, depuis le panneau : elle se
+    # distingue donc de « hors ligne », qui ne lui demande rien.
+    "key.badKey": {
+        "en": "Bad key", "fr": "Clé refusée", "de": "Key falsch", "es": "Clave errónea", "it": "Chiave errata",
+        "ja": "キー不一致", "ko": "키 오류", "zh_CN": "密钥错误", "zh_TW": "密鑰錯誤",
+    },
+    # Repli pour ce qu'on ne sait pas nommer. Volontairement muet sur la cause :
+    # un diagnostic invente enverrait l'utilisateur demonter son pare-feu pour rien.
+    "key.error": {
+        "en": "Error", "fr": "Erreur", "de": "Fehler", "es": "Error", "it": "Errore",
+        "ja": "エラー", "ko": "오류", "zh_CN": "错误", "zh_TW": "錯誤",
+    },
     "key.on": {
         "en": "On", "fr": "Allumée", "de": "An", "es": "Encendida", "it": "Accesa",
         "ja": "オン", "ko": "켜짐", "zh_CN": "开", "zh_TW": "開",

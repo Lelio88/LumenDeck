@@ -17,6 +17,7 @@ import { t } from '../i18n.js';
 import { asImage, brightnessKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
+import { reportFailure } from './failure.js';
 import type { BrightnessSettings } from '../settings.js';
 
 /** Pas par defaut, en points de pourcentage. */
@@ -61,8 +62,8 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
     try {
       const state = await withRetry(coords, (bulb) => bulb.read());
       await paint(target, state.brightness, state.on);
-    } catch {
-      await reset(target, t('key.offline'));
+    } catch (error) {
+      await reportFailure(target, error, { where: 'brightness.refresh', deviceId: coords.id });
     }
   }
 
@@ -88,8 +89,8 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
         return bulb.read();
       });
       await paint(target, state.brightness, state.on);
-    } catch {
-      await target.showAlert();
+    } catch (error) {
+      await reportFailure(target, error, { where: 'brightness.toggle', deviceId: coords.id, alert: true });
     }
   }
 
@@ -99,8 +100,8 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
     try {
       const level = await withRetry(coords, (bulb) => bulb.nudgeBrightness(delta));
       await paint(target, level, true);
-    } catch {
-      await target.showAlert();
+    } catch (error) {
+      await reportFailure(target, error, { where: 'brightness.nudge', deviceId: coords.id, alert: true });
     }
   }
 }

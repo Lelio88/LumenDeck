@@ -19,6 +19,8 @@
     "key": {
       "toSet": "À régler",
       "offline": "Hors ligne",
+      "badKey": "Clé refusée",
+      "error": "Erreur",
       "on": "Allumée",
       "off": "Éteinte",
       "noColour": "Sans couleur",

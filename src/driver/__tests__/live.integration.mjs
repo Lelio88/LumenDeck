@@ -14,6 +14,7 @@ import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import TuyAPI from 'tuyapi';
 import { TuyaLanDriver } from '../tuya.ts';
+import { asLightError } from '../errors.ts';
 import { hexToHsv } from '../../color-format.ts';
 import { discover } from '../../discovery.ts';
 
@@ -115,6 +116,41 @@ try {
   });
 } finally {
   await bulb.close();
+}
+
+// Aucune ecriture dans cette section : une cle refusee et une adresse non
+// routable n'atteignent jamais l'etat de la lampe. Elle peut donc s'executer
+// avant la restauration sans risquer d'introduire une derive.
+console.log('');
+console.log('5. CHEMINS DE PANNE — ce que l utilisateur lit quand ca casse');
+{
+  // Selon le protocole, la cle est refusee a deux moments differents : en 3.4 et
+  // 3.5 des la negociation de session, en 3.3 seulement a la premiere operation
+  // — et tuyapi rend alors la charge utile NON DECHIFFREE sans rien lever. Le
+  // test enjambe les deux cas pour rester valable quel que soit le materiel.
+  const faussee = { ...cfg, key: cfg.key.slice(0, -4) + '0000' };
+  let refusee = null;
+  let sonde = null;
+  try {
+    sonde = await TuyaLanDriver.connect(faussee);
+    await sonde.read();
+  } catch (e) {
+    refusee = asLightError(e).failure;
+  } finally {
+    if (sonde) { try { await sonde.close(); } catch { /* rien a fermer */ } }
+  }
+  check('une cle fausse est rapportee « cle refusee »', () => assert.equal(refusee, 'badKey'));
+
+  // 192.0.2.1 est reserve a la documentation (TEST-NET-1) : garanti non routable,
+  // donc aucun paquet ne part vers un tiers pendant le test.
+  let injoignable = null;
+  try {
+    const perdue = await TuyaLanDriver.connect({ ...cfg, ip: '192.0.2.1' });
+    await perdue.close();
+  } catch (e) {
+    injoignable = asLightError(e).failure;
+  }
+  check('une adresse injoignable est rapportee « hors ligne »', () => assert.equal(injoignable, 'unreachable'));
 }
 
 console.log('\nRESTAURATION de l etat initial');

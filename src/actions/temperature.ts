@@ -22,6 +22,7 @@ import { t } from '../i18n.js';
 import { asImage, temperatureKey } from '../key-art.js';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
+import { reportFailure } from './failure.js';
 import type { TemperatureSettings } from '../settings.js';
 
 /** Plage atteignable par les ampoules Calex a blanc reglable. */
@@ -79,8 +80,8 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
       // pour la couleur : mieux vaut l'ecrire que laisser croire a une panne.
       if (!snapshot.supported) { await reset(target, t('key.noWhite')); return; }
       await paint(target, snapshot.state.temperatureK ?? clamp(settings.kelvin ?? DEFAULT_KELVIN), snapshot.state.on);
-    } catch {
-      await reset(target, t('key.offline'));
+    } catch (error) {
+      await reportFailure(target, error, { where: 'temperature.refresh', deviceId: coords.id });
     }
   }
 
@@ -110,8 +111,8 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
       });
       if (!supported) { await reset(target, t('key.noWhite')); return; }
       await paint(target, wanted);
-    } catch {
-      await target.showAlert();
+    } catch (error) {
+      await reportFailure(target, error, { where: 'temperature.apply', deviceId: coords.id, alert: true });
     }
   }
 
@@ -131,8 +132,8 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
         return next;
       });
       await paint(target, applied);
-    } catch {
-      await target.showAlert();
+    } catch (error) {
+      await reportFailure(target, error, { where: 'temperature.rotate', deviceId: coords.id, alert: true });
     }
   }
 
@@ -144,8 +145,8 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
     try {
       const on = await withRetry(coords, (bulb) => bulb.togglePower());
       await paint(target, clamp(settings.kelvin ?? DEFAULT_KELVIN), on);
-    } catch {
-      await target.showAlert();
+    } catch (error) {
+      await reportFailure(target, error, { where: 'temperature.toggle', deviceId: coords.id, alert: true });
     }
   }
 }

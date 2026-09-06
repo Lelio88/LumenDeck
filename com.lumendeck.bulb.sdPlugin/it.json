@@ -19,6 +19,8 @@
     "key": {
       "toSet": "Da impostare",
       "offline": "Non in linea",
+      "badKey": "Chiave errata",
+      "error": "Errore",
       "on": "Accesa",
       "off": "Spenta",
       "noColour": "Senza colore",

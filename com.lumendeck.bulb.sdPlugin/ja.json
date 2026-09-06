@@ -19,6 +19,8 @@
     "key": {
       "toSet": "未設定",
       "offline": "オフライン",
+      "badKey": "キー不一致",
+      "error": "エラー",
       "on": "オン",
       "off": "オフ",
       "noColour": "色非対応",

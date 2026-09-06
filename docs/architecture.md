@@ -69,7 +69,9 @@ l'existence de Tuya.
 |---|---|
 | `src/driver/types.ts` | Contrat `LightDriver` et vocabulaire métier (`LightState`, `Hsv`, `LightMode`). Exprime les grandeurs en **pourcentages et kelvins**, jamais dans les unités du transport. |
 | `src/driver/tuya.ts` | Adaptateur LAN Tuya 3.3. Traduit le contrat en datapoints, encode/décode les couleurs, borne les échelles. **Seul fichier qui a le droit de connaître un numéro de DP.** |
-| `src/driver/pool.ts` | Réservoir de connexions indexé par ampoule, plus `withRetry` qui rejoue une fois après reconnexion. |
+| `src/driver/pool.ts` | Réservoir de connexions indexé par ampoule, plus `withRetry` qui rejoue une fois après reconnexion, en conservant la cause la plus précise des deux tentatives. |
+| `src/driver/errors.ts` | Vocabulaire des pannes : `LightFailure` (quatre causes), `LightError`, `classify()`. Traduit les messages de `tuyapi` en causes que l'utilisateur peut distinguer. N'importe rien. |
+| `src/actions/failure.ts` | Report d'une panne : un mot sur la touche, la cause complète au journal. Point de passage unique des cinq actions. |
 | `src/actions/toggle.ts` | Action « allumer / éteindre », touche et molette. |
 | `src/actions/brightness.ts` | Action « intensité » : pas fixe sur touche, rotation continue sur molette, retour visuel sur l'écran de la molette. |
 | `src/actions/color.ts` | Action « couleur » : applique une couleur choisie, ou fait tourner la teinte à la molette en préservant l'intensité courante. |
@@ -236,6 +238,66 @@ Exemple réel : l'utilisateur appuie sur une touche « Intensité » réglée à
 9. **En cas d'échec** à n'importe quelle étape, `withRetry` referme la connexion et rejoue une fois ;
    si le second essai échoue, l'action déclenche `showAlert()`. L'erreur n'est jamais avalée.
 
+## Ce que l'utilisateur voit quand ça casse
+
+Une panne traverse trois étages, chacun avec une responsabilité unique.
+
+| Étage | Responsabilité |
+|---|---|
+| `driver/tuya.ts` | Absorbe l'événement `'error'` du device, **qualifie** l'échec et le lève. |
+| `driver/pool.ts` | Rejoue une fois, puis remonte la cause la plus précise des deux tentatives. |
+| `actions/failure.ts` | Journalise une fois, écrit un mot sur la touche. **Seul étage qui journalise.** |
+
+### Les quatre causes
+
+| Cause | Signature `tuyapi` | Touche | Ce que l'utilisateur peut faire |
+|---|---|---|---|
+| `badKey` | `Decrypt failed`, `HMAC mismatch`, `CRC mismatch` — **ou**, en 3.3, une charge utile rendue en clair (voir ci-dessous) | « Clé refusée » | **Rouvrir le panneau** et refaire un scan de QR code. |
+| `unreachable` | `find() timed out`, `connection timed out`, `Error from socket`, codes `ECONN*`/`EHOST*` | « Hors ligne » | Vérifier l'alimentation et le réseau ; `npm run diagnose`. |
+| `unresponsive` | `Timeout waiting for status response` | « Erreur » | Attendre : le réseau va bien, l'ampoule non. |
+| `unknown` | tout le reste | « Erreur » | Lire le journal. |
+
+`badKey` est la seule qui se distingue à l'écran, parce que c'est la seule que l'utilisateur répare
+seul. Trois mots pour quatre causes : multiplier les libellés ferait deviner une nuance qui ne
+change rien au geste à faire.
+
+Le classement s'appuie sur les **messages** de `tuyapi`, faute de code d'erreur ou de classe typée
+dans la bibliothèque. Le prix est connu et assumé : un message reformulé en amont fait retomber le
+cas dans `unknown` — un repli sûr, jamais un mauvais diagnostic. `errors.test.mjs` cite les lignes
+d'origine pour que la vérification reste mécanique.
+
+### Quand la clé se révèle fausse dépend du protocole
+
+En **3.4 et 3.5**, la clé sert à négocier une session : `connect()` échoue directement, sur un
+`HMAC mismatch(keys)`. En **3.3** — de loin la plus répandue — `connect()` n'ouvre qu'un socket TCP,
+et la clé ne sert qu'à chiffrer les charges utiles. Une clé fausse ne se voit alors qu'à la première
+opération, et `tuyapi` **ne lève rien et n'émet rien** : il rend la charge utile non déchiffrée, sous
+forme de *chaîne* là où un objet est attendu.
+
+`readDps()` reconnaît cette signature et lève un `badKey`. Sans elle, le cas le plus courant — une
+clé régénérée depuis l'application Calex — s'afficherait « Erreur », et l'utilisateur n'aurait aucune
+raison d'aller la ressaisir. Aucun test unitaire ne peut révéler cette nuance : elle tient au
+comportement d'une bibliothèque tierce face à du vrai matériel, et seul `live.integration.mjs` §5
+la vérifie.
+
+### L'écouteur `'error'`, non négociable
+
+`TuyaDevice` étend `EventEmitter` et émet `'error'` à neuf endroits. Node relance en **exception non
+capturée** tout événement `'error'` sans écouteur : sans lui, un `ECONNRESET` — une coupure wifi
+suffit — tue le processus du plugin, toutes les touches cessent de répondre, et rien à l'écran ne
+l'explique. L'écouteur est posé avant la moindre opération et n'est **jamais** retiré, pas même à la
+fermeture : détruire le socket peut encore émettre au tick suivant.
+
+### Journalisation
+
+`WARN` pour les pannes nommées — une ampoule qu'on débranche le soir est un événement domestique
+ordinaire. `ERROR` pour `unknown` seul, la seule catégorie qui réclame une lecture humaine. Les
+journaux vivent dans `com.lumendeck.bulb.sdPlugin/logs/`.
+
+On journalise la cause et un identifiant **abrégé**, jamais les réglages d'une touche : la clé
+locale y figure. Les messages de `tuyapi` sont sûrs à ce titre — ils citent des HMAC dérivés et des
+fragments de trame chiffrée, pas le secret.
+
 ## Règles de couplage
 
 | Depuis | Peut importer | Ne doit jamais importer |
@@ -290,8 +352,17 @@ partage et réessai.
 - ❌ Déduire l'état de l'ampoule d'un compteur local plutôt que de le relire — elle est pilotable
   depuis l'application Calex et les assistants vocaux, un état supposé finit désynchronisé.
 - ❌ Passer le niveau de journalisation à `trace` : les réglages contiennent la clé locale.
+- ❌ Laisser un `catch {}` nu dans une action. Une panne avalée est une panne que personne ne
+  saura diagnostiquer — passer par `reportFailure()`.
+- ❌ Construire un `TuyAPI` sans lui poser un écouteur `'error'` : le processus meurt au premier
+  incident de socket.
+- ❌ Journaliser deux fois la même panne. Le report au niveau de l'action est le seul étage qui
+  écrit ; un pilote ou un réservoir qui journalise dédouble les lignes et brouille la lecture.
 - ❌ Utiliser une propriété de paramètre TypeScript : cela casse l'exécution directe par Node, donc
   le test matériel sans build.
+- ❌ Ajouter un import relatif **de valeur** suffixé `.js` dans un module atteint directement par
+  les tests. Node ne réécrit pas `.js` en `.ts` : le module devient introuvable et le test casse.
+  Suffixer `.ts` (voir « Stratégie de test »).
 - ❌ Retoucher un PNG à la main plutôt que `tools/make_icons.py`.
 - ❌ Arrondir un PNG de touche : Stream Deck arrondit lui-même, on obtient des coins morts.
 - ❌ Passer un SVG **nu** à `setImage`. Toujours l'emballer avec `asImage()`, qui produit un
@@ -306,10 +377,17 @@ partage et réessai.
 
 Deux étages, séparés parce qu'ils n'ont pas les mêmes prérequis.
 
-**Tests purs** — `src/driver/__tests__/codec.test.mjs`, lancés par `npm test`. Ils couvrent les
+**Tests purs** — `src/driver/__tests__/*.test.mjs`, lancés par `npm test`. Ils couvrent les
 calculs où une erreur d'un facteur dix passe inaperçue à l'œil : encodage et décodage des couleurs,
-allers-retours d'échelle, plancher matériel, bornes de température. Aucune ampoule requise, donc
-exécutables partout.
+allers-retours d'échelle, plancher matériel, bornes de température. `errors.test.mjs` y ajoute le
+classement des pannes, sur les messages réels de `tuyapi`. Aucune ampoule requise, donc exécutables
+partout.
+
+Ces tests importent les **sources** avec un suffixe `.ts` et Node les exécute sans build, par
+effacement de types. D'où deux contraintes sur tout module qu'un test atteint : aucune syntaxe
+TypeScript non effaçable (ni `enum`, ni propriété de paramètre), et tout import relatif **de valeur**
+suffixé `.ts` — Node ne réécrit pas `.js` en `.ts`. `rewriteRelativeImportExtensions` (tsconfig)
+rétablit l'extension `.js` à la compilation, si bien que le bundle reste correct.
 
 **Test matériel** — `src/driver/__tests__/live.integration.mjs`, lancé par `npm run test:live`. Il
 valide ce qu'aucun test unitaire ne peut prouver : que l'intensité agit réellement dans chaque mode.

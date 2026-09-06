@@ -19,6 +19,8 @@
     "key": {
       "toSet": "Configurar",
       "offline": "Sin conexión",
+      "badKey": "Clave errónea",
+      "error": "Error",
       "on": "Encendida",
       "off": "Apagada",
       "noColour": "Sin color",

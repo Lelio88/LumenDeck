@@ -20,7 +20,11 @@
  *   - aucun numero de DP ne doit fuir hors de ce fichier ;
  *   - toute ecriture est suivie d'une relecture de l'etat par l'appelant s'il a
  *     besoin d'afficher la verite (l'ampoule est seule maitresse de son etat) ;
- *   - les erreurs remontent telles quelles, jamais avalees.
+ *   - les erreurs remontent CLASSEES (voir errors.ts), jamais avalees ;
+ *   - le device Tuya a TOUJOURS un ecouteur 'error'. Sans lui, Node relance
+ *     l'evenement en exception non capturee : un ECONNRESET pendant une
+ *     coupure wifi tuait le processus du plugin, et toutes les touches
+ *     cessaient de repondre sans qu'aucun message ne l'explique.
  *
  * Usage canonique :
  *   const bulb = await TuyaLanDriver.connect({ id, key, ip });
@@ -30,6 +34,7 @@
  */
 import TuyAPI from 'tuyapi';
 import type { Hsv, LightCapabilities, LightDriver, LightMode, LightState } from './types.js';
+import { LightError, asLightError } from './errors.ts';
 
 /** Datapoints du profil Tuya « dj » (source lumineuse), schema v2. */
 const DP = {
@@ -95,6 +100,30 @@ export const kelvinToTuya = (k: number) =>
 export const tuyaToKelvin = (raw: number) =>
   Math.round(KELVIN_MIN + (clamp(raw, 0, TUYA_MAX) / TUYA_MAX) * (KELVIN_MAX - KELVIN_MIN));
 
+/**
+ * Dernier evenement 'error' capture, en attente d'etre attribue a une operation.
+ *
+ * Un evenement ne peut pas etre "leve" : il arrive hors de toute pile d'appel.
+ * On le retient donc ici pour que l'operation qui echouera juste apres puisse
+ * en tirer sa cause, au lieu de ne rapporter qu'un delai depasse.
+ */
+type TransportSink = { last: Error | null };
+
+/**
+ * Retient le verdict le plus precis entre le rejet et l'evenement 'error'.
+ *
+ * Quand un socket tombe, tuyapi rejette souvent sur un delai depasse alors que
+ * la cause reelle — la coupure — est arrivee par l'evenement une fraction de
+ * seconde plus tot. On ne prefere l'evenement QUE si le rejet ne dit rien :
+ * preferer toujours l'un ou toujours l'autre donnerait tantot un diagnostic
+ * plus vague, tantot un diagnostic perime par une panne precedente.
+ */
+function pickCause(rejection: unknown, sink: TransportSink): LightError {
+  const direct = asLightError(rejection);
+  if (direct.failure !== 'unknown' || sink.last === null) return direct;
+  return asLightError(sink.last);
+}
+
 export class TuyaLanDriver implements LightDriver {
   // Optimiste par defaut : si la table de datapoints est illisible, mieux vaut
   // laisser l'utilisateur essayer que lui interdire une action qui marcherait.
@@ -130,16 +159,50 @@ export class TuyaLanDriver implements LightDriver {
   }
 
   private readonly device: TuyAPI;
+  private readonly sink: TransportSink;
 
   // Champ assigne explicitement plutot qu'en propriete de parametre : cette
   // syntaxe TypeScript exige une transformation, la ou le reste du fichier se
   // contente d'un effacement de types. Node peut ainsi executer ce module tel
   // quel, sans etape de build — ce dont les tests profitent directement.
-  private constructor(device: TuyAPI) {
+  private constructor(device: TuyAPI, sink: TransportSink) {
     this.device = device;
+    this.sink = sink;
   }
 
-  /** Ouvre une connexion locale persistante. Echoue franchement si l'ampoule est injoignable. */
+  /**
+   * Execute une operation de transport et qualifie son echec.
+   *
+   * Vide la sonde AVANT d'agir : un incident vieux de dix minutes, laisse la
+   * par une commande precedente, ferait accuser le reseau alors que l'echec du
+   * jour vient d'ailleurs.
+   */
+  private async guard<T>(operation: () => Promise<T>): Promise<T> {
+    this.sink.last = null;
+    try {
+      return await operation();
+    } catch (error) {
+      throw pickCause(error, this.sink);
+    }
+  }
+
+  /**
+   * Ecrit un ou plusieurs datapoints, l'echec qualifie.
+   *
+   * Point de passage UNIQUE des ecritures : c'est ce qui garantit qu'aucune
+   * commande ne peut echouer sans que sa cause soit nommee.
+   */
+  private async write(payload: Parameters<TuyAPI['set']>[0]): Promise<void> {
+    await this.guard(() => this.device.set(payload));
+  }
+
+  /**
+   * Ouvre une connexion locale persistante. Echoue franchement si l'ampoule est injoignable.
+   *
+   * L'ecouteur 'error' est pose AVANT la moindre operation et n'est jamais
+   * retire : c'est lui qui empeche le plugin de mourir sur un incident reseau
+   * (voir l'invariant en tete de fichier).
+   */
   static async connect(config: TuyaLanConfig): Promise<TuyaLanDriver> {
     const device = new TuyAPI({
       id: config.id,
@@ -148,9 +211,19 @@ export class TuyaLanDriver implements LightDriver {
       version: config.version ?? DEFAULT_PROTOCOL,
       issueRefreshOnConnect: true,
     });
-    if (!config.ip) await device.find();
-    await device.connect();
-    const driver = new TuyaLanDriver(device);
+
+    const sink: TransportSink = { last: null };
+    device.on('error', (cause: Error) => { sink.last = cause; });
+
+    try {
+      if (!config.ip) await device.find();
+      await device.connect();
+    } catch (error) {
+      device.disconnect();
+      throw pickCause(error, sink);
+    }
+
+    const driver = new TuyaLanDriver(device, sink);
     await driver.detectCapabilities();
     return driver;
   }
@@ -165,7 +238,19 @@ export class TuyaLanDriver implements LightDriver {
    * doit se voir immediatement, pas se propager en `undefined` silencieux.
    */
   private async readDps(): Promise<Record<string, unknown>> {
-    const status = await this.device.get({ schema: true });
+    const status = await this.guard(() => this.device.get({ schema: true }));
+
+    // UNE CHAINE la ou un objet est attendu : en protocole 3.3, tuyapi rend la
+    // charge utile TELLE QUELLE quand elle ne se dechiffre pas. Il ne leve rien,
+    // n'emet aucun evenement 'error', et ne pose donc aucune des signatures que
+    // classify() sait lire. Or le socket est etabli et l'ampoule a repondu : la
+    // cle locale est la seule variable qui reste. Sans ce cas, une cle regeneree
+    // depuis l'appli Calex — le scenario le plus courant — s'afficherait
+    // « Erreur » au lieu de « Cle refusee », et l'utilisateur n'aurait aucune
+    // raison d'aller la ressaisir.
+    if (typeof status === 'string') {
+      throw new LightError('badKey', new Error('charge utile indechiffrable : cle locale refusee'));
+    }
     if (typeof status !== 'object' || status === null || !('dps' in status)) {
       throw new Error('Reponse inattendue de l ampoule : table de datapoints absente');
     }
@@ -187,7 +272,7 @@ export class TuyaLanDriver implements LightDriver {
   }
 
   async setPower(on: boolean): Promise<void> {
-    await this.device.set({ dps: Number(DP.power), set: on });
+    await this.write({ dps: Number(DP.power), set: on });
   }
 
   async togglePower(): Promise<boolean> {
@@ -207,17 +292,17 @@ export class TuyaLanDriver implements LightDriver {
     const state = await this.read();
 
     if (state.mode === 'colour' && state.color) {
-      await this.device.set({ dps: Number(DP.color), set: encodeColor({ ...state.color, v: pct }) });
+      await this.write({ dps: Number(DP.color), set: encodeColor({ ...state.color, v: pct }) });
       return;
     }
     if (state.mode === 'scene' || state.mode === 'music') {
-      await this.device.set({
+      await this.write({
         multiple: true,
         data: { [DP.mode]: 'white', [DP.brightness]: pctToTuya(pct) },
       });
       return;
     }
-    await this.device.set({ dps: Number(DP.brightness), set: pctToTuya(pct) });
+    await this.write({ dps: Number(DP.brightness), set: pctToTuya(pct) });
   }
 
   async nudgeBrightness(delta: number): Promise<number> {
@@ -228,20 +313,24 @@ export class TuyaLanDriver implements LightDriver {
   }
 
   async setTemperature(kelvin: number): Promise<void> {
-    await this.device.set({
+    await this.write({
       multiple: true,
       data: { [DP.mode]: 'white', [DP.temperature]: kelvinToTuya(kelvin) },
     });
   }
 
   async setColor(color: Hsv): Promise<void> {
-    await this.device.set({
+    await this.write({
       multiple: true,
       data: { [DP.mode]: 'colour', [DP.color]: encodeColor(color) },
     });
   }
 
   async close(): Promise<void> {
+    // L'ecouteur 'error' n'est deliberement PAS retire : detruire le socket
+    // peut encore emettre un ECONNRESET au tick suivant, et il n'y aurait
+    // alors plus personne pour l'absorber — soit exactement la panne que cet
+    // ecouteur existe pour empecher. Il part avec le device, a la collecte.
     this.device.disconnect();
   }
 }

@@ -14,6 +14,7 @@ import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 import { withRetry } from '../driver/pool.js';
 import { coordinatesFor } from '../bulbs.js';
+import { reportFailure } from './failure.js';
 import { t } from '../i18n.js';
 import type { BulbSettings } from '../settings.js';
 
@@ -73,8 +74,8 @@ export class ToggleBulb extends SingletonAction<BulbSettings> {
     try {
       const on = await withRetry(coords, (bulb) => bulb.togglePower());
       await paint(target, on);
-    } catch {
-      await target.showAlert();
+    } catch (error) {
+      await reportFailure(target, error, { where: 'toggle', deviceId: coords.id, alert: true });
     }
   }
 
@@ -85,8 +86,8 @@ export class ToggleBulb extends SingletonAction<BulbSettings> {
     try {
       const state = await withRetry(coords, (bulb) => bulb.read());
       await paint(target, state.on);
-    } catch {
-      await target.setTitle(t('key.offline'));
+    } catch (error) {
+      await reportFailure(target, error, { where: 'toggle.refresh', deviceId: coords.id });
     }
   }
 }

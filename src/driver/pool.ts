@@ -18,6 +18,7 @@
  *   await bulb.togglePower();
  */
 import type { LightDriver } from './types.js';
+import { asLightError } from './errors.js';
 import { TuyaLanDriver, type TuyaLanConfig } from './tuya.js';
 
 /** Connexions vivantes, indexees par identifiant d'ampoule. */
@@ -66,6 +67,11 @@ export async function releaseAll(): Promise<void> {
  * Une ampoule redemarre, change d'adresse ou coupe la session au bout d'un temps
  * d'inactivite : la premiere commande echoue alors sans que rien ne soit casse.
  * Retenter une fois evite d'imposer a l'utilisateur un appui « pour rien ».
+ *
+ * En cas de double echec, la cause remontee est CLASSEE et jamais perdue : la
+ * version precedente avalait l'erreur de la premiere tentative, si bien qu'une
+ * cle refusee — qu'aucune reouverture ne repare — ressortait sous les traits
+ * d'un simple incident reseau.
  */
 export async function withRetry<T>(
   config: TuyaLanConfig,
@@ -73,8 +79,15 @@ export async function withRetry<T>(
 ): Promise<T> {
   try {
     return await operation(await acquire(config));
-  } catch {
+  } catch (first) {
     await release(config.id);
-    return operation(await acquire(config));
+    try {
+      return await operation(await acquire(config));
+    } catch (second) {
+      // La SECONDE tentative decrit l'etat present et prime donc a egalite ;
+      // on ne retombe sur la premiere que si la seconde n'a rien su dire.
+      const retry = asLightError(second);
+      throw retry.failure === 'unknown' ? asLightError(first) : retry;
+    }
   }
 }

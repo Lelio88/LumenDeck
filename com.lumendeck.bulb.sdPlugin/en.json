@@ -3,6 +3,8 @@
     "key": {
       "toSet": "Set up",
       "offline": "Offline",
+      "badKey": "Bad key",
+      "error": "Error",
       "on": "On",
       "off": "Off",
       "noColour": "No colour",

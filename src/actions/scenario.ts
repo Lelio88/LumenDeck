@@ -20,6 +20,7 @@ import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent } from '@elgato/streamdeck';
 
 import { coordinatesFor, resolve } from '../bulbs.js';
+import { reportFailure } from './failure.js';
 import { scenarioName, t } from '../i18n.js';
 import { asImage, scenarioKey } from '../key-art.js';
 import { byId } from '../scenarios/catalogue.js';
@@ -95,8 +96,11 @@ export class ScenarioAction extends SingletonAction<ScenarioSettings> {
     try {
       if (runningOn(primary.id)) await stop(primary.id);
       else await start(scenario, targets);
-    } catch {
-      await target.showAlert();
+    } catch (error) {
+      // On NE repeint PAS derriere : paint() remet un titre vide, et le mot
+      // d'explication disparaitrait aussitot ecrit.
+      await reportFailure(target, error, { where: 'scenario', deviceId: primary.id, alert: true });
+      return;
     }
     await this.paint(target, settings);
   }
