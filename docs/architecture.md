@@ -464,6 +464,14 @@ peint la valeur choisie : l'utilisateur est en train de la sélectionner, il veu
 qu'il la choisit. L'aperçu reste fidèle, puisque appuyer allume l'ampoule et applique exactement
 cette valeur.
 
+La même question se repose **à l'apparition** d'une touche, et la réponse dépend cette fois du
+contrôleur. Sur une **touche**, la goutte et le demi-disque montrent *leur propre* valeur, celle que
+l'appui appliquera : deux touches pointant la même ampoule doivent rester distinguables, sinon on ne
+sait plus laquelle fait quoi — et le doute naît précisément après en avoir pressé une, puisque les
+deux se mettent alors à afficher la même chose. Sur une **molette**, l'écran suit la lampe : la
+rotation part de sa valeur courante, et la contredire priverait le geste de sens. L'état allumé /
+éteint, lui, vient toujours de la lampe dans les deux cas — c'est lui qui assombrit le dessin.
+
 ## Le registre des ampoules
 
 Les identifiants ne vivent pas dans les touches mais dans les **réglages globaux** du plugin. Une

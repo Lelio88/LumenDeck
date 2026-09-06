@@ -66,6 +66,25 @@ function warmth(kelvin: number): string {
   return t('warmth.daylight');
 }
 
+/**
+ * Ce que la face doit montrer, selon le controleur.
+ *
+ * Sur une TOUCHE : SA valeur, celle que l'appui appliquera. Deux touches
+ * pointant la meme ampoule doivent rester distinguables — sinon on ne sait plus
+ * laquelle fait quoi, et la question se pose precisement quand on vient d'en
+ * presser une, puisque les deux se mettent alors a montrer la meme chose.
+ *
+ * Sur une MOLETTE : la valeur de la lampe. La rotation part de sa valeur
+ * courante, et l'ecran doit la suivre pour que le geste garde un sens.
+ *
+ * Le test du controleur passe par setFeedback, qui n'existe que sur une molette
+ * — c'est l'idiome deja employe par paint() dans ce fichier.
+ */
+function faceKelvin(target: Paintable, current: number | null, settings: TemperatureSettings): number {
+  const choisi = clamp(settings.kelvin ?? DEFAULT_KELVIN);
+  return typeof target.setFeedback === 'function' ? current ?? choisi : choisi;
+}
+
 @action({ UUID: 'com.lumendeck.bulb.temperature' })
 export class Temperature extends SingletonAction<TemperatureSettings> {
   /**
@@ -96,7 +115,7 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
       // Certaines ampoules couleur n'ont pas de blanc reglable. Meme raison que
       // pour la couleur : mieux vaut l'ecrire que laisser croire a une panne.
       if (!snapshot.supported) { await reset(target, t('key.noWhite')); return; }
-      await paint(target, snapshot.state.temperatureK ?? clamp(settings.kelvin ?? DEFAULT_KELVIN), snapshot.state.on);
+      await paint(target, faceKelvin(target, snapshot.state.temperatureK, settings), snapshot.state.on);
     } catch (error) {
       await reportFailure(target, error, { where: 'temperature.refresh', deviceId: coords.id, recover: () => this.refresh(target, settings) });
     }

@@ -79,6 +79,25 @@ function hueName(h: number): string {
   return t('hue.red');
 }
 
+/**
+ * Ce que la face doit montrer, selon le controleur.
+ *
+ * Sur une TOUCHE : SA valeur, celle que l'appui appliquera. Deux touches
+ * pointant la meme ampoule doivent rester distinguables — sinon on ne sait plus
+ * laquelle fait quoi, et la question se pose precisement quand on vient d'en
+ * presser une, puisque les deux se mettent alors a montrer la meme chose.
+ *
+ * Sur une MOLETTE : la valeur de la lampe. La rotation part de sa valeur
+ * courante, et l'ecran doit la suivre pour que le geste garde un sens.
+ *
+ * Le test du controleur passe par setFeedback, qui n'existe que sur une molette
+ * — c'est l'idiome deja employe par paint() dans ce fichier.
+ */
+function faceColor(target: Paintable, current: Hsv | null, settings: ColorSettings): Hsv {
+  const choisie = configured(settings);
+  return typeof target.setFeedback === 'function' ? current ?? choisie : choisie;
+}
+
 @action({ UUID: 'com.lumendeck.bulb.color' })
 export class Color extends SingletonAction<ColorSettings> {
   /**
@@ -113,7 +132,7 @@ export class Color extends SingletonAction<ColorSettings> {
       // vaut mieux que d'echouer en silence : sans ce mot, l'utilisateur conclut
       // que le plugin est casse alors que c'est son materiel qui ne sait pas.
       if (!snapshot.supported) { await reset(target, t('key.noColour')); return; }
-      await paint(target, snapshot.state.color ?? configured(settings), snapshot.state.on);
+      await paint(target, faceColor(target, snapshot.state.color, settings), snapshot.state.on);
     } catch (error) {
       await reportFailure(target, error, { where: 'color.refresh', deviceId: coords.id, recover: () => this.refresh(target, settings) });
     }
