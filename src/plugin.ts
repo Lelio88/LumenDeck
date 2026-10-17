@@ -24,6 +24,9 @@ import { installUiBridge } from './ui-bridge.js';
 // aucun import n'est necessaire.
 streamDeck.logger.setLevel('info');
 
+/** Temps laisse a Twitch pour mettre les recompenses en pause a l'extinction. */
+const SHUTDOWN_TWITCH_MS = 3000;
+
 streamDeck.actions.registerAction(new ToggleBulb());
 streamDeck.actions.registerAction(new Brightness());
 streamDeck.actions.registerAction(new Color());
@@ -41,8 +44,10 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
     // Couper les scenarios AVANT de fermer les connexions : le moteur a besoin
     // des sessions Tuya pour remettre chaque lampe comme il l'a trouvee.
-    twitch.shutdown();
-    void stopAll().finally(() => releaseAll().finally(() => process.exit(0)));
+    // La pause des recompenses Twitch part en parallele, bornee : une extinction
+    // ne doit pas attendre un reseau lent.
+    const twitchDone = Promise.race([twitch.shutdown(), new Promise((resolve) => setTimeout(resolve, SHUTDOWN_TWITCH_MS))]);
+    void Promise.allSettled([twitchDone, stopAll()]).finally(() => releaseAll().finally(() => process.exit(0)));
   });
 }
 

@@ -192,7 +192,7 @@
           "duplicate": "Une récompense de ce nom existe déjà sur votre chaîne et n'a pas été créée par LumenDeck. Renommez-la ou supprimez-la, puis réessayez."
         },
         "liveLine": "En ligne · les viewers ont la main",
-        "pausedLine": "En pause · rachats remboursés",
+        "pausedLine": "En pause · récompenses indisponibles",
         "blockedLine": "Bloqué",
         "connecting": "Connexion…",
         "pause": "Pause",

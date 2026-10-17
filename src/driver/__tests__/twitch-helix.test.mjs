@@ -10,7 +10,7 @@ import { test } from 'node:test';
 
 import { CLIENT_ID } from '../../twitch/auth.ts';
 import {
-  HelixError, createReward, deleteReward, listOwnRewards, listPendingRedemptions, settleRedemption, settleWithRetry, subscribeToRedemptions,
+  HelixError, createReward, deleteReward, listOwnRewards, listPendingRedemptions, setRewardPaused, settleRedemption, settleWithRetry, subscribeToRedemptions,
 } from '../../twitch/helix.ts';
 
 const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -200,4 +200,16 @@ test('sans recompense precisee, l abonnement couvre toute la chaine', async () =
   const { fetcher, calls } = fakeFetch(json(202, { data: [{ id: 'sub-1' }] }));
   await subscribeToRedemptions(SESSION, { sessionId: 'S1' }, fetcher);
   assert.deepEqual(calls[0].body.condition, { broadcaster_user_id: '1337' });
+});
+
+test('mettre une recompense en pause la rend inachetable chez Twitch, sans la supprimer', async () => {
+  const { fetcher, calls } = fakeFetch(json(200, { data: [{ id: 'rw-1', title: 't', cost: 1, prompt: '', is_enabled: true }] }), json(200, { data: [] }));
+  await setRewardPaused(SESSION, 'rw-1', true, fetcher);
+  await setRewardPaused(SESSION, 'rw-1', false, fetcher);
+  assert.equal(calls[0].method, 'PATCH');
+  assert.equal(calls[0].url.pathname, '/helix/channel_points/custom_rewards');
+  assert.equal(calls[0].url.searchParams.get('id'), 'rw-1');
+  assert.equal(calls[0].url.searchParams.get('broadcaster_id'), '1337');
+  assert.deepEqual(calls[0].body, { is_paused: true });
+  assert.deepEqual(calls[1].body, { is_paused: false });
 });

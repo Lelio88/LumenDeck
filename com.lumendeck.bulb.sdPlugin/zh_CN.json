@@ -192,7 +192,7 @@
           "duplicate": "你的频道上已有同名奖励，且并非由 LumenDeck 创建。请重命名或删除后重试。"
         },
         "liveLine": "在线 · 观众掌控中",
-        "pausedLine": "已暂停 · 兑换将被退还",
+        "pausedLine": "已暂停 · 奖励暂不可兑换",
         "blockedLine": "受阻",
         "connecting": "连接中…",
         "pause": "暂停",

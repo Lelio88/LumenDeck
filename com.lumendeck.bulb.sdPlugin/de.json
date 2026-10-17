@@ -192,7 +192,7 @@
           "duplicate": "Auf Ihrem Kanal existiert bereits eine Belohnung mit diesem Namen, die nicht von LumenDeck stammt. Benennen Sie sie um oder löschen Sie sie und versuchen Sie es erneut."
         },
         "liveLine": "Online · die Zuschauer steuern",
-        "pausedLine": "Pausiert · Einlösungen werden erstattet",
+        "pausedLine": "Pausiert · Belohnungen nicht einlösbar",
         "blockedLine": "Blockiert",
         "connecting": "Verbinde…",
         "pause": "Pause",

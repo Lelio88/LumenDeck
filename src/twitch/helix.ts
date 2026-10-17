@@ -312,3 +312,14 @@ export async function settleWithRetry(
     }
   }
 }
+
+/**
+ * Met une recompense en pause chez Twitch, ou la reactive.
+ *
+ * En pause, la recompense reste visible mais ne peut plus etre achetee : c'est
+ * mieux que d'encaisser puis rembourser, le viewer ne depense rien. Le plugin
+ * s'en sert pour sa touche Pause et a sa fermeture (voir service.ts).
+ */
+export async function setRewardPaused(session: HelixSession, rewardId: string, paused: boolean, fetcher: Fetcher): Promise<void> {
+  await call(session, fetcher, '/channel_points/custom_rewards', { id: rewardId }, { method: 'PATCH', body: { is_paused: paused } });
+}

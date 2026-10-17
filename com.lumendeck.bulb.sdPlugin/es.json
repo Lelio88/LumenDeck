@@ -192,7 +192,7 @@
           "duplicate": "Ya existe en tu canal una recompensa con este nombre que no creó LumenDeck. Cámbiale el nombre o elimínala y vuelve a intentarlo."
         },
         "liveLine": "En línea · los espectadores mandan",
-        "pausedLine": "En pausa · los canjes se reembolsan",
+        "pausedLine": "En pausa · recompensas no disponibles",
         "blockedLine": "Bloqueado",
         "connecting": "Conectando…",
         "pause": "Pausa",

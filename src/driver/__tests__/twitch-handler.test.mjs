@@ -207,3 +207,19 @@ test('en pause, un scenario n est pas lance et le viewer est rembourse', async (
   await handle(redemption({ rewardId: 'rw-orage', userInput: '' }));
   assert.deepEqual(log, [['settle', 'r-1', 'refund'], ['report', 'refunded', 'paused']]);
 });
+
+test('au-dela de 10 rachats en attente, les suivants sont rembourses tout de suite au lieu de faire la queue', async () => {
+  // Arrange : les ampoules ne repondent plus, chaque application reste bloquee.
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  const { handle, log } = setup({ applyColor: async () => { await gate; return true; } });
+  // Act : 12 viewers rachetent coup sur coup.
+  const pending = Array.from({ length: 12 }, (_, i) => handle(redemption({ id: 'r-' + i })));
+  await new Promise((resolve) => setImmediate(resolve));
+  // Assert : les deux derniers sont deja rembourses, sans attendre la file.
+  const busy = log.filter((entry) => entry[0] === 'report' && entry[2] === 'busy');
+  assert.equal(busy.length, 2);
+  release();
+  await Promise.all(pending);
+  assert.equal(log.filter((entry) => entry[0] === 'report' && entry[1] === 'applied').length, 10);
+});

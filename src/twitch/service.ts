@@ -58,6 +58,13 @@
  *   - Un scenario en cours sur une ampoule visee est ARRETE avant d'appliquer
  *     une couleur : sa prochaine image effacerait sinon le choix du viewer.
  *
+ *   - La pause est une VRAIE pause chez Twitch : les recompenses y sont mises en
+ *     pause (visibles, mais impossibles a acheter), plutot que d'encaisser puis
+ *     rembourser. Le plugin fait de meme a sa fermeture, et les reactive a la
+ *     mise en ligne suivante : un viewer ne paie plus pendant que personne
+ *     n'ecoute. Le remboursement reste en filet de securite (rachat parti juste
+ *     avant la pause, plugin tue sans fermeture propre).
+ *
  * Invariant : le panneau et la touche ne recoivent que `Status`, jamais un jeton.
  *
  * Usage canonique :
@@ -83,7 +90,7 @@ import { createEventSubClient, type ClientState, type EventSubClient, type Socke
 import type { Link } from './face.js';
 import { createRedemptionHandler, staleRedemptions, type Outcome } from './handler.js';
 import {
-  HelixError, createReward, deleteReward, listOwnRewards, listPendingRedemptions, settleWithRetry, subscribeToRedemptions,
+  HelixError, createReward, deleteReward, listOwnRewards, listPendingRedemptions, setRewardPaused, settleWithRetry, subscribeToRedemptions,
   type HelixSession,
 } from './helix.js';
 import { actionFor, normalizeConfig, planRewards, scenarioDuration, wantedRewards, type TwitchConfig } from './rewards.js';
@@ -164,6 +171,12 @@ let syncing: Promise<void> = Promise.resolve();
 let syncDirty = false;
 /** Panne de la derniere synchronisation qui n'empeche pas d'ecouter (`duplicate`), ou undefined. */
 let rewardsProblem: string | undefined;
+/**
+ * Vrai des que le plugin s'eteint : plus aucune recompense ne doit etre creee ni
+ * reactivee. Une reactivation encore en vol laisserait sinon des recompenses
+ * achetables alors que plus personne n'ecoute.
+ */
+let closing = false;
 /** Numero de la mise en ligne courante : une attente qui revient avec un autre numero abandonne. */
 let epoch = 0;
 /** Renouvellement en vol, partage par tous les appelants. */
@@ -322,9 +335,26 @@ async function withHelix<T>(call: (session: HelixSession) => Promise<T>): Promis
  * prochaine synchronisation retentera de la supprimer.
  */
 function syncRewards(): Promise<void> {
-  const run = syncing.then(syncNow, syncNow);
+  return inSyncQueue(syncNow);
+}
+
+/** Met une operation sur les recompenses dans la file des synchronisations : une a la fois. */
+function inSyncQueue<T>(job: () => Promise<T>): Promise<T> {
+  const run = syncing.then(job, job);
   syncing = run.then(() => undefined, () => undefined);
   return run;
+}
+
+/** Met en pause (ou reactive) chez Twitch les recompenses donnees. Au mieux : un echec est journalise. */
+async function pauseRewards(ids: readonly string[], paused: boolean): Promise<void> {
+  for (const id of ids) {
+    if (!stored.tokens || (closing && !paused)) return;
+    try {
+      await withHelix((s) => setRewardPaused(s, id, paused, fetcher));
+    } catch (error: unknown) {
+      log.warn('pause de recompense non appliquee : ' + describe(error));
+    }
+  }
 }
 
 async function syncNow(): Promise<void> {
@@ -332,16 +362,18 @@ async function syncNow(): Promise<void> {
   const own = await withHelix((s) => listOwnRewards(s, fetcher));
   const plan = planRewards(wantedRewards(config(), t), own, rewardIds());
   const next: Record<string, string> = { ...plan.keep };
+  const created: string[] = [];
   let firstError: unknown;
 
   for (const spec of plan.create) {
-    // Une deconnexion survenue entre deux creations arrete la synchronisation.
-    if (!stored.tokens) break;
+    // Une deconnexion ou une extinction survenue entre deux creations arrete la synchronisation.
+    if (!stored.tokens || closing) break;
     try {
-      const created = await withHelix((s) => createReward(s, {
+      const reward = await withHelix((s) => createReward(s, {
         title: spec.title, cost: spec.cost, prompt: spec.prompt, cooldownSeconds: spec.cooldownSeconds, userInput: spec.userInput,
       }, fetcher));
-      next[spec.key] = created.id;
+      next[spec.key] = reward.id;
+      created.push(reward.id);
     } catch (error: unknown) {
       log.warn('recompense non creee (' + spec.key + ') : ' + describe(error));
       firstError ??= error;
@@ -356,6 +388,9 @@ async function syncNow(): Promise<void> {
       next[key] = id;
     }
   }
+
+  // Une recompense creee pendant une pause doit naitre en pause : Twitch la cree active.
+  if (stored.paused) await pauseRewards(created, true);
 
   // Une deconnexion survenue pendant l'attente ne doit pas laisser des identifiants orphelins.
   await mutate((disk) => {
@@ -540,6 +575,9 @@ async function goOnline(): Promise<void> {
   }
   if (mine !== epoch) return;
 
+  /** Vrai une fois l'etat de pause rendu aux recompenses pour cette mise en ligne. */
+  let pauseRestored = false;
+
   const next = createEventSubClient({
     openSocket: (url) => new WebSocket(url) as unknown as SocketLike,
     subscribe,
@@ -552,6 +590,13 @@ async function goOnline(): Promise<void> {
       publish({ link: clientLink, problem });
       // Un changement de panneau fait pendant la connexion est rejoue maintenant.
       if (clientLink === 'online' && syncDirty) { syncDirty = false; scheduleSync(); }
+      // Les recompenses ont pu etre mises en pause a la derniere fermeture du
+      // plugin. On ne les reactive qu'une fois l'ecoute ETABLIE : plus tot, un
+      // rachat fait dans l'intervalle ne serait pas entendu.
+      if (clientLink === 'online' && !pauseRestored) {
+        pauseRestored = true;
+        void inSyncQueue(() => pauseRewards(Object.values(rewardIds()), Boolean(stored.paused)));
+      }
     },
     timers: { set: (callback, ms) => setTimeout(callback, ms), clear: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>) },
   });
@@ -585,13 +630,19 @@ export async function init(): Promise<void> {
   if (stored.tokens) void goOnline();
 }
 
-/** Arrete l'ecoute (extinction du plugin). */
-export function shutdown(): void {
+/**
+ * Arrete l'ecoute (extinction du plugin) et met les recompenses en pause chez
+ * Twitch : personne n'ecoute plus, les viewers ne doivent plus pouvoir payer.
+ * Au mieux : l'appelant borne l'attente, et la mise en ligne suivante les reactive.
+ */
+export async function shutdown(): Promise<void> {
+  closing = true;
   epoch += 1;
   clearTimers();
   pairing?.abort();
   pairing = undefined;
   stopClient();
+  if (stored.tokens) await pauseRewards(Object.values(rewardIds()), true);
 }
 
 /** Interrompt un appairage en cours et retrouve l'etat d'avant. */
@@ -705,10 +756,15 @@ export async function configure(settings: { deviceIds: string[]; config: Record<
   if (!sameConfig) scheduleSync();
 }
 
-/** Met les viewers en pause (tout rachat est rembourse) ou les reactive. */
+/** Met les viewers en pause (recompenses en pause chez Twitch) ou les reactive. */
 export async function setPaused(paused: boolean): Promise<void> {
   await mutate((disk) => ({ ...disk, paused }));
   publish({ paused });
+  // Mettre en pause s'applique toujours ; reactiver attend que l'ecoute soit
+  // etablie (onState s'en charge alors), sinon un viewer paierait dans le vide.
+  if (stored.tokens && (paused || clientLink === 'online')) {
+    void inSyncQueue(() => pauseRewards(Object.values(rewardIds()), paused));
+  }
 }
 
 export async function togglePaused(): Promise<boolean> {

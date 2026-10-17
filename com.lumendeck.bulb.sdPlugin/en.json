@@ -175,7 +175,7 @@
           "duplicate": "A reward with this name already exists on your channel and was not created by LumenDeck. Rename or delete it, then try again."
         },
         "liveLine": "Live · viewers are in control",
-        "pausedLine": "Paused · redemptions are refunded",
+        "pausedLine": "Paused · rewards cannot be bought",
         "blockedLine": "Blocked",
         "connecting": "Connecting…",
         "pause": "Pause",

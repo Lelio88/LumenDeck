@@ -13,7 +13,8 @@
  *
  *   - Les rachats sont traites UN PAR UN, dans l'ordre d'arrivee. Deux viewers
  *     qui rachetent a la meme seconde sinon se disputeraient les ampoules, et la
- *     couleur finale ne dirait pas qui a gagne.
+ *     couleur finale ne dirait pas qui a gagne. La file est BORNEE (MAX_QUEUED) :
+ *     au-dela, un rachat est rembourse aussitot (`busy`).
  *
  *   - Chaque identifiant de rachat n'est traite qu'UNE fois. Apres une
  *     reconnexion, Twitch peut renvoyer un rachat deja vu ; le rejouer
@@ -39,7 +40,7 @@ import { surpriseColor, type RewardAction } from './rewards.ts';
 import { parseViewerColor, type RejectReason } from './viewer-color.ts';
 
 /** Pourquoi un viewer a ete rembourse. */
-export type RefundReason = RejectReason | 'paused' | 'bulbs-unreachable';
+export type RefundReason = RejectReason | 'paused' | 'bulbs-unreachable' | 'busy';
 
 /** Ce qui s'est passe pour un rachat, pour le journal et pour la touche. */
 export type Outcome =
@@ -68,6 +69,13 @@ export type HandlerDeps = {
 
 /** Combien d'identifiants on retient pour reconnaitre un rachat rejoue. */
 const REMEMBERED = 200;
+
+/**
+ * Rachats au plus en attente. Au-dela, les suivants sont rembourses tout de
+ * suite : des ampoules muettes (5 s par essai) feraient sinon attendre chaque
+ * viewer de longues minutes avant de savoir que son achat n'a rien donne.
+ */
+const MAX_QUEUED = 10;
 
 /** Monte le gestionnaire de rachats. */
 export function createRedemptionHandler(deps: HandlerDeps): ((redemption: Redemption) => Promise<void>) & { isKnown(id: string): boolean } {
@@ -141,6 +149,12 @@ export function createRedemptionHandler(deps: HandlerDeps): ((redemption: Redemp
   }
 
   const handle = (redemption: Redemption): Promise<void> => {
+    // File pleine : rembourser tout de suite, hors file. Seuls les rachats du
+    // plugin comptent, et un rachat deja vu reste ignore.
+    if (queued.size >= MAX_QUEUED && deps.actionFor(redemption.rewardId) !== undefined && !seen.has(redemption.id) && !queued.has(redemption.id)) {
+      remember(redemption.id);
+      return refund(redemption, 'busy').catch(() => undefined);
+    }
     // `process` est enveloppe pour qu'une erreur imprevue (dans `report`, par
     // exemple) ne casse jamais la file : le rachat suivant doit passer.
     queued.add(redemption.id);

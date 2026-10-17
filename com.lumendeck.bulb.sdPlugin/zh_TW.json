@@ -192,7 +192,7 @@
           "duplicate": "你的頻道上已有同名獎勵，且並非由 LumenDeck 建立。請重新命名或刪除後再試。"
         },
         "liveLine": "線上 · 觀眾掌控中",
-        "pausedLine": "已暫停 · 兌換將被退還",
+        "pausedLine": "已暫停 · 獎勵暫不可兌換",
         "blockedLine": "受阻",
         "connecting": "連線中…",
         "pause": "暫停",

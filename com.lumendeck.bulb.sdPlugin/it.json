@@ -192,7 +192,7 @@
           "duplicate": "Sul tuo canale esiste già una ricompensa con questo nome, non creata da LumenDeck. Rinominala o eliminala, poi riprova."
         },
         "liveLine": "Online · gli spettatori hanno il controllo",
-        "pausedLine": "In pausa · i riscatti vengono rimborsati",
+        "pausedLine": "In pausa · ricompense non disponibili",
         "blockedLine": "Bloccato",
         "connecting": "Connessione…",
         "pause": "Pausa",

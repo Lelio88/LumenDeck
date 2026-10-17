@@ -85,7 +85,8 @@ l'existence de Tuya.
 | `src/actions/scenario.ts` | Action « scénario » : un appui lance une animation, un second l'arrête. N'entretient aucun état local — elle interroge le moteur, ce qui garde deux touches d'accord sur la même ampoule. |
 | `src/scenarios/catalogue.ts` | Les scénarios eux-mêmes, en **données pures**. Chacun a deux écritures : `frame(step)`, ce que fait une lampe, et `group(step, count)`, le scénario écrit pour toute la pièce (chenillard, vague, arc-en-ciel étalé, éclair qui frappe une lampe). `frameFor` choisit selon « les ampoules jouent ensemble ». Testable sans ampoule ; en ajouter un ne touche pas au moteur. |
 | `src/scenarios/sessions.ts` | Index des sessions de scénario **par ampoule** : une session est retrouvable depuis chacune de ses lampes, et `remove` ne libère que les lampes qui pointent encore sur elle. N'importe rien — testable seul. |
-| `src/scenarios/runner.ts` | Déroule les images dans le temps. Une exécution par ampoule — une session est retrouvable depuis **chacune** de ses ampoules —, relevé de l'état avant la première image et restauration à l'arrêt. Options : `together` (version de groupe) et `maxMs`, une durée après laquelle le scénario s'arrête seul et rend les lampes dans leur état d'avant (scénarios achetés par un viewer). |
+| `src/scenarios/engine.ts` | Le moteur des scénarios, **testé sans ampoule** : accès aux lampes, minuteries et horloge sont injectés. Une exécution par ampoule, relevé de l'état et restauration à l'arrêt, version de groupe, durée maximale. `start` dit si la première image a atteint une lampe. |
+| `src/scenarios/runner.ts` | Liaison du moteur au vrai pilote (`withRetry`) et aux minuteries de Node ; l'unique moteur du plugin, partagé par les touches et Twitch. Déroule les images dans le temps. Une exécution par ampoule — une session est retrouvable depuis **chacune** de ses ampoules —, relevé de l'état avant la première image et restauration à l'arrêt. Options : `together` (version de groupe) et `maxMs`, une durée après laquelle le scénario s'arrête seul et rend les lampes dans leur état d'avant (scénarios achetés par un viewer). |
 | `src/key-art.ts` | Dessine les faces de touche **à la volée**, en SVG : jauge qui se remplit, goutte à la vraie couleur, disque teinté à la vraie température. N'importe rien — donc testable sans ampoule ni Stream Deck. |
 | `src/color-format.ts` | Conversions hexadécimal ↔ TSV et rotation de teinte. Vit côté présentation : l'hexadécimal est une convention d'interface web, pas un langage d'ampoule. |
 | `src/bulbs.ts` | **Registre des ampoules** (identifiant, clé, adresse, nom, **version de protocole**), dans les réglages globaux du plugin. Une ampoule y est déclarée une fois ; `coordinatesForMany()` est le point d'entrée unique des actions et rend les coordonnées des ampoules d'une touche, dans l'ordre ; `adoptBulbs()` met une ancienne touche à jour à son apparition. |
@@ -199,13 +200,23 @@ réellement appliquée, ou un scénario réellement lancé, est validé. La clô
 **pas** posée et le viewer est toujours débité). Dans les deux cas, le streamer règle ce rachat à la
 main dans son tableau de bord.
 
-**Ce qui arrive pendant une coupure.** La récompense reste active chez Twitch quand le plugin est
-fermé ou déconnecté, et EventSub ne rejoue rien : un rachat fait à ce moment reste « en attente »,
-points retenus. À chaque abonnement, `service.ts` liste donc les rachats en attente et **rembourse**
+**La pause est une vraie pause.** Le bouton Pause (et la touche) met les récompenses en pause **chez
+Twitch** : visibles, mais impossibles à acheter — le viewer ne dépense rien, au lieu d'être débité puis
+remboursé. Le plugin fait de même à sa fermeture (attente bornée à 3 s), et rend aux récompenses l'état
+voulu par le streamer une fois l'écoute rétablie — pas avant, sinon un rachat fait dans l'intervalle ne
+serait pas entendu. Une récompense créée pendant une pause naît en pause.
+Retirer la pause pendant que la connexion se rétablit n'agit qu'une fois l'écoute établie. Conséquence
+assumée : si le plugin est désinstallé, ses récompenses restent **en pause** sur la chaîne — personne
+ne les achète, mais il faut les supprimer à la main dans le tableau de bord Twitch (ou se
+déconnecter avant, ce qui les supprime).
+
+**Ce qui arrive pendant une coupure.** Si le plugin est tué sans fermeture propre, ou perd la
+liaison, les récompenses restent actives et EventSub ne rejoue rien : un rachat fait à ce moment
+reste « en attente », points retenus. À chaque abonnement, `service.ts` liste donc les rachats en attente et **rembourse**
 ceux que le plugin n'a pas vus et qui ont plus d'une minute (plus récents, ils sont peut-être en cours
 de traitement). La garantie est donc « remboursé au plus tard au prochain démarrage », pas « jamais
-débité pendant une panne ». Limite connue : la file des rachats n'a pas de plafond de longueur, et des
-ampoules éteintes ou injoignables font attendre les viewers suivants.
+débité pendant une panne ». La file des rachats est **bornée** à dix : au-delà, un rachat est remboursé
+aussitôt (`busy`), plutôt que de faire attendre des minutes des viewers face à des ampoules muettes.
 
 **Le texte d'un viewer est une entrée non fiable.** `viewer-color.ts` n'accepte qu'un seul mot
 connu (français, anglais, allemand, espagnol ou italien) ou un `#` suivi de 3 ou 6 chiffres hexadécimaux. « rouge vif » est refusé
@@ -592,7 +603,8 @@ allers-retours d'échelle, plancher matériel, bornes de température. `errors.t
 classement des pannes, sur les messages réels de `tuyapi`. Aucune ampoule requise, donc exécutables
 partout. Les modules Twitch se testent sans compte ni réseau (`twitch-*.test.mjs`, `viewer-color`) :
 réseau, horloge, socket et attente y sont des faux injectés. `service.ts`, la colle liée au SDK, n'a
-pas de test direct ; ses décisions d'état sont extraites dans `state.ts` et `face.ts`, qui en ont.
+pas de test direct ; ses décisions d'état sont extraites dans `state.ts` et `face.ts`, qui en ont. Le moteur des scénarios aussi (`engine.test.mjs`) : de fausses lampes notent les ordres, et
+l'horloge avance à la main — arrêt à l'heure, restauration, aucune minuterie survivante.
 
 Ces tests importent les **sources** avec un suffixe `.ts` et Node les exécute sans build, par
 effacement de types. D'où deux contraintes sur tout module qu'un test atteint : aucune syntaxe

@@ -192,7 +192,7 @@
           "duplicate": "같은 이름의 보상이 이미 채널에 있으며 LumenDeck이 만든 것이 아닙니다. 이름을 바꾸거나 삭제한 뒤 다시 시도하세요."
         },
         "liveLine": "온라인 · 시청자가 조작 중",
-        "pausedLine": "일시정지 · 교환은 환불됩니다",
+        "pausedLine": "일시정지 · 보상을 교환할 수 없습니다",
         "blockedLine": "차단됨",
         "connecting": "연결 중…",
         "pause": "일시정지",

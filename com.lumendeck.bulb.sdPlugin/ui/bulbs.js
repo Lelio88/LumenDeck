@@ -319,6 +319,14 @@
     let mode = 'qr';
     const scan = { running: false, items: null, method: null, message: null, tone: null };
     const cloud = { polling: null, message: '', tone: null, qr: null, busy: false, code: '' };
+    /**
+     * Ce qui a ete tape pour chaque appareil nouveau, par adresse. Le formulaire est
+     * redessine a chaque reponse du plugin (un autre appareil enregistre, une
+     * erreur) : sans ce brouillon, la saisie en cours serait effacee.
+     */
+    const drafts = {};
+    /** Adresse du dernier appareil envoye a l'enregistrement : la reponse ne porte que son identifiant. */
+    let lastSavedIp = null;
 
     // -- Mes ampoules --
     function renderMine() {
@@ -405,9 +413,16 @@
 
     /** Un appareil nouveau, trouve sur le reseau : le seul cas ou il faut un formulaire. */
     function newDevice(item) {
-      const idInput = item.id ? null : el('input', { type: 'text', id: 'ld-new-id-' + item.ip, placeholder: tr('pi.field.id', 'Bulb identifier') });
-      const name = el('input', { type: 'text', id: 'ld-new-name-' + item.ip, placeholder: tr('pi.scan.namePlaceholder', 'e.g. Hallway') });
-      const key = el('input', { type: 'password', id: 'ld-new-key-' + item.ip, placeholder: tr('pi.field.key', 'Local key') });
+      const draft = (drafts[item.ip] ??= { id: '', name: '', key: '' });
+      /** Un champ qui reprend et tient a jour son brouillon. */
+      const field = (type, id, placeholder, slot) => {
+        const input = el('input', { type, id, placeholder, value: draft[slot] });
+        input.addEventListener('input', () => { draft[slot] = input.value; });
+        return input;
+      };
+      const idInput = item.id ? null : field('text', 'ld-new-id-' + item.ip, tr('pi.field.id', 'Bulb identifier'), 'id');
+      const name = field('text', 'ld-new-name-' + item.ip, tr('pi.scan.namePlaceholder', 'e.g. Hallway'), 'name');
+      const key = field('password', 'ld-new-key-' + item.ip, tr('pi.field.key', 'Local key'), 'key');
       const add = el('button', {
         type: 'button', class: 'ld-primary', text: tr('pi.scan.add', 'Add'),
         onclick: () => {
@@ -416,6 +431,7 @@
           if (!key.value.trim()) { scan.message = tr('pi.save.needKey', 'This bulb needs its local key to be controllable.'); scan.tone = 'err'; renderAdder(); return; }
           // La version du protocole n'est connaissable qu'a la recherche : l'ampoule
           // ne l'annonce que dans sa diffusion. La transmettre evite de supposer 3.3.
+          lastSavedIp = item.ip;
           send({ event: 'saveBulb', id, ip: item.ip, key: key.value.trim(), name: name.value.trim(), version: item.version || '' });
         },
       });
@@ -487,7 +503,11 @@
           break;
         case 'saveBulb':
           if (payload.ok) {
-            scan.items = scan.items ? scan.items.filter((i) => i.id !== payload.id) : null;
+            // Retrouve par l'adresse : un appareil trouve par balayage n'avait pas d'identifiant.
+            // Le brouillon porte la cle locale en clair : on l'oublie des que l'ampoule est enregistree.
+            if (lastSavedIp) delete drafts[lastSavedIp];
+            scan.items = scan.items ? scan.items.filter((i) => i.id !== payload.id && i.ip !== lastSavedIp) : null;
+            lastSavedIp = null;
             scan.message = tr('pi.save.ok', 'Bulb saved. Choose it in the list above.'); scan.tone = 'ok';
           } else {
             scan.message = payload.message || tr('pi.save.failed', 'Could not save.'); scan.tone = 'err';
