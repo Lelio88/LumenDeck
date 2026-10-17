@@ -172,6 +172,32 @@ async function sendDiscovery(): Promise<void> {
 }
 
 /**
+ * Retrouve sur le reseau local l'adresse des ampoules qu'on vient d'enroler.
+ *
+ * Le cloud Tuya rapporte bien une adresse pour chaque appareil, mais c'est celle
+ * de la box vue d'Internet, pas celle de l'ampoule chez soi : s'y connecter
+ * expire, et la touche affiche « Hors ligne » alors que la cle est la bonne.
+ * L'enrolement n'enregistre donc AUCUNE adresse ; l'ecoute des annonces que les
+ * ampoules diffusent d'elles-memes la renseigne ensuite.
+ *
+ * Lance en arriere-plan : l'ecoute dure quelques secondes, et le panneau n'a pas
+ * a attendre pour annoncer que les ampoules sont ajoutees. Un echec n'est pas
+ * grave : sans adresse enregistree, le pilote cherche l'ampoule lui-meme a
+ * chaque connexion, et la recherche du panneau reste disponible.
+ */
+async function locateEnrolled(ids: readonly string[]): Promise<void> {
+  try {
+    const wanted = new Set(ids);
+    for (const bulb of await discover(SCAN_MS)) {
+      if (wanted.has(bulb.id)) await bulbs.remember({ id: bulb.id, ip: bulb.ip, version: bulb.version });
+    }
+  } catch (error: unknown) {
+    const detail = error instanceof Error ? error.message : String(error);
+    streamDeck.logger.createScope('bulbs').warn('adresses des ampoules non retrouvees apres enrolement : ' + detail);
+  }
+}
+
+/**
  * Installe le pont. A appeler une fois au demarrage du plugin.
  *
  * Les erreurs sont renvoyees au panneau plutot que journalisees : c'est la seule
@@ -253,7 +279,7 @@ export function installUiBridge(): void {
               await bulbs.remember({
                 id: lampe.id,
                 key: lampe.key,
-                ...(lampe.ip ? { ip: lampe.ip } : {}),
+                // L'adresse du cloud n'est PAS enregistree : voir `locateEnrolled`.
                 ...(lampe.name ? { name: lampe.name } : {}),
               });
             }
@@ -267,6 +293,7 @@ export function installUiBridge(): void {
               ignored: tous.length - lampes.length,
             });
             await sendBulbList();
+            void locateEnrolled(lampes.map((l) => l.id));
           } catch (error: unknown) {
             const message = error instanceof TuyaCloudError ? error.message : 'Recuperation des ampoules impossible.';
             await reply({ event: 'tuyaLoginPoll', ok: false, done: false, message });

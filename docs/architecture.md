@@ -138,6 +138,12 @@ qui vérifient l'algorithme contre des vecteurs calculés à part.
 **Invariant** : la clé ne quitte jamais le plugin. `fetchDevices` la rend au pont d'interface, qui
 l'écrit directement dans le registre ; le panneau, lui, n'apprend que des noms.
 
+**L'adresse du cloud est ignorée.** Le cloud rapporte une adresse pour chaque appareil, mais c'est celle
+de la box vue d'Internet, pas celle de l'ampoule : s'y connecter expire et la touche affiche « Hors
+ligne » alors que la clé est bonne. L'enrôlement n'enregistre donc **aucune** adresse ; l'écoute des
+annonces UDP (`locateEnrolled`, en arrière-plan) la renseigne ensuite, et à défaut le pilote cherche
+l'ampoule par diffusion à chaque connexion.
+
 ## Twitch : les points de chaîne
 
 Les viewers dépensent des points de chaîne pour choisir la couleur des ampoules. Le plugin parle
