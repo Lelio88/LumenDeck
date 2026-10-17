@@ -16,6 +16,7 @@
     "Rotate the hue": "색조 회전",
     "Adjust the white": "백색 온도 조절",
     "Start / stop the scenario": "시나리오 시작 / 정지",
+    "Lets your viewers change the colour with channel points.": "시청자가 채널 포인트로 색상을 바꿀 수 있게 합니다.",
     "key": {
       "toSet": "설정 필요",
       "offline": "오프라인",
@@ -24,7 +25,8 @@
       "on": "켜짐",
       "off": "꺼짐",
       "noColour": "색상 미지원",
-      "noWhite": "백색 미지원"
+      "noWhite": "백색 미지원",
+      "paused": "일시정지"
     },
     "warmth": {
       "warm": "따뜻함",
@@ -155,6 +157,46 @@
         "ok": "전구를 저장했습니다. 위 목록에서 선택하세요.",
         "failed": "저장하지 못했습니다.",
         "needKey": "이 전구를 제어하려면 로컬 키가 필요합니다."
+      },
+      "twitch": {
+        "intro": "시청자가 채널 포인트를 사용해 전구 색상을 고릅니다. Twitch 계정을 한 번만 연결하면 보상은 LumenDeck이 직접 만듭니다.",
+        "connect": "Twitch 연결",
+        "pairing": "방금 열린 Twitch 페이지에서 이 코드를 확인하세요:",
+        "waiting": "Twitch에서 승인을 기다리는 중...",
+        "cancel": "취소",
+        "connectedAs": "연결된 계정",
+        "rewardOk": "보상이 채널에서 활성화되었습니다. 비용과 쿨다운은 Twitch 대시보드에서 바꿀 수 있습니다.",
+        "rewardWait": "보상을 설정하는 중...",
+        "disconnect": "연결 해제",
+        "disconnectHelp": "연결을 해제하면 채널에서 보상이 삭제되고 LumenDeck의 접근 권한이 제거됩니다.",
+        "bulbsHelp": "시청자가 바꾸는 전구입니다. 아무것도 선택하지 않으면 등록된 전구가 하나뿐일 때 그 전구가 사용됩니다.",
+        "pauseHelp": "키를 누르면 시청자 조작을 일시정지하거나 재개합니다. 일시정지 중에는 모든 교환이 환불됩니다.",
+        "inputHelp": "시청자는 색상 이름(red, blue, pink 등)이나 #ff8800 같은 코드를 입력합니다. 검은색과 읽을 수 없는 입력은 자동으로 환불됩니다.",
+        "last": "최근 교환",
+        "outcome": {
+          "applied": "색상 적용됨",
+          "refunded": "환불됨",
+          "unsettled": "색상은 적용되었지만 Twitch가 처리를 완료하지 못했습니다. 대시보드에서 직접 처리하세요",
+          "refundFailed": "색상이 적용되지 않았고 Twitch가 환불을 거부했습니다. 대시보드에서 직접 환불하세요"
+        },
+        "retry": "다시 시도",
+        "err": {
+          "generic": "문제가 발생했습니다. 다시 시도하세요.",
+          "network": "Twitch에 연결할 수 없습니다. 네트워크를 확인하세요.",
+          "expired": "코드가 만료되었습니다. 다시 연결하세요.",
+          "rejected": "Twitch가 요청을 거부했습니다.",
+          "missing-scope": "권한이 거부되었습니다. 다시 연결하고 둘 다 허용하세요.",
+          "reconnect-needed": "Twitch 세션이 만료되었습니다. 다시 연결하세요.",
+          "revoked": "Twitch에서 접근 권한이 제거되었습니다. 다시 연결하세요.",
+          "forbidden": "Twitch가 이 계정을 거부했습니다. 채널 포인트는 제휴 또는 파트너 자격이 필요합니다.",
+          "duplicate": "같은 이름의 보상이 이미 채널에 있으며 LumenDeck이 만든 것이 아닙니다. 이름을 바꾸거나 삭제한 뒤 다시 시도하세요."
+        }
+      }
+    },
+    "twitch": {
+      "reward": {
+        "colorTitle": "색상 고르기",
+        "colorPrompt": "색상 이름(red, blue, pink 등)이나 #ff8800 같은 코드를 입력하세요. 그 외에는 환불됩니다."
       }
     }
   }

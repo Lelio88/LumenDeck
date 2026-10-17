@@ -187,6 +187,32 @@ def glyph_temperature(d: ImageDraw.ImageDraw, s: int, color, detailed: bool) -> 
     d.pieslice([cx - inset, cy - inset, cx + inset, cy + inset], start=90, end=270, fill=color)
 
 
+def glyph_twitch(d: ImageDraw.ImageDraw, s: int, color, detailed: bool) -> None:
+    """Piece traversee d'un eclair : les points de chaine, pas la marque Twitch.
+
+    Le logo de Twitch (une bulle de discussion) est une marque deposee et se
+    confondrait avec un glyphe de messagerie. La piece evoque ce que le viewer
+    DEPENSE ; l'eclair, l'effet instantane sur la lumiere. Elle ne ressemble a
+    aucun des cinq autres glyphes (ampoule, jauge, goutte, disque, triangle).
+    """
+    w = s * 0.088
+    cx, cy, r = s * 0.5, s * 0.5, s * 0.30
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=color, width=max(1, int(round(w))))
+
+    # Eclair plein, un peu en retrait de l'anneau pour ne pas le toucher. En petit,
+    # il est epaissi : un eclair fin se refermerait en tache.
+    k = r * (0.62 if detailed else 0.70)
+    bolt = [
+        (cx + k * 0.22, cy - k),
+        (cx - k * 0.62, cy + k * 0.10),
+        (cx - k * 0.10, cy + k * 0.10),
+        (cx - k * 0.30, cy + k),
+        (cx + k * 0.62, cy - k * 0.18),
+        (cx + k * 0.10, cy - k * 0.18),
+    ]
+    d.polygon(bolt, fill=color)
+
+
 # --- Fabrication ------------------------------------------------------------
 
 
@@ -273,6 +299,7 @@ def main() -> None:
         ("color", glyph_color),
         ("temperature", glyph_temperature),
         ("scenario", glyph_scenario),
+        ("twitch", glyph_twitch),
     )
     for size, suffix in ((20, ""), (40, "@2x")):
         for name, glyph in actions:

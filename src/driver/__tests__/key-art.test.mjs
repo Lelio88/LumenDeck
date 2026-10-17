@@ -9,7 +9,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { arcPath, asImage, brightnessKey, colorKey, kelvinToRgb, temperatureKey } from '../../key-art.ts';
+import { arcPath, asImage, brightnessKey, colorKey, kelvinToRgb, temperatureKey, twitchKey } from '../../key-art.ts';
 
 /**
  * Libelle d'extinction, passe en parametre depuis l'action.
@@ -113,4 +113,32 @@ test('un dessin emballe pour setImage survit a ses propres dieses', () => {
   const charge = uri.slice(prefixe.length);
   assert.ok(!charge.includes('#'), 'aucun diese ne doit subsister dans la charge');
   assert.equal(decodeURIComponent(charge), svg, "l'aller-retour doit rendre le dessin intact");
+});
+
+test('la touche Twitch est bien formee dans chacun de ses trois modes', () => {
+  for (const mode of ['live', 'paused', 'idle']) assert.ok(wellFormed(twitchKey(mode, '')), mode);
+});
+
+test('seule la touche Twitch en ligne est ambre : en pause ou au repos elle est grise', () => {
+  assert.match(twitchKey('live', ''), /#ffb247/);
+  for (const mode of ['paused', 'idle']) {
+    const svg = twitchKey(mode, 'Pause');
+    assert.ok(!svg.includes('#ffb247'), mode);
+    assert.match(svg, /#5c6470/, mode);
+  }
+});
+
+test('la touche Twitch ecrit son mot, et rien quand il n y en a pas', () => {
+  assert.match(twitchKey('paused', 'Pause'), />Pause</);
+  assert.ok(!twitchKey('live', '').includes('<text'));
+});
+
+test('un mot traduit ne peut pas casser le SVG', () => {
+  const svg = twitchKey('paused', '<b>&');
+  assert.ok(svg.includes('&lt;b&gt;&amp;'));
+  assert.ok(!svg.includes('<b>'));
+});
+
+test('la touche Twitch n emploie jamais rgba() que Stream Deck rejetterait', () => {
+  for (const mode of ['live', 'paused', 'idle']) assert.ok(!twitchKey(mode, 'x').includes('rgba('), mode);
 });

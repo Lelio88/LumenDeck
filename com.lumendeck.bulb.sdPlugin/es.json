@@ -16,6 +16,7 @@
     "Rotate the hue": "Girar el tono",
     "Adjust the white": "Ajustar el blanco",
     "Start / stop the scenario": "Iniciar / detener el escenario",
+    "Lets your viewers change the colour with channel points.": "Permite a tus espectadores cambiar el color con puntos del canal.",
     "key": {
       "toSet": "Configurar",
       "offline": "Sin conexión",
@@ -24,7 +25,8 @@
       "on": "Encendida",
       "off": "Apagada",
       "noColour": "Sin color",
-      "noWhite": "Sin blanco"
+      "noWhite": "Sin blanco",
+      "paused": "En pausa"
     },
     "warmth": {
       "warm": "Cálido",
@@ -155,6 +157,46 @@
         "ok": "Bombilla guardada. Elígela en la lista de arriba.",
         "failed": "Error al guardar.",
         "needKey": "Esta bombilla necesita su clave local para poder controlarse."
+      },
+      "twitch": {
+        "intro": "Tus espectadores gastan puntos del canal para elegir el color de tus bombillas. Conecta tu cuenta de Twitch una sola vez: LumenDeck crea la recompensa por sí mismo.",
+        "connect": "Conectar Twitch",
+        "pairing": "Comprueba este código en la página de Twitch que se acaba de abrir:",
+        "waiting": "Esperando tu aprobación en Twitch...",
+        "cancel": "Cancelar",
+        "connectedAs": "Conectado como",
+        "rewardOk": "La recompensa está activa en tu canal. Cambia su precio o su enfriamiento en tu panel de Twitch.",
+        "rewardWait": "Configurando la recompensa...",
+        "disconnect": "Desconectar",
+        "disconnectHelp": "Al desconectar se elimina la recompensa de tu canal y se retira el acceso de LumenDeck.",
+        "bulbsHelp": "Son las bombillas que cambian tus espectadores. Si no marcas ninguna, se usa la única bombilla declarada.",
+        "pauseHelp": "Pulsa la tecla para pausar o reactivar a tus espectadores. En pausa, cada canje se reembolsa.",
+        "inputHelp": "Los espectadores escriben un nombre de color (rojo, azul, rosa...) o un código como #ff8800. El negro y todo lo ilegible se reembolsan automáticamente.",
+        "last": "Último canje",
+        "outcome": {
+          "applied": "color aplicado",
+          "refunded": "reembolsado",
+          "unsettled": "color aplicado, pero Twitch no lo cerró: resuélvelo a mano en tu panel",
+          "refundFailed": "color no aplicado, y Twitch rechazó el reembolso: reembólsalo a mano en tu panel"
+        },
+        "retry": "Reintentar",
+        "err": {
+          "generic": "Algo salió mal. Inténtalo de nuevo.",
+          "network": "No se puede contactar con Twitch. Revisa tu conexión.",
+          "expired": "El código ha caducado. Vuelve a conectar.",
+          "rejected": "Twitch rechazó la solicitud.",
+          "missing-scope": "Se rechazó un permiso. Vuelve a conectar y acepta ambos.",
+          "reconnect-needed": "Tu sesión de Twitch ha caducado. Vuelve a conectar.",
+          "revoked": "Se retiró el acceso en Twitch. Vuelve a conectar.",
+          "forbidden": "Twitch rechazó esta cuenta. Los puntos del canal requieren ser Afiliado o Socio.",
+          "duplicate": "Ya existe en tu canal una recompensa con este nombre que no creó LumenDeck. Cámbiale el nombre o elimínala y vuelve a intentarlo."
+        }
+      }
+    },
+    "twitch": {
+      "reward": {
+        "colorTitle": "Elige el color",
+        "colorPrompt": "Escribe un nombre de color (rojo, azul, rosa...) o un código como #ff8800. Todo lo demás se reembolsa."
       }
     }
   }

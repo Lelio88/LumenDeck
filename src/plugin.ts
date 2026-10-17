@@ -11,8 +11,10 @@ import { Color } from './actions/color.js';
 import { ScenarioAction } from './actions/scenario.js';
 import { Temperature } from './actions/temperature.js';
 import { ToggleBulb } from './actions/toggle.js';
+import { TwitchAction } from './actions/twitch.js';
 import { releaseAll } from './driver/pool.js';
 import { stopAll } from './scenarios/runner.js';
+import * as twitch from './twitch/service.js';
 import { installUiBridge } from './ui-bridge.js';
 
 // INFO plutot que TRACE : le mode trace journalise tous les echanges avec Stream
@@ -27,6 +29,7 @@ streamDeck.actions.registerAction(new Brightness());
 streamDeck.actions.registerAction(new Color());
 streamDeck.actions.registerAction(new Temperature());
 streamDeck.actions.registerAction(new ScenarioAction());
+streamDeck.actions.registerAction(new TwitchAction());
 
 // Repond aux panneaux de configuration : liste, recherche et enregistrement
 // des ampoules connues.
@@ -38,8 +41,16 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
     // Couper les scenarios AVANT de fermer les connexions : le moteur a besoin
     // des sessions Tuya pour remettre chaque lampe comme il l'a trouvee.
+    twitch.shutdown();
     void stopAll().finally(() => releaseAll().finally(() => process.exit(0)));
   });
 }
 
-streamDeck.connect();
+// Rouvre la session Twitch s'il en existe une, APRES la connexion : lire les
+// reglages globaux suppose que Stream Deck repond. Un echec ne doit jamais
+// empecher les touches de fonctionner : Twitch est un plus, pas un prerequis.
+void streamDeck.connect()
+  .then(() => twitch.init())
+  .catch((error: unknown) => {
+    streamDeck.logger.createScope('plugin').warn('demarrage impossible : ' + (error instanceof Error ? error.name : 'erreur'));
+  });

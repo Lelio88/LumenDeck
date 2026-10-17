@@ -16,6 +16,7 @@
     "Rotate the hue": "色相を回す",
     "Adjust the white": "白色温度を調整",
     "Start / stop the scenario": "シナリオを開始 / 停止",
+    "Lets your viewers change the colour with channel points.": "視聴者がチャンネルポイントで色を変えられるようにします。",
     "key": {
       "toSet": "未設定",
       "offline": "オフライン",
@@ -24,7 +25,8 @@
       "on": "オン",
       "off": "オフ",
       "noColour": "色非対応",
-      "noWhite": "白色非対応"
+      "noWhite": "白色非対応",
+      "paused": "一時停止"
     },
     "warmth": {
       "warm": "暖色",
@@ -155,6 +157,46 @@
         "ok": "電球を保存しました。上の一覧から選んでください。",
         "failed": "保存できませんでした。",
         "needKey": "この電球を操作するにはローカルキーが必要です。"
+      },
+      "twitch": {
+        "intro": "視聴者がチャンネルポイントを使って電球の色を選べます。Twitch アカウントを一度接続すれば、報酬は LumenDeck が自動で作成します。",
+        "connect": "Twitch に接続",
+        "pairing": "いま開いた Twitch のページでこのコードを確認してください：",
+        "waiting": "Twitch での承認を待っています...",
+        "cancel": "キャンセル",
+        "connectedAs": "接続中のアカウント",
+        "rewardOk": "報酬はチャンネルで有効です。コストやクールダウンは Twitch のダッシュボードで変更できます。",
+        "rewardWait": "報酬を設定しています...",
+        "disconnect": "接続解除",
+        "disconnectHelp": "接続を解除すると、チャンネルから報酬が削除され、LumenDeck のアクセス権も取り消されます。",
+        "bulbsHelp": "視聴者が変更する電球です。何も選ばない場合は、登録済みの電球が 1 つだけならそれが使われます。",
+        "pauseHelp": "キーを押すと視聴者の操作を一時停止／再開できます。一時停止中は、すべての交換が返金されます。",
+        "inputHelp": "視聴者は色の名前（red、blue、pink など）か #ff8800 のようなコードを入力します。黒や読み取れない入力は自動的に返金されます。",
+        "last": "直近の交換",
+        "outcome": {
+          "applied": "色を適用",
+          "refunded": "返金済み",
+          "unsettled": "色は適用されましたが、Twitch 側で完了できませんでした。ダッシュボードで手動で処理してください",
+          "refundFailed": "色は適用されず、Twitch も返金を拒否しました。ダッシュボードで手動で返金してください"
+        },
+        "retry": "再試行",
+        "err": {
+          "generic": "問題が発生しました。もう一度お試しください。",
+          "network": "Twitch に接続できません。ネットワークを確認してください。",
+          "expired": "コードの有効期限が切れました。もう一度接続してください。",
+          "rejected": "Twitch がリクエストを拒否しました。",
+          "missing-scope": "権限が拒否されました。もう一度接続し、両方を許可してください。",
+          "reconnect-needed": "Twitch のセッションが切れました。もう一度接続してください。",
+          "revoked": "Twitch 側でアクセスが取り消されました。もう一度接続してください。",
+          "forbidden": "Twitch がこのアカウントを拒否しました。チャンネルポイントにはアフィリエイトまたはパートナーの資格が必要です。",
+          "duplicate": "同じ名前の報酬がすでにチャンネルにあり、LumenDeck が作成したものではありません。名前を変えるか削除してから、もう一度お試しください。"
+        }
+      }
+    },
+    "twitch": {
+      "reward": {
+        "colorTitle": "色を選ぶ",
+        "colorPrompt": "色の名前（red、blue、pink など）か #ff8800 のようなコードを入力してください。それ以外は返金されます。"
       }
     }
   }

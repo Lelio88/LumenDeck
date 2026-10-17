@@ -81,6 +81,7 @@ l'existence de Tuya.
 | `src/actions/brightness.ts` | Action « intensité » : pas fixe sur touche, rotation continue sur molette, retour visuel sur l'écran de la molette. |
 | `src/actions/color.ts` | Action « couleur » : applique une couleur choisie, ou fait tourner la teinte à la molette en préservant l'intensité courante. |
 | `src/actions/temperature.ts` | Action « blanc chaud / froid », de 2700 K à 6500 K. |
+| `src/actions/twitch.ts` | Action « Twitch » : tableau de bord des points de chaîne. Montre si les viewers peuvent agir, un appui les met en pause. Son panneau porte la connexion du compte et le choix des ampoules. |
 | `src/actions/scenario.ts` | Action « scénario » : un appui lance une animation, un second l'arrête. N'entretient aucun état local — elle interroge le moteur, ce qui garde deux touches d'accord sur la même ampoule. |
 | `src/scenarios/catalogue.ts` | Les scénarios eux-mêmes, en **données pures** : `frame(step)` rend une image, sans effet de bord. Testable sans ampoule ; en ajouter un ne touche pas au moteur. |
 | `src/scenarios/sessions.ts` | Index des sessions de scénario **par ampoule** : une session est retrouvable depuis chacune de ses lampes, et `remove` ne libère que les lampes qui pointent encore sur elle. N'importe rien — testable seul. |
@@ -93,7 +94,19 @@ l'existence de Tuya.
 | `src/settings.ts` | Formes des réglages d'une touche. Une touche ne retient que les **identifiants** (`deviceIds`) des ampoules qu'elle pilote, plus ce qui lui est propre. |
 | `src/plugin.ts` | Racine de composition. |
 | `src/tools/probe.mjs` | Sonde de diagnostic : relève les datapoints d'une ampoule. Vit sous `src/` parce qu'il a besoin des dépendances du projet. |
-| `src/tuya-cloud.ts` | Récupère les clés locales par **scan de QR code**. Seul module qui parle à un serveur, et seulement pour l'enrôlement : le pilotage n'y repasse jamais. |
+| `src/tuya-cloud.ts` | Récupère les clés locales par **scan de QR code**. Parle à Tuya, et seulement pour l'enrôlement : le pilotage n'y repasse jamais. |
+| `src/global-store.ts` | Magasin des **réglages globaux**, par clé : la lecture, le calcul de la nouvelle valeur et l'écriture ont lieu **dans la même file**, avec un délai maximal sur la lecture. `setGlobalSettings` remplace l'objet entier : sérialiser les seules écritures ne suffit pas, deux modifications simultanées liraient le même état de départ et la seconde effacerait la première (une clé locale saisie peut ainsi disparaître). Pur — testable avec un faux disque. |
+| `src/globals.ts` | Liaison du magasin au SDK. Toute lecture et toute écriture des réglages globaux passent par là. |
+| `src/registry.ts` | Fusion pure des ampoules du registre (ajout, mise à jour, oubli). Une fonction de la liste **courante** : `bulbs.ts` la confie au magasin, qui l'applique dans sa file. Une découverte réseau, qui ignore la clé, n'efface jamais une clé déjà saisie. |
+| `src/twitch/viewer-color.ts` | Lit le texte tapé par un viewer : un nom de couleur (français, anglais, allemand, espagnol, italien) ou un hexadécimal **avec** `#`, rien d'autre ; le noir est refusé. Pur, ne lève jamais. |
+| `src/twitch/protocol.ts` | Lit les messages EventSub : bienvenue, maintien, rachat, reconnexion, révocation. Ne rend un rachat que s'il est encore à traiter ; n'accepte une adresse de reconnexion que chez `twitch.tv`. Pur. |
+| `src/twitch/eventsub.ts` | Connexion temps réel : chien de garde sur le silence, reconnexion à délai croissant, bascule sans perte sur demande de Twitch. Socket, horloge et abonnement injectés. |
+| `src/twitch/auth.ts` | Connexion du compte (code à saisir, application **publique**, aucun secret) et renouvellement des jetons. Réseau, horloge et attente injectés. |
+| `src/twitch/helix.ts` | Appels à l'API Twitch : créer, lister, supprimer la récompense ; s'abonner aux rachats ; valider ou rembourser un rachat (avec reprises sur panne passagère) ; lister les rachats restés en attente. Erreurs classées, jamais de jeton dans un message. |
+| `src/twitch/handler.ts` | La décision pour chaque rachat : appliquer la couleur puis valider, **ou** rembourser avec sa raison. Un par un, dans l'ordre ; chaque rachat une seule fois. Effets injectés. |
+| `src/twitch/face.ts` | Ce que la touche Twitch montre selon l'état du service. Rend une clé de traduction, pas un mot. Pur. |
+| `src/twitch/state.ts` | Quel état montrer après un échec ou une annulation d'appairage : une session encore présente mais sans écoute redevient « à refaire » au lieu de bloquer le panneau. Pur. |
+| `src/twitch/service.ts` | La colle, seule partie liée au SDK : session persistée, renouvellement sérialisé, récompense, socket, ampoules visées. Aucune règle métier — elles sont dans les modules ci-dessus. |
 | `src/i18n.ts` | Raccourci unique vers le dictionnaire du SDK. Les clés y sont **structurées** (`key.off`), jamais des phrases : une phrase corrigée pour un détail de style ferait retomber toutes les traductions sur l'anglais, en silence. |
 | `tools/make_promo.mjs` | Compose les visuels de présentation. Les faces de touches y viennent de `key-art.ts`, **le module que le plugin appelle vraiment** : une image promotionnelle dessinée à part finit par mentir dès que le produit évolue. |
 | `tools/make_locales.py` | Produit les cinq `<langue>.json` depuis une table unique où chaque texte figure dans toutes les langues. Une entrée incomplète fait **échouer** la génération. |
@@ -124,6 +137,78 @@ qui vérifient l'algorithme contre des vecteurs calculés à part.
 
 **Invariant** : la clé ne quitte jamais le plugin. `fetchDevices` la rend au pont d'interface, qui
 l'écrit directement dans le registre ; le panneau, lui, n'apprend que des noms.
+
+## Twitch : les points de chaîne
+
+Les viewers dépensent des points de chaîne pour choisir la couleur des ampoules. Le plugin parle
+alors à Twitch — c'est la seule autre porte ouverte vers l'extérieur, avec l'enrôlement Tuya.
+
+**Ce que Twitch fait, et ne fait jamais.** Il apprend au plugin qu'un viewer a payé, et permet de
+clore ce rachat. Il ne commande **jamais** une lampe : la couleur arrive au plugin sous forme de
+texte, le plugin la lit, puis la pose sur les ampoules **en LAN**, comme n'importe quelle touche.
+Aucune lecture du chat : les deux seules permissions demandées sont `channel:read:redemptions` et
+`channel:manage:redemptions`, et le plugin vérifie à la connexion que les deux ont été accordées.
+
+**Le flux d'un rachat.**
+
+1. Le viewer rachète « Choisis la couleur » et tape un texte.
+2. `eventsub.ts` reçoit le message sur la socket ; `protocol.ts` le lit, et ne rend que les rachats
+   encore en attente.
+3. `handler.ts` lit la couleur (`viewer-color.ts`), la pose sur les ampoules choisies (`service.ts`
+   arrête d'abord un scénario en cours sur ces lampes, qui repeindrait la couleur à sa prochaine
+   image), puis **valide** le rachat. Si le texte est illisible, trop sombre, si les ampoules ne
+   répondent pas, ou si les viewers sont en pause, le rachat est **remboursé**.
+
+**Un viewer ne perd pas ses points pour rien.** C'est l'invariant du module. Seule une couleur
+réellement appliquée est validée. La clôture est retentée deux fois sur une panne passagère
+(réseau, limitation). Si Twitch la refuse malgré tout, le panneau le dit en distinguant deux cas :
+`unsettled` (la couleur est posée, la validation a échoué) et `refund-failed` (la couleur n'est
+**pas** posée et le viewer est toujours débité). Dans les deux cas, le streamer règle ce rachat à la
+main dans son tableau de bord.
+
+**Ce qui arrive pendant une coupure.** La récompense reste active chez Twitch quand le plugin est
+fermé ou déconnecté, et EventSub ne rejoue rien : un rachat fait à ce moment reste « en attente »,
+points retenus. À chaque abonnement, `service.ts` liste donc les rachats en attente et **rembourse**
+ceux que le plugin n'a pas vus et qui ont plus d'une minute (plus récents, ils sont peut-être en cours
+de traitement). La garantie est donc « remboursé au plus tard au prochain démarrage », pas « jamais
+débité pendant une panne ». Limite connue : la file des rachats n'a pas de plafond de longueur, et des
+ampoules éteintes ou injoignables font attendre les viewers suivants.
+
+**Le texte d'un viewer est une entrée non fiable.** `viewer-color.ts` n'accepte qu'un seul mot
+connu (français, anglais, allemand, espagnol ou italien) ou un `#` suivi de 3 ou 6 chiffres hexadécimaux. « rouge vif » est refusé
+plutôt que ramené à « rouge », un hexadécimal sans `#` aussi (« facade » est un mot). Le noir et les
+quasi-noirs sont refusés : pour une ampoule, un noir est un interrupteur, et un viewer n'éteint pas
+la pièce pour le prix d'un rachat. La longueur est contrôlée avant toute autre analyse. Le texte de la
+récompense est posté sur Twitch dans la langue de Stream Deck : **chaque exemple qu'il cite doit être
+accepté** dans cette langue, un test relit les textes réels pour le garantir.
+
+**Pourquoi le plugin crée la récompense lui-même.** Twitch ne laisse clore ou rembourser un rachat
+qu'à l'application qui a créé la récompense. Une récompense faite à la main dans le tableau de bord
+ne pourrait jamais être remboursée. Le plugin la crée donc à la connexion (saisie obligatoire, délai
+de 30 s entre deux rachats) ; le prix et le délai se changent ensuite dans le tableau de bord Twitch.
+Un titre déjà pris par une récompense qui n'est pas la sienne est signalé (`duplicate`), jamais écrasé.
+
+**La session.** L'application est **publique** (flux « Device Code », aucun secret embarqué) : le
+Client ID de `auth.ts` identifie l'application et n'ouvre rien. Les jetons vivent dans les réglages
+globaux, au même niveau de confiance que les clés locales : jamais journalisés, jamais renvoyés au
+panneau — `Status` est le seul type qui franchit cette frontière. Le jeton de renouvellement est à
+usage unique : `service.ts` n'en lance qu'un à la fois et l'écrit **avant** de s'en servir. Seul un
+jeton **invalide** (400, 401) force à se reconnecter ; une limitation ou une panne de Twitch est
+passagère et ne détruit jamais la session. Se déconnecter supprime la récompense et révoque
+l'autorisation chez Twitch ; remplacer une session révoque l'ancienne.
+
+**Une liaison qui ne meurt pas en silence.** Twitch envoie un message au moins toutes les dix
+secondes. Sans lui, la liaison est déclarée morte et rouverte (délai de 1 à 60 s, remis à zéro après
+une connexion réussie) : sans ce chien de garde, les viewers paieraient dans le vide. Une demande de
+reconnexion de Twitch ouvre la nouvelle socket **avant** de fermer l'ancienne. Un jeton refusé ou une
+révocation arrêtent la boucle : réessayer ne servirait à rien tant que le streamer n'a pas réautorisé.
+
+**Le plugin écoute dès son démarrage**, qu'une touche Twitch soit affichée ou non : une touche sur
+une page cachée n'émet aucun événement. Les ampoules visées et l'état de pause sont donc conservés.
+Aucune écriture n'a lieu avant la fin de `init`, et chaque écriture part de la valeur **du disque** :
+une touche affichée dès le lancement ne peut pas écraser la session persistée. Une « époque » numérote
+chaque mise en ligne : une attente réseau qui revient après une déconnexion abandonne, sans laisser de
+socket orpheline.
 
 ## Langues
 
@@ -379,8 +464,12 @@ fragments de trame chiffrée, pas le secret.
 
 | Depuis | Peut importer | Ne doit jamais importer |
 |---|---|---|
-| `src/actions/` | `driver/types`, `driver/pool`, `bulbs`, `settings`, `color-format`, et entre elles `group`, `run`, `power`, `failure`, `recovery`, `face` (les modules transverses — jamais une autre **action**) | `driver/tuya`, `tuyapi`, une autre action |
-| `src/bulbs.ts` | `@elgato/streamdeck` (réglages globaux), `actions/group` (module pur) | `driver/*`, toute autre partie de `actions/` |
+| `src/actions/` | `driver/types`, `driver/pool`, `bulbs`, `settings`, `color-format`, et entre elles `group`, `run`, `power`, `failure`, `recovery`, `face` (les modules transverses — jamais une autre **action**) ; `actions/twitch.ts` seul importe `twitch/service` | `driver/tuya`, `tuyapi`, une autre action |
+| `src/bulbs.ts` | `globals`, `registry`, `actions/group` (modules purs) | `driver/*`, toute autre partie de `actions/` |
+| `src/globals.ts` | `@elgato/streamdeck` (réglages globaux), `global-store` | tout le reste — c'est le point d'accès unique |
+| `src/global-store.ts`, `src/registry.ts` | **rien** | tout — modules purs, testés sans SDK |
+| `src/twitch/` (sauf `service.ts`) | `twitch/*` entre eux, `color-format`, `driver/types` (types) | `@elgato/streamdeck`, `actions/`, `bulbs`, `driver/pool` — ils restent purs et testables |
+| `src/twitch/service.ts` | `twitch/*`, `bulbs`, `globals`, `driver/pool`, `scenarios/runner`, `actions/group` | `driver/tuya`, `tuyapi` |
 | `src/discovery.ts` | `node:dgram`, `node:crypto` | tout le reste — il n'écoute que le réseau |
 | `src/key-art.ts` | **rien** | tout — c'est un module de dessin pur |
 | `src/driver/pool.ts` | `driver/types`, `driver/tuya` | `@elgato/streamdeck`, `actions/` |
@@ -440,6 +529,15 @@ partage et réessai.
 - ❌ Ajouter un import relatif **de valeur** suffixé `.js` dans un module atteint directement par
   les tests. Node ne réécrit pas `.js` en `.ts` : le module devient introuvable et le test casse.
   Suffixer `.ts` (voir « Stratégie de test »).
+- ❌ Appliquer le texte d'un viewer sans passer par `parseViewerColor`, ou lui faire payer un rachat
+  non appliqué : tout rachat qui n'aboutit pas est remboursé.
+- ❌ Appeler `setGlobalSettings` directement, ou lire puis écrire les réglages globaux en deux temps.
+  Il **remplace** l'objet entier : le registre d'ampoules ou la session Twitch disparaîtrait sans
+  erreur. Passer par `updateGlobal` (`globals.ts`), qui calcule la nouvelle valeur DANS la file.
+- ❌ Renouveler un jeton Twitch sans l'écrire avant de s'en servir, ou en lancer deux à la fois : le
+  jeton de renouvellement n'est valable qu'une fois, le second échec invalide toute la session.
+- ❌ Citer le texte d'une réponse Twitch dans un message d'erreur ou le journal : il peut contenir
+  un jeton. Les erreurs portent un code et un message fixes.
 - ❌ Retoucher un PNG à la main plutôt que `tools/make_icons.py`.
 - ❌ Arrondir un PNG de touche : Stream Deck arrondit lui-même, on obtient des coins morts.
 - ❌ Passer un SVG **nu** à `setImage`. Toujours l'emballer avec `asImage()`, qui produit un
@@ -458,7 +556,9 @@ Deux étages, séparés parce qu'ils n'ont pas les mêmes prérequis.
 calculs où une erreur d'un facteur dix passe inaperçue à l'œil : encodage et décodage des couleurs,
 allers-retours d'échelle, plancher matériel, bornes de température. `errors.test.mjs` y ajoute le
 classement des pannes, sur les messages réels de `tuyapi`. Aucune ampoule requise, donc exécutables
-partout.
+partout. Les modules Twitch se testent sans compte ni réseau (`twitch-*.test.mjs`, `viewer-color`) :
+réseau, horloge, socket et attente y sont des faux injectés. `service.ts`, la colle liée au SDK, n'a
+pas de test direct ; ses décisions d'état sont extraites dans `state.ts` et `face.ts`, qui en ont.
 
 Ces tests importent les **sources** avec un suffixe `.ts` et Node les exécute sans build, par
 effacement de types. D'où deux contraintes sur tout module qu'un test atteint : aucune syntaxe
@@ -522,7 +622,8 @@ révélée — une lampe verte, deux touches, dont une réglée sur violet.
 
 ## Le registre des ampoules
 
-Les identifiants ne vivent pas dans les touches mais dans les **réglages globaux** du plugin. Une
+Les identifiants ne vivent pas dans les touches mais dans les **réglages globaux** du plugin (clé
+`bulbs`, à côté de `twitch` : voir `globals.ts`). Une
 touche ne retient que l'identifiant de l'ampoule qu'elle pilote ; clé et adresse sont lues dans le
 registre au moment d'agir.
 
@@ -542,8 +643,10 @@ parfaitement en TCP. Symptôme trompeur, cause bête.
 
 ## Ce qui n'existe pas encore
 
-Cinq actions couvrent l'allumage, l'intensité, la couleur, le blanc réglable et les scénarios
-animés. Restent hors du périmètre : les **scènes internes de l'ampoule** (datapoint 25, non
+Six actions couvrent l'allumage, l'intensité, la couleur, le blanc réglable, les scénarios animés
+et le tableau de bord Twitch. Une seule récompense existe côté Twitch : la **couleur choisie par le
+viewer**. Déclencher un scénario par points de chaîne n'existe pas encore — il demanderait un plafond
+de durée et une liste blanche, à cause des scénarios à éclats (photosensibilité). Restent hors du périmètre : les **scènes internes de l'ampoule** (datapoint 25, non
 exploité — nos scénarios sont pilotés depuis le plugin, image par image) et tout **adaptateur autre
 que Tuya**.
 

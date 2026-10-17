@@ -16,6 +16,7 @@
     "Rotate the hue": "Faire tourner la teinte",
     "Adjust the white": "Régler le blanc",
     "Start / stop the scenario": "Lancer / arrêter le scénario",
+    "Lets your viewers change the colour with channel points.": "Laisse vos viewers changer la couleur avec les points de chaîne.",
     "key": {
       "toSet": "À régler",
       "offline": "Hors ligne",
@@ -24,7 +25,8 @@
       "on": "Allumée",
       "off": "Éteinte",
       "noColour": "Sans couleur",
-      "noWhite": "Sans blanc"
+      "noWhite": "Sans blanc",
+      "paused": "En pause"
     },
     "warmth": {
       "warm": "Chaud",
@@ -155,6 +157,46 @@
         "ok": "Ampoule enregistrée. Choisissez-la dans la liste ci-dessus.",
         "failed": "Échec de l'enregistrement.",
         "needKey": "Cette ampoule a besoin de sa clé locale pour être pilotable."
+      },
+      "twitch": {
+        "intro": "Vos viewers dépensent des points de chaîne pour choisir la couleur de vos ampoules. Connectez votre compte Twitch une seule fois : LumenDeck crée la récompense lui-même.",
+        "connect": "Connecter Twitch",
+        "pairing": "Vérifiez ce code sur la page Twitch qui vient de s'ouvrir :",
+        "waiting": "En attente de votre accord sur Twitch...",
+        "cancel": "Annuler",
+        "connectedAs": "Connecté en tant que",
+        "rewardOk": "La récompense est active sur votre chaîne. Changez son prix ou son délai dans votre tableau de bord Twitch.",
+        "rewardWait": "Mise en place de la récompense...",
+        "disconnect": "Déconnecter",
+        "disconnectHelp": "Se déconnecter supprime la récompense de votre chaîne et retire l'accès de LumenDeck.",
+        "bulbsHelp": "Ce sont les ampoules que vos viewers changent. Si aucune n'est cochée, l'unique ampoule déclarée est utilisée.",
+        "pauseHelp": "Appuyez sur la touche pour mettre vos viewers en pause ou les réactiver. En pause, chaque rachat est remboursé.",
+        "inputHelp": "Les viewers saisissent un nom de couleur (rouge, bleu, rose...) ou un code comme #ff8800. Le noir et tout texte illisible sont remboursés automatiquement.",
+        "last": "Dernier rachat",
+        "outcome": {
+          "applied": "couleur appliquée",
+          "refunded": "remboursé",
+          "unsettled": "couleur appliquée, mais Twitch ne l'a pas clôturé : à régler à la main dans votre tableau de bord",
+          "refundFailed": "couleur non appliquée, et Twitch a refusé le remboursement : à rembourser à la main dans votre tableau de bord"
+        },
+        "retry": "Réessayer",
+        "err": {
+          "generic": "Un problème est survenu. Réessayez.",
+          "network": "Twitch est injoignable. Vérifiez votre connexion.",
+          "expired": "Le code a expiré. Reconnectez-vous.",
+          "rejected": "Twitch a refusé la demande.",
+          "missing-scope": "Une autorisation a été refusée. Reconnectez-vous et acceptez les deux.",
+          "reconnect-needed": "Votre session Twitch a expiré. Reconnectez-vous.",
+          "revoked": "L'accès a été retiré sur Twitch. Reconnectez-vous.",
+          "forbidden": "Twitch a refusé ce compte. Les points de chaîne exigent le statut Affilié ou Partenaire.",
+          "duplicate": "Une récompense de ce nom existe déjà sur votre chaîne et n'a pas été créée par LumenDeck. Renommez-la ou supprimez-la, puis réessayez."
+        }
+      }
+    },
+    "twitch": {
+      "reward": {
+        "colorTitle": "Choisis la couleur",
+        "colorPrompt": "Écris un nom de couleur (rouge, bleu, rose...) ou un code comme #ff8800. Tout le reste est remboursé."
       }
     }
   }

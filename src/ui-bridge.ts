@@ -32,6 +32,7 @@ import * as bulbs from './bulbs.js';
 import { discover, sweep } from './discovery.js';
 import * as pool from './driver/pool.js';
 import { TuyaLanDriver } from './driver/tuya.js';
+import * as twitch from './twitch/service.js';
 import { fetchDevices, pollQrLogin, startQrLogin, TuyaCloudError } from './tuya-cloud.js';
 
 /** Duree d'ecoute du reseau. Les annonces Tuya tombent toutes les ~5 s. */
@@ -68,6 +69,14 @@ function text(value: unknown): string | undefined {
  */
 async function reply(payload: Record<string, unknown>): Promise<void> {
   await streamDeck.ui.sendToPropertyInspector(payload as never);
+}
+
+/**
+ * Etat de Twitch pour le panneau. `Status` ne porte jamais de jeton : ce type
+ * est la seule chose qui franchit la frontiere vers une page web.
+ */
+async function sendTwitchStatus(status: twitch.Status = twitch.getStatus()): Promise<void> {
+  await reply({ event: 'twitchStatus', ...status });
 }
 
 /** Liste destinee au selecteur d'ampoule. Ne divulgue aucune cle. */
@@ -170,6 +179,10 @@ async function sendDiscovery(): Promise<void> {
  * et un journal qu'il n'ouvrira jamais ne l'aiderait pas.
  */
 export function installUiBridge(): void {
+  // L'appairage et la connexion avancent seuls : le panneau est prevenu a chaque
+  // changement au lieu d'avoir a interroger. Sans panneau ouvert, l'envoi est sans effet.
+  twitch.onStatus((status) => { void sendTwitchStatus(status).catch(() => undefined); });
+
   streamDeck.ui.onSendToPlugin(async (ev) => {
     const request = asRequest(ev.payload);
     if (!request) return;
@@ -270,6 +283,28 @@ export function installUiBridge(): void {
 
         case 'getBulbs':
           await sendBulbList();
+          break;
+
+        case 'twitchStatus':
+          await sendTwitchStatus();
+          break;
+
+        case 'twitchConnect':
+          // Rend la main tout de suite : la suite (code, attente, recompense)
+          // arrive par `onStatus`. Attendre ici bloquerait le panneau des minutes.
+          void twitch.beginPairing();
+          break;
+
+        case 'twitchCancel':
+          twitch.cancelPairing();
+          break;
+
+        case 'twitchRetry':
+          await twitch.retry();
+          break;
+
+        case 'twitchDisconnect':
+          await twitch.disconnect();
           break;
 
         case 'discoverBulbs':

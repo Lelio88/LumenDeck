@@ -201,3 +201,24 @@ export function scenarioKey(name: string, running: boolean): string {
     + ' font-size="19" font-weight="600" fill="' + (running ? TEXT : DIM) + '">' + label + '</text>',
   );
 }
+
+/** Echappe un texte pour l'inserer dans un SVG : un mot traduit ne doit jamais casser le document. */
+const xml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/**
+ * Face de la touche Twitch : une piece traversee d'un eclair.
+ *
+ * Trois modes, et seul `live` est ambre : la touche dit d'un coup d'oeil si les
+ * viewers PEUVENT agir sur les lampes. En pause ou au repos (non connecte, en
+ * panne), la piece est grise, et le mot dit pourquoi. Le glyphe est volontairement
+ * une piece, pas le logo de Twitch : il evoque les points de chaine, pas la marque.
+ */
+export function twitchKey(mode: 'live' | 'paused' | 'idle', label: string): string {
+  const color = mode === 'live' ? AMBER : DIM;
+  const bolt = 'M 80 28 L 56 62 L 70 62 L 62 90 L 90 52 L 75 52 Z';
+  return frame(
+    `<circle cx="72" cy="58" r="42" fill="none" stroke="${color}" stroke-width="9"/>`
+    + `<path d="${bolt}" fill="${color}"/>`
+    + (label ? caption(xml(label), mode === 'live' ? TEXT : DIM) : ''),
+  );
+}

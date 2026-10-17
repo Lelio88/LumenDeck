@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <title>Twitch settings</title>
+    <meta charset="utf-8" />
+    <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+    <style>
+        /* Les couleurs viennent des variables de sdpi-components : le panneau suit le theme. */
+        #tw {
+            font-family: var(--font-family, "Segoe UI", sans-serif);
+            font-size: var(--font-size, 12px);
+            color: var(--font-color, #d8d8d8);
+        }
+        #tw .tw-note { margin: 8px 0; line-height: 1.45; }
+        #tw .tw-dim { opacity: .65; }
+        #tw .tw-ok { color: #7ddf8f; }
+        #tw .tw-err { color: #ff8a80; }
+        #tw .tw-row { display: flex; gap: 6px; align-items: center; margin: 8px 0; }
+        #tw .tw-code {
+            font-family: ui-monospace, Consolas, monospace;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: .18em;
+            text-align: center;
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 6px;
+        }
+        #tw button {
+            height: var(--input-height, 24px);
+            padding: 0 12px;
+            background-color: var(--input-bg-color, #3d3d3d);
+            color: var(--input-font-color, #d8d8d8);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: inherit;
+            white-space: nowrap;
+        }
+        #tw button:hover:not(:disabled) { border-color: #ffb247; color: #ffb247; }
+        /* Action principale : la seule teintee, pour qu'on sache ou cliquer. */
+        #tw button.tw-primary { background-color: #ffb247; color: #1a1a1a; border-color: transparent; font-weight: 600; }
+        #tw button.tw-primary:hover:not(:disabled) { background-color: #ffc474; color: #1a1a1a; }
+        #tw [hidden] { display: none; }
+    </style>
+</head>
+
+<body>
+    <div id="tw">
+        <p class="tw-note" data-i18n="pi.twitch.intro">Viewers spend channel points to choose the colour of your bulbs. Connect your Twitch account once: LumenDeck creates the reward itself.</p>
+
+        <!-- Non connecte, ou session a refaire -->
+        <div id="tw-off" hidden>
+            <div class="tw-row">
+                <button type="button" id="tw-connect" class="tw-primary" data-i18n="pi.twitch.connect">Connect Twitch</button>
+            </div>
+        </div>
+
+        <!-- Appairage : le code a verifier sur la page Twitch ouverte par le plugin -->
+        <div id="tw-pairing" hidden>
+            <p class="tw-note" data-i18n="pi.twitch.pairing">Check this code on the Twitch page that just opened:</p>
+            <div id="tw-code" class="tw-code"></div>
+            <p class="tw-note tw-dim" data-i18n="pi.twitch.waiting">Waiting for your approval on Twitch...</p>
+            <div class="tw-row">
+                <button type="button" id="tw-cancel" data-i18n="pi.twitch.cancel">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Connecte -->
+        <div id="tw-on" hidden>
+            <p class="tw-note"><span data-i18n="pi.twitch.connectedAs">Connected as</span> <strong id="tw-login"></strong></p>
+            <p id="tw-reward-ok" class="tw-note tw-ok" hidden data-i18n="pi.twitch.rewardOk">The reward is live on your channel. Change its cost or cooldown in your Twitch dashboard.</p>
+            <p id="tw-reward-wait" class="tw-note tw-dim" hidden data-i18n="pi.twitch.rewardWait">Setting up the reward...</p>
+            <p class="tw-note" data-i18n="pi.twitch.inputHelp">Viewers type a colour name (red, blue, pink...) or a code such as #ff8800. Black and anything unreadable are refunded automatically.</p>
+            <p class="tw-note" data-i18n="pi.twitch.pauseHelp">Press the key to pause or resume viewers. While paused, every redemption is refunded.</p>
+            <p id="tw-last" class="tw-note" hidden>
+                <span data-i18n="pi.twitch.last">Last redemption</span> :
+                <strong id="tw-last-user"></strong> &mdash;
+                <span data-outcome="applied" data-i18n="pi.twitch.outcome.applied" hidden>colour applied</span>
+                <span data-outcome="refunded" data-i18n="pi.twitch.outcome.refunded" hidden>refunded</span>
+                <span data-outcome="unsettled" data-i18n="pi.twitch.outcome.unsettled" hidden>colour applied, but Twitch did not close it: settle it by hand in your dashboard</span>
+                <span data-outcome="refund-failed" data-i18n="pi.twitch.outcome.refundFailed" hidden>colour not applied, and Twitch refused the refund: refund it by hand in your dashboard</span>
+            </p>
+            <div class="tw-row">
+                <button type="button" id="tw-retry" hidden data-i18n="pi.twitch.retry">Try again</button>
+                <button type="button" id="tw-disconnect" data-i18n="pi.twitch.disconnect">Disconnect</button>
+            </div>
+            <p class="tw-note tw-dim" data-i18n="pi.twitch.disconnectHelp">Disconnecting deletes the reward from your channel and removes LumenDeck's access.</p>
+        </div>
+
+        <!-- Une seule explication visible a la fois, choisie par le code de la panne -->
+        <div id="tw-problem" class="tw-note tw-err" hidden>
+            <p data-code="generic" data-i18n="pi.twitch.err.generic">Something went wrong. Try again.</p>
+            <p data-code="network" data-i18n="pi.twitch.err.network">Twitch cannot be reached. Check your connection.</p>
+            <p data-code="expired" data-i18n="pi.twitch.err.expired">The code expired. Connect again.</p>
+            <p data-code="rejected" data-i18n="pi.twitch.err.rejected">Twitch refused the request.</p>
+            <p data-code="missing-scope" data-i18n="pi.twitch.err.missing-scope">A permission was refused. Connect again and accept both.</p>
+            <p data-code="reconnect-needed" data-i18n="pi.twitch.err.reconnect-needed">Your Twitch session has expired. Connect again.</p>
+            <p data-code="revoked" data-i18n="pi.twitch.err.revoked">Access was removed on Twitch. Connect again.</p>
+            <p data-code="forbidden" data-i18n="pi.twitch.err.forbidden">Twitch refused this account. Channel points need Affiliate or Partner status.</p>
+            <p data-code="duplicate" data-i18n="pi.twitch.err.duplicate">A reward with this name already exists on your channel and was not created by LumenDeck. Rename or delete it, then try again.</p>
+        </div>
+    </div>
+
+    <sdpi-item label="Bulbs" data-i18n-label="pi.bulbs">
+        <sdpi-checkbox-list setting="deviceIds" datasource="getBulbs" hot-reload></sdpi-checkbox-list>
+    </sdpi-item>
+    <p class="tw-note" id="tw-bulbs-help" data-i18n="pi.twitch.bulbsHelp" style="font-size: 11px; opacity: .72; margin: 6px 0;">These are the bulbs your viewers change. If none is ticked, the single declared bulb is used.</p>
+
+    <details>
+        <summary data-i18n="pi.manage">Add or edit a bulb</summary>
+        <div id="bulb-manager"></div>
+    </details>
+
+    <script src="bulbs.js"></script>
+    <script src="twitch.js"></script>
+</body>
+
+</html>

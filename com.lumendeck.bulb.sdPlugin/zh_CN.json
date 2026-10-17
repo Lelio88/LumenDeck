@@ -16,6 +16,7 @@
     "Rotate the hue": "转动色相",
     "Adjust the white": "调节白光",
     "Start / stop the scenario": "启动 / 停止情景",
+    "Lets your viewers change the colour with channel points.": "让观众用频道积分更换颜色。",
     "key": {
       "toSet": "待设置",
       "offline": "离线",
@@ -24,7 +25,8 @@
       "on": "开",
       "off": "关",
       "noColour": "不支持颜色",
-      "noWhite": "不支持白光"
+      "noWhite": "不支持白光",
+      "paused": "已暂停"
     },
     "warmth": {
       "warm": "暖色",
@@ -155,6 +157,46 @@
         "ok": "灯泡已保存。请在上面的列表中选择它。",
         "failed": "保存失败。",
         "needKey": "这只灯泡需要本地密钥才能被控制。"
+      },
+      "twitch": {
+        "intro": "观众花费频道积分来选择灯泡的颜色。只需连接一次 Twitch 账号，奖励由 LumenDeck 自动创建。",
+        "connect": "连接 Twitch",
+        "pairing": "请在刚打开的 Twitch 页面上核对此代码：",
+        "waiting": "正在等待你在 Twitch 上批准...",
+        "cancel": "取消",
+        "connectedAs": "已连接为",
+        "rewardOk": "奖励已在你的频道上线。可在 Twitch 控制台中修改其价格或冷却时间。",
+        "rewardWait": "正在设置奖励...",
+        "disconnect": "断开连接",
+        "disconnectHelp": "断开连接会从你的频道删除该奖励，并撤销 LumenDeck 的访问权限。",
+        "bulbsHelp": "这些是观众可以更改的灯泡。如果一个都不勾选，且只登记了一只灯泡，则使用该灯泡。",
+        "pauseHelp": "按下按键即可暂停或恢复观众操作。暂停期间，所有兑换都会被退还。",
+        "inputHelp": "观众输入颜色名称（red、blue、pink 等）或 #ff8800 这样的代码。黑色和无法识别的内容会自动退还。",
+        "last": "最近一次兑换",
+        "outcome": {
+          "applied": "已应用颜色",
+          "refunded": "已退还",
+          "unsettled": "颜色已应用，但 Twitch 未能完成处理：请在控制台中手动处理",
+          "refundFailed": "颜色未应用，且 Twitch 拒绝了退款：请在控制台中手动退还"
+        },
+        "retry": "重试",
+        "err": {
+          "generic": "出了点问题，请重试。",
+          "network": "无法连接到 Twitch，请检查网络。",
+          "expired": "代码已过期，请重新连接。",
+          "rejected": "Twitch 拒绝了该请求。",
+          "missing-scope": "有一项权限被拒绝。请重新连接并同时允许两项。",
+          "reconnect-needed": "你的 Twitch 会话已过期，请重新连接。",
+          "revoked": "访问权限已在 Twitch 上被移除，请重新连接。",
+          "forbidden": "Twitch 拒绝了此账号。频道积分需要 Affiliate 或 Partner 资格。",
+          "duplicate": "你的频道上已有同名奖励，且并非由 LumenDeck 创建。请重命名或删除后重试。"
+        }
+      }
+    },
+    "twitch": {
+      "reward": {
+        "colorTitle": "选择颜色",
+        "colorPrompt": "输入颜色名称（red、blue、pink 等）或 #ff8800 这样的代码。其他内容将被退还。"
       }
     }
   }

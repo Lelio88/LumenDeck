@@ -20,7 +20,7 @@ Topologie rapide :
 - `src/driver/` — contrat `LightDriver`, adaptateur Tuya, réservoir de connexions
 - `src/actions/` — une classe par action Stream Deck ; ne connaît que le contrat
 - `src/scenarios/` — catalogue d'animations en données pures, et moteur qui les déroule
-- `src/tuya-cloud.ts` — enrôlement par QR code ; **seul** module qui parle à un serveur
+- `src/tuya-cloud.ts` (enrôlement par QR code) et `src/twitch/` (points de chaîne) — **seuls** modules qui parlent à un serveur
 - `src/plugin.ts` — composition : enregistre les actions, ouvre le dialogue Stream Deck
 - `com.lumendeck.bulb.sdPlugin/` — manifeste, images, panneaux de configuration (versionné)
 - `tools/` — génération des icônes ; `src/tools/` — sondes de diagnostic (ont besoin des deps)
@@ -48,7 +48,7 @@ Topologie rapide :
    transformer, et l'éviter permet de **tester le pilote sans étape de build**.
 5. **L'ampoule est seule maîtresse de son état.** Après une écriture, relire plutôt que déduire :
    elle peut avoir été changée depuis l'application Calex ou un assistant vocal.
-6. **Le cloud sert UNIQUEMENT à l'enrôlement** — aucune commande d'éclairage ne quitte le réseau local. Les secrets vivent dans `../.lumendeck-secrets/`, jamais dans le dépôt.
+6. **Le réseau externe ne pilote JAMAIS une lampe.** Le cloud Tuya sert uniquement à l'enrôlement ; Twitch, uniquement à recevoir et clore les rachats de points de chaîne (aucune lecture du chat). Toute commande d'éclairage reste en LAN. Un texte de viewer ne s'applique qu'après `parseViewerColor`, et un rachat non appliqué est **toujours remboursé**. Secrets (clés Tuya, jetons Twitch) : jamais dans le dépôt, jamais journalisés, jamais renvoyés à un panneau ; les écritures globales passent par `src/globals.ts`.
 7. **PNG et `<langue>.json` sont générés** — par `tools/make_icons.py` et `tools/make_locales.py`, jamais à la main.
 
 ## V. Flux de Travail (Explore → Plan → Code → Verify)
@@ -88,8 +88,8 @@ npx streamdeck restart com.lumendeck.bulb           # recharge après build
 | Nouvelle action Stream Deck | `manifest.json` + `src/plugin.ts` + catalogue de `docs/architecture.md` |
 | Nouveau réglage d'action | `src/settings.ts` + le panneau `ui/*.html` correspondant |
 | Nouvel adaptateur (Zigbee, Matter) | Section « Adaptateurs » de `docs/architecture.md` |
-| Retouche d'icône | `tools/make_icons.py` — **jamais** le PNG |
-| Nouveau texte affiché à l'utilisateur | `tools/make_locales.py` — **jamais** un `<langue>.json` |
+| Retouche d'icône, ou nouveau texte affiché | `tools/make_icons.py`, `tools/make_locales.py` — **jamais** un PNG ni un `<langue>.json` |
+| Règle de rachat Twitch (couleur lue, remboursement, récompense) | `src/twitch/*` + son test + section « Twitch » de `docs/architecture.md` |
 | Nouvelle cause de panne, signature `tuyapi` reclassée, ou délai de reprise | `src/driver/errors.ts` ou `src/actions/recovery.ts`, leur test, + `docs/architecture.md` |
 | Nouvel anti-pattern découvert | Section « Anti-patterns » de `docs/architecture.md` |
 | Changement de dépendance critique | Section III ci-dessus + `package.json` |

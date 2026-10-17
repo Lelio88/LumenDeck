@@ -26,38 +26,18 @@
 import streamDeck from '@elgato/streamdeck';
 
 import { adoptGroup, selectedIds, type GroupSettings, type Writable } from './actions/group.js';
+import { readGlobal, updateGlobal } from './globals.js';
+import { mergeBulb, withoutBulb, type KnownBulb } from './registry.js';
 
-/** Une ampoule declaree par l'utilisateur, cle comprise. */
-export type KnownBulb = {
-  /** Identifiant Tuya. Cle primaire du registre. */
-  id: string;
-  /** Cle locale de chiffrement. Secret : ne jamais journaliser ni reafficher. */
-  key: string;
-  /** Adresse sur le reseau local. Absente, l'ampoule est cherchee par diffusion. */
-  ip?: string;
-  /** Nom lisible, pour que les listes affichent autre chose qu'un identifiant. */
-  name?: string;
-  /**
-   * Version du protocole annoncee par l'ampoule, par exemple "3.4".
-   *
-   * Absente, le pilote retombe sur 3.3. C'est la decouverte reseau qui la
-   * renseigne : elle figure dans l'annonce que l'ampoule diffuse d'elle-meme.
-   */
-  version?: string;
-};
+export type { KnownBulb };
 
-type GlobalSettings = {
-  bulbs?: KnownBulb[];
-};
-
+// Le registre vit sous la cle `bulbs` des reglages globaux, a cote d'autres
+// donnees (voir globals.ts) : on n'ecrit JAMAIS l'objet entier.
 async function readAll(): Promise<KnownBulb[]> {
-  const settings = await streamDeck.settings.getGlobalSettings<GlobalSettings>();
-  return Array.isArray(settings.bulbs) ? settings.bulbs : [];
+  const bulbs = await readGlobal<KnownBulb[]>('bulbs');
+  return Array.isArray(bulbs) ? bulbs : [];
 }
 
-async function writeAll(bulbs: KnownBulb[]): Promise<void> {
-  await streamDeck.settings.setGlobalSettings<GlobalSettings>({ bulbs });
-}
 
 /** Toutes les ampoules declarees. */
 export function list(): Promise<KnownBulb[]> {
@@ -79,33 +59,15 @@ export async function resolve(id: string | undefined): Promise<KnownBulb | undef
  * effacer la cle deja saisie.
  */
 export async function remember(bulb: Partial<KnownBulb> & { id: string }): Promise<void> {
-  const bulbs = await readAll();
-  const index = bulbs.findIndex((b) => b.id === bulb.id);
-
-  if (index === -1) {
-    bulbs.push({
-      id: bulb.id,
-      key: bulb.key ?? '',
-      ...(bulb.ip ? { ip: bulb.ip } : {}),
-      ...(bulb.name ? { name: bulb.name } : {}),
-      ...(bulb.version ? { version: bulb.version } : {}),
-    });
-  } else {
-    const previous = bulbs[index] as KnownBulb;
-    bulbs[index] = {
-      id: previous.id,
-      key: bulb.key || previous.key,
-      ...(bulb.ip ?? previous.ip ? { ip: bulb.ip ?? previous.ip } : {}),
-      ...(bulb.name ?? previous.name ? { name: bulb.name ?? previous.name } : {}),
-      ...(bulb.version ?? previous.version ? { version: bulb.version ?? previous.version } : {}),
-    };
-  }
-  await writeAll(bulbs);
+  // La fusion se calcule SUR la liste courante, dans la file du magasin : deux
+  // enregistrements simultanes se cumulent au lieu de s'ecraser, ce qui ferait
+  // perdre une cle locale saisie et introuvable ailleurs.
+  await updateGlobal<KnownBulb[]>('bulbs', (current) => mergeBulb(current ?? [], bulb));
 }
 
 /** Retire une ampoule du registre. Les touches qui la designaient afficheront « A regler ». */
 export async function forget(id: string): Promise<void> {
-  await writeAll((await readAll()).filter((b) => b.id !== id));
+  await updateGlobal<KnownBulb[]>('bulbs', (current) => withoutBulb(current ?? [], id));
 }
 
 /**

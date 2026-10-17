@@ -8,7 +8,8 @@
       "on": "On",
       "off": "Off",
       "noColour": "No colour",
-      "noWhite": "No white"
+      "noWhite": "No white",
+      "paused": "Paused"
     },
     "warmth": {
       "warm": "Warm",
@@ -139,6 +140,46 @@
         "ok": "Bulb saved. Choose it in the list above.",
         "failed": "Could not save.",
         "needKey": "This bulb needs its local key to be controllable."
+      },
+      "twitch": {
+        "intro": "Viewers spend channel points to choose the colour of your bulbs. Connect your Twitch account once: LumenDeck creates the reward itself.",
+        "connect": "Connect Twitch",
+        "pairing": "Check this code on the Twitch page that just opened:",
+        "waiting": "Waiting for your approval on Twitch...",
+        "cancel": "Cancel",
+        "connectedAs": "Connected as",
+        "rewardOk": "The reward is live on your channel. Change its cost or cooldown in your Twitch dashboard.",
+        "rewardWait": "Setting up the reward...",
+        "disconnect": "Disconnect",
+        "disconnectHelp": "Disconnecting deletes the reward from your channel and removes LumenDeck's access.",
+        "bulbsHelp": "These are the bulbs your viewers change. If none is ticked, the single declared bulb is used.",
+        "pauseHelp": "Press the key to pause or resume viewers. While paused, every redemption is refunded.",
+        "inputHelp": "Viewers type a colour name (red, blue, pink...) or a code such as #ff8800. Black and anything unreadable are refunded automatically.",
+        "last": "Last redemption",
+        "outcome": {
+          "applied": "colour applied",
+          "refunded": "refunded",
+          "unsettled": "colour applied, but Twitch did not close it: settle it by hand in your dashboard",
+          "refundFailed": "colour not applied, and Twitch refused the refund: refund it by hand in your dashboard"
+        },
+        "retry": "Try again",
+        "err": {
+          "generic": "Something went wrong. Try again.",
+          "network": "Twitch cannot be reached. Check your connection.",
+          "expired": "The code expired. Connect again.",
+          "rejected": "Twitch refused the request.",
+          "missing-scope": "A permission was refused. Connect again and accept both.",
+          "reconnect-needed": "Your Twitch session has expired. Connect again.",
+          "revoked": "Access was removed on Twitch. Connect again.",
+          "forbidden": "Twitch refused this account. Channel points need Affiliate or Partner status.",
+          "duplicate": "A reward with this name already exists on your channel and was not created by LumenDeck. Rename or delete it, then try again."
+        }
+      }
+    },
+    "twitch": {
+      "reward": {
+        "colorTitle": "Pick the colour",
+        "colorPrompt": "Type a colour name (red, blue, pink...) or a code like #ff8800. Anything else is refunded."
       }
     }
   }

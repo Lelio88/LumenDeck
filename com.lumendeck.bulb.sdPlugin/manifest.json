@@ -131,6 +131,22 @@
           "Rotate": ""
         }
       }
+    },
+    {
+      "Name": "Twitch",
+      "UUID": "com.lumendeck.bulb.twitch",
+      "Icon": "imgs/actions/twitch/icon",
+      "Tooltip": "Lets your viewers change the colour with channel points.",
+      "PropertyInspectorPath": "ui/twitch.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/twitch/key",
+          "TitleAlignment": "bottom"
+        }
+      ]
     }
   ],
   "CodePath": "bin/plugin.js",
