@@ -8,9 +8,8 @@
 </head>
 
 <body>
-    <sdpi-item label="Bulb" data-i18n-label="pi.bulb">
-        <sdpi-select setting="deviceId" datasource="getBulbs" placeholder="Choose a bulb"
-                     data-i18n-placeholder="pi.bulbPlaceholder"></sdpi-select>
+    <sdpi-item label="Bulbs" data-i18n-label="pi.bulbs">
+        <sdpi-checkbox-list setting="deviceIds" datasource="getBulbs" hot-reload></sdpi-checkbox-list>
     </sdpi-item>
 
     <details>

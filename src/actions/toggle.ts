@@ -12,9 +12,9 @@
  */
 import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent, WillDisappearEvent } from '@elgato/streamdeck';
-import { withRetry } from '../driver/pool.js';
-import { coordinatesFor } from '../bulbs.js';
-import { reportFailure } from './failure.js';
+import { adoptBulbs, coordinatesForMany } from '../bulbs.js';
+import { toggleAll } from './power.js';
+import { applyToAll } from './run.js';
 import { cancelRecovery } from './recovery.js';
 import { t } from '../i18n.js';
 import type { BulbSettings } from '../settings.js';
@@ -59,6 +59,7 @@ export class ToggleBulb extends SingletonAction<BulbSettings> {
   }
 
   override async onWillAppear(ev: WillAppearEvent<BulbSettings>): Promise<void> {
+    await adoptBulbs(ev.action, ev.payload.settings);
     await this.refresh(ev.action as unknown as Paintable, ev.payload.settings);
   }
 
@@ -81,27 +82,31 @@ export class ToggleBulb extends SingletonAction<BulbSettings> {
     await this.toggle(ev.action as unknown as Paintable, ev.payload.settings);
   }
 
-  /** Bascule l'ampoule puis reporte l'etat REEL sur la touche. */
+  /** Bascule les ampoules puis reporte l'etat REEL sur la touche. */
   private async toggle(target: Paintable, settings: BulbSettings): Promise<void> {
-    const coords = await coordinatesFor(settings);
-    if (!coords) { await target.setTitle(t('key.toSet')); return; }
-    try {
-      const on = await withRetry(coords, (bulb) => bulb.togglePower());
-      await paint(target, on);
-    } catch (error) {
-      await reportFailure(target, error, { where: 'toggle', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
-    }
+    const coords = await coordinatesForMany(settings);
+    if (coords.length === 0) { await target.setTitle(t('key.toSet')); return; }
+
+    const on = await toggleAll(target, coords, {
+      where: 'toggle',
+      alert: true,
+      recover: () => this.refresh(target, settings),
+    });
+    if (on !== null) await paint(target, on);
   }
 
   /** Lit l'etat courant sans le modifier, pour l'affichage initial. */
   private async refresh(target: Paintable, settings: BulbSettings): Promise<void> {
-    const coords = await coordinatesFor(settings);
-    if (!coords) { await target.setTitle(t('key.toSet')); return; }
-    try {
-      const state = await withRetry(coords, (bulb) => bulb.read());
-      await paint(target, state.on);
-    } catch (error) {
-      await reportFailure(target, error, { where: 'toggle.refresh', deviceId: coords.id, recover: () => this.refresh(target, settings) });
-    }
+    const coords = await coordinatesForMany(settings);
+    if (coords.length === 0) { await target.setTitle(t('key.toSet')); return; }
+
+    const states = await applyToAll(target, coords, (bulb) => bulb.read(), {
+      where: 'toggle.refresh',
+      tolerant: true,
+      recover: () => this.refresh(target, settings),
+    });
+    // Un groupe est « allume » des qu'une de ses lampes l'est : c'est ce que
+    // son appui eteindrait (voir nextPower).
+    if (states) await paint(target, states.some((state) => state.on));
   }
 }

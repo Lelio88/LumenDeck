@@ -83,10 +83,7 @@
       }
     },
     "pi": {
-      "bulb": "Lampe",
-      "bulbPlaceholder": "Lampe wählen",
-      "secondBulb": "Zweite Lampe",
-      "secondBulbPlaceholder": "Keine (optional)",
+      "bulbs": "Lampen",
       "scenario": "Szenario",
       "scenarioPlaceholder": "Szenario wählen",
       "colour": "Farbe",
@@ -117,7 +114,7 @@
       "scenarioHelp": {
         "title": "Wie funktioniert das?",
         "toggle": "Ein Druck startet das Szenario, ein zweiter stoppt es. Die Lampe kehrt dann genau in ihren vorherigen Zustand zurück: gleiche Farbe, gleiche Helligkeit, ein oder aus.",
-        "second": "Die zweite Lampe ist optional. Nur Blaulicht nutzt heute zwei, damit sie sich in Rot und Blau antworten. Mit einer wechselt es beide Farben auf derselben Lampe.",
+        "second": "Haken Sie eine oder mehrere Lampen an. Nur Blaulicht hat heute zwei Rollen: mit zwei Lampen antworten sie sich in Rot und Blau, mit einer wechselt es beide Farben auf derselben Lampe, und jede weitere Lampe wiederholt die zweite Rolle.",
         "oneShot": "Alarm und Sonnenaufgang stoppen von selbst, nach drei Blitzen bzw. fünf Minuten. Die anderen laufen, bis Sie erneut drücken.",
         "safety": "Animationen sind bewusst auf zwei Wechsel pro Sekunde begrenzt: darüber hinaus kann Blinklicht bei photosensiblen Menschen einen Anfall auslösen."
       },

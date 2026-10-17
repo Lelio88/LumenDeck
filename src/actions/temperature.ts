@@ -20,11 +20,11 @@ import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEv
 
 import { t } from '../i18n.js';
 import { asImage, temperatureKey } from '../key-art.js';
-import { withRetry } from '../driver/pool.js';
-import { coordinatesFor } from '../bulbs.js';
-import { reportFailure } from './failure.js';
+import { adoptBulbs, coordinatesForMany } from '../bulbs.js';
 import { cancelRecovery } from './recovery.js';
 import { faceValue } from './face.js';
+import { toggleAll } from './power.js';
+import { applyToAll } from './run.js';
 import type { TemperatureSettings } from '../settings.js';
 
 /** Plage atteignable par les ampoules Calex a blanc reglable. */
@@ -81,91 +81,90 @@ export class Temperature extends SingletonAction<TemperatureSettings> {
   }
 
   override async onWillAppear(ev: WillAppearEvent<TemperatureSettings>): Promise<void> {
+    await adoptBulbs(ev.action, ev.payload.settings);
     await this.refresh(ev.action as unknown as Paintable, ev.payload.settings);
   }
 
-  /** Lit l'ampoule et reporte son etat REEL. Sert aussi de point de reprise. */
+  /** Lit les ampoules et reporte leur etat REEL. Sert aussi de point de reprise. */
   private async refresh(target: Paintable, settings: TemperatureSettings): Promise<void> {
-    const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, t('key.toSet')); return; }
-    try {
-      // Idem : l'etat reel prime sur le reglage memorise.
-      const snapshot = await withRetry(coords, async (bulb) => ({
-        state: await bulb.read(),
-        supported: bulb.capabilities.supportsTemperature,
-      }));
-      // Certaines ampoules couleur n'ont pas de blanc reglable. Meme raison que
-      // pour la couleur : mieux vaut l'ecrire que laisser croire a une panne.
-      if (!snapshot.supported) { await reset(target, t('key.noWhite')); return; }
-      await paint(target, faceValue(target, snapshot.state.temperatureK, clamp(settings.kelvin ?? DEFAULT_KELVIN)), snapshot.state.on);
-    } catch (error) {
-      await reportFailure(target, error, { where: 'temperature.refresh', deviceId: coords.id, recover: () => this.refresh(target, settings) });
-    }
+    const coords = await coordinatesForMany(settings);
+    if (coords.length === 0) { await reset(target, t('key.toSet')); return; }
+
+    // Idem : l'etat reel prime sur le reglage memorise.
+    const snapshots = await applyToAll(target, coords, async (bulb) => ({
+      state: await bulb.read(),
+      supported: bulb.capabilities.supportsTemperature,
+    }), {
+      where: 'temperature.refresh',
+      tolerant: true,
+      recover: () => this.refresh(target, settings),
+    });
+    if (!snapshots) return;
+
+    // Certaines ampoules couleur n'ont pas de blanc reglable. Meme raison que
+    // pour la couleur : mieux vaut l'ecrire que laisser croire a une panne.
+    const capable = snapshots.filter((snapshot) => snapshot.supported);
+    const [first] = capable;
+    if (!first) { await reset(target, t('key.noWhite')); return; }
+    await paint(target, faceValue(target, first.state.temperatureK, clamp(settings.kelvin ?? DEFAULT_KELVIN)), capable.some((c) => c.state.on));
   }
 
   /** Le curseur bouge dans le panneau : le disque se teinte aussitot. */
   override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<TemperatureSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    if (!(await coordinatesFor(settings))) { await reset(target, t('key.toSet')); return; }
+    if ((await coordinatesForMany(settings)).length === 0) { await reset(target, t('key.toSet')); return; }
     await paint(target, clamp(settings.kelvin ?? DEFAULT_KELVIN), true);
   }
 
   override async onKeyDown(ev: KeyDownEvent<TemperatureSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, t('key.toSet')); return; }
+    const coords = await coordinatesForMany(settings);
+    if (coords.length === 0) { await reset(target, t('key.toSet')); return; }
 
     const wanted = clamp(settings.kelvin ?? DEFAULT_KELVIN);
-    try {
-      const supported = await withRetry(coords, async (bulb) => {
-        if (!bulb.capabilities.supportsTemperature) return false;
-        // Allumer d'abord : regler une ampoule eteinte ne produit rien de
-        // visible, et la touche passerait pour cassee.
-        await bulb.setPower(true);
-        await bulb.setTemperature(wanted);
-        return true;
-      });
-      if (!supported) { await reset(target, t('key.noWhite')); return; }
-      await paint(target, wanted);
-    } catch (error) {
-      await reportFailure(target, error, { where: 'temperature.apply', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
-    }
+    const applied = await applyToAll(target, coords, async (bulb) => {
+      if (!bulb.capabilities.supportsTemperature) return false;
+      // Allumer d'abord : regler une ampoule eteinte ne produit rien de
+      // visible, et la touche passerait pour cassee.
+      await bulb.setPower(true);
+      await bulb.setTemperature(wanted);
+      return true;
+    }, { where: 'temperature.apply', alert: true, recover: () => this.refresh(target, settings) });
+    if (!applied) return;
+
+    if (!applied.some(Boolean)) { await reset(target, t('key.noWhite')); return; }
+    await paint(target, wanted);
   }
 
+  /** Chaque ampoule poursuit SON propre reglage du meme pas, comme pour la teinte. */
   override async onDialRotate(ev: DialRotateEvent<TemperatureSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, t('key.toSet')); return; }
+    const coords = await coordinatesForMany(settings);
+    if (coords.length === 0) { await reset(target, t('key.toSet')); return; }
 
     const step = Math.abs(settings.step ?? DEFAULT_STEP);
-    try {
-      const applied = await withRetry(coords, async (bulb) => {
-        const state = await bulb.read();
-        const base = state.temperatureK ?? clamp(settings.kelvin ?? DEFAULT_KELVIN);
-        const next = clamp(base + ev.payload.ticks * step);
-        await bulb.setTemperature(next);
-        return next;
-      });
-      await paint(target, applied);
-    } catch (error) {
-      await reportFailure(target, error, { where: 'temperature.rotate', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
-    }
+    const applied = await applyToAll(target, coords, async (bulb) => {
+      const state = await bulb.read();
+      const base = state.temperatureK ?? clamp(settings.kelvin ?? DEFAULT_KELVIN);
+      const next = clamp(base + ev.payload.ticks * step);
+      await bulb.setTemperature(next);
+      return next;
+    }, { where: 'temperature.rotate', alert: true, recover: () => this.refresh(target, settings) });
+    const [first] = applied ?? [];
+    if (first !== undefined) await paint(target, first);
   }
 
   override async onDialDown(ev: DialDownEvent<TemperatureSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    const coords = await coordinatesFor(settings);
-    if (!coords) return;
-    try {
-      const on = await withRetry(coords, (bulb) => bulb.togglePower());
-      await paint(target, clamp(settings.kelvin ?? DEFAULT_KELVIN), on);
-    } catch (error) {
-      await reportFailure(target, error, { where: 'temperature.toggle', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
-    }
+    const coords = await coordinatesForMany(settings);
+    if (coords.length === 0) return;
+
+    const on = await toggleAll(target, coords, { where: 'temperature.toggle', alert: true, recover: () => this.refresh(target, settings) });
+    if (on !== null) await paint(target, clamp(settings.kelvin ?? DEFAULT_KELVIN), on);
   }
 }
 

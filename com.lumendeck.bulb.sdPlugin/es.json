@@ -83,10 +83,7 @@
       }
     },
     "pi": {
-      "bulb": "Bombilla",
-      "bulbPlaceholder": "Elija una bombilla",
-      "secondBulb": "Segunda bombilla",
-      "secondBulbPlaceholder": "Ninguna (opcional)",
+      "bulbs": "Bombillas",
       "scenario": "Escenario",
       "scenarioPlaceholder": "Elija un escenario",
       "colour": "Color",
@@ -117,7 +114,7 @@
       "scenarioHelp": {
         "title": "¿Cómo funciona?",
         "toggle": "Una pulsación inicia el escenario, otra lo detiene. La lámpara vuelve exactamente al estado en que estaba: mismo color, misma intensidad, encendida o apagada.",
-        "second": "La segunda bombilla es opcional. Solo Luces de policía usa dos hoy, para que se respondan en rojo y azul. Con una, alterna ambos colores en la misma lámpara.",
+        "second": "Marque una o varias bombillas. Solo Luces de policía tiene hoy dos papeles: con dos bombillas se responden en rojo y azul, con una alterna ambos colores en la misma lámpara, y cada bombilla adicional repite el segundo papel.",
         "oneShot": "Alerta y Amanecer se detienen solos, tras tres destellos y cinco minutos respectivamente. Los demás siguen hasta que vuelva a pulsar.",
         "safety": "Las animaciones están limitadas a propósito a dos alternancias por segundo: más allá, un parpadeo puede provocar una crisis en una persona fotosensible."
       },

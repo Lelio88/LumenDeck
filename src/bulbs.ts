@@ -25,6 +25,8 @@
  */
 import streamDeck from '@elgato/streamdeck';
 
+import { adoptGroup, selectedIds, type GroupSettings, type Writable } from './actions/group.js';
+
 /** Une ampoule declaree par l'utilisateur, cle comprise. */
 export type KnownBulb = {
   /** Identifiant Tuya. Cle primaire du registre. */
@@ -101,22 +103,6 @@ export async function remember(bulb: Partial<KnownBulb> & { id: string }): Promi
   await writeAll(bulbs);
 }
 
-/**
- * L'unique ampoule declaree, quand il n'y en a qu'une.
- *
- * Sert de repli a une touche qui n'en designe aucune : avec un seul appareil au
- * registre, la question « laquelle ? » n'a qu'une reponse, et l'exiger n'apporte
- * rien. C'est le cas de la grande majorite des installations.
- *
- * Rend undefined des qu'il y en a zero ou plusieurs. Avec plusieurs, il n'existe
- * pas de reponse evidente, et en inventer une ferait piloter la mauvaise lampe —
- * mieux vaut alors afficher « A regler » et laisser choisir.
- */
-export async function soleBulb(): Promise<KnownBulb | undefined> {
-  const all = await readAll();
-  return all.length === 1 ? all[0] : undefined;
-}
-
 /** Retire une ampoule du registre. Les touches qui la designaient afficheront « A regler ». */
 export async function forget(id: string): Promise<void> {
   await writeAll((await readAll()).filter((b) => b.id !== id));
@@ -137,35 +123,83 @@ export async function adoptLegacy(legacy: { deviceId?: string; localKey?: string
   await remember({ id: legacy.deviceId, key: legacy.localKey, ...(legacy.ip ? { ip: legacy.ip } : {}) });
 }
 
+type LegacySettings = GroupSettings & { localKey?: string; ip?: string };
+
+/** Ce que `adoptLegacy` sait reprendre d'une touche : identifiant, cle et adresse d'origine. */
+function legacyOf(settings: LegacySettings): { deviceId?: string; localKey?: string; ip?: string } {
+  return {
+    ...(typeof settings.deviceId === 'string' ? { deviceId: settings.deviceId } : {}),
+    ...(settings.localKey ? { localKey: settings.localKey } : {}),
+    ...(settings.ip ? { ip: settings.ip } : {}),
+  };
+}
+
+/**
+ * Met une touche a jour des qu'elle apparait : cle au registre, ampoules en liste.
+ *
+ * L'ORDRE est la raison d'etre de cette fonction. `adoptGroup` retire `deviceId`
+ * des reglages, or `adoptLegacy` a besoin de `deviceId` ET de `localKey` pour
+ * recopier la cle au registre. Dans l'ordre inverse, une interruption entre les
+ * deux laisserait une cle orpheline, sans identifiant pour la rattacher : la
+ * touche resterait « A regler » pour toujours.
+ *
+ * Un echec est journalise et n'empeche pas la touche de se dessiner : la reprise
+ * se retentera a la prochaine apparition, puisque les anciens champs restent.
+ */
+export async function adoptBulbs(action: Writable, settings: LegacySettings & Record<string, unknown>): Promise<void> {
+  try {
+    await adoptLegacy(legacyOf(settings));
+    await adoptGroup(action, settings);
+  } catch (error: unknown) {
+    const detail = error instanceof Error ? error.message : String(error);
+    streamDeck.logger.createScope('bulbs').warn('reprise des anciens reglages impossible : ' + detail);
+  }
+}
+
 /** Etiquette affichable d'une ampoule : son nom, sinon un identifiant abrege. */
 export function label(bulb: KnownBulb): string {
   if (bulb.name) return bulb.name;
   return 'Ampoule ' + bulb.id.slice(-6);
 }
 
+/** Ce qu'il faut pour joindre une ampoule : le pilote n'en demande pas davantage. */
+export type Coordinates = { id: string; key: string; ip?: string; version?: string };
+
 /**
- * Traduit les reglages d'une touche en coordonnees utilisables, ou null.
+ * Traduit les reglages d'une touche en coordonnees utilisables, dans l'ordre
+ * des ampoules choisies. Liste vide si aucune n'est joignable.
  *
  * C'est le point d'entree UNIQUE des actions : une seule question a poser, une
- * seule reponse a tester. Renvoyer null plutot que de lever une exception laisse
- * l'action afficher « A regler » sans avoir a distinguer les causes — touche
- * neuve, ampoule retiree du registre, ou cle jamais saisie reviennent au meme
- * pour l'utilisateur : il faut aller dans le panneau de configuration.
+ * seule reponse a tester. Rendre une liste vide plutot que de lever une
+ * exception laisse l'action afficher « A regler » sans avoir a distinguer les
+ * causes — touche neuve, ampoules retirees du registre, ou cle jamais saisie
+ * reviennent au meme pour l'utilisateur : il faut aller dans le panneau.
+ *
+ * Une ampoule du choix qui n'est plus au registre, ou sans cle, est ECARTEE
+ * sans bruit : les autres obeissent. Si plus aucune ne reste et qu'UNE SEULE
+ * ampoule est declaree, c'est elle : la question « laquelle ? » n'a qu'une
+ * reponse, et l'exiger n'apporte rien a la grande majorite des installations.
+ * Des qu'il y en a plusieurs, il n'existe pas de reponse evidente, et en
+ * inventer une ferait piloter la mauvaise lampe — mieux vaut afficher
+ * « A regler » et laisser choisir.
  *
  * Reprend au passage une configuration posee par une version anterieure.
  */
-export async function coordinatesFor(
-  settings: { deviceId?: string; localKey?: string; ip?: string },
-): Promise<{ id: string; key: string; ip?: string; version?: string } | null> {
-  await adoptLegacy(settings);
+export async function coordinatesForMany(
+  settings: LegacySettings,
+): Promise<Coordinates[]> {
+  await adoptLegacy(legacyOf(settings));
 
-  const bulb = (await resolve(settings.deviceId)) ?? (await soleBulb());
-  if (!bulb || !bulb.key) return null;
+  const all = await readAll();
+  const chosen = selectedIds(settings)
+    .map((id) => all.find((b) => b.id === id))
+    .filter((b): b is KnownBulb => b !== undefined && b.key.length > 0);
+  const bulbs = chosen.length > 0 ? chosen : all.length === 1 && all[0]?.key ? [all[0]] : [];
 
-  return {
+  return bulbs.map((bulb) => ({
     id: bulb.id,
     key: bulb.key,
     ...(bulb.ip ? { ip: bulb.ip } : {}),
     ...(bulb.version ? { version: bulb.version } : {}),
-  };
+  }));
 }

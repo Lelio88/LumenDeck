@@ -83,10 +83,7 @@
       }
     },
     "pi": {
-      "bulb": "Lampadina",
-      "bulbPlaceholder": "Scegli una lampadina",
-      "secondBulb": "Seconda lampadina",
-      "secondBulbPlaceholder": "Nessuna (facoltativa)",
+      "bulbs": "Lampadine",
       "scenario": "Scenario",
       "scenarioPlaceholder": "Scegli uno scenario",
       "colour": "Colore",
@@ -117,7 +114,7 @@
       "scenarioHelp": {
         "title": "Come funziona?",
         "toggle": "Una pressione avvia lo scenario, una seconda lo ferma. La lampada torna esattamente allo stato precedente: stesso colore, stessa intensità, accesa o spenta.",
-        "second": "La seconda lampadina è facoltativa. Solo Lampeggiante ne usa due oggi, perché si rispondano in rosso e blu. Con una sola, alterna i due colori sulla stessa lampada.",
+        "second": "Seleziona una o più lampadine. Solo Lampeggiante ha oggi due ruoli: con due lampadine si rispondono in rosso e blu, con una sola alterna i due colori sulla stessa lampada, e ogni lampadina in più ripete il secondo ruolo.",
         "oneShot": "Allerta e Alba si fermano da soli, dopo tre lampi e cinque minuti rispettivamente. Gli altri proseguono finché non premi di nuovo.",
         "safety": "Le animazioni sono volutamente limitate a due alternanze al secondo: oltre, un lampeggio può scatenare una crisi in una persona fotosensibile."
       },

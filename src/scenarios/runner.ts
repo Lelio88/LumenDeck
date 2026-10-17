@@ -33,8 +33,9 @@
 import { withRetry } from '../driver/pool.js';
 import type { LightDriver, LightState } from '../driver/types.js';
 import { MIN_HOLD_MS, type Cue, type Scenario } from './catalogue.js';
+import { createRegistry } from './sessions.js';
 
-/** Coordonnees d'une ampoule, telles que les rend `coordinatesFor`. */
+/** Coordonnees d'une ampoule, telles que les rend `coordinatesForMany`. */
 export type Target = { id: string; key: string; ip?: string; version?: string };
 
 type Session = {
@@ -56,10 +57,10 @@ type Session = {
  */
 const TOLERANCE = 3;
 
-/** Executions en cours, indexees par identifiant de l'ampoule principale. */
-const sessions = new Map<string, Session>();
+/** Executions en cours, retrouvables depuis chacune de leurs ampoules (voir sessions.ts). */
+const sessions = createRegistry<Session>();
 
-/** Le scenario en cours sur cette ampoule, ou undefined. */
+/** Le scenario en cours sur cette ampoule, principale ou non, ou undefined. */
 export function runningOn(bulbId: string | undefined): string | undefined {
   return bulbId ? sessions.get(bulbId)?.scenarioId : undefined;
 }
@@ -86,12 +87,17 @@ async function applyCue(target: Target, cue: Cue): Promise<void> {
  * un gyrophare a deux roles ne joue que le premier, ce qui donne une alternance
  * rouge/bleu au lieu d'un scenario muet. Avec deux lampes et une seule consigne,
  * les deux recoivent la meme.
+ *
+ * Les lampes obeissent INDEPENDAMMENT : une lampe debranchee dans le groupe ne
+ * doit pas arreter l'animation des autres. Rend vrai si au moins une a repondu ;
+ * c'est seulement quand AUCUNE ne repond que l'image compte comme un echec.
  */
-async function applyFrame(cues: readonly Cue[], targets: readonly Target[]): Promise<void> {
-  await Promise.all(targets.map((target, index) => {
+async function applyFrame(cues: readonly Cue[], targets: readonly Target[]): Promise<boolean> {
+  const settled = await Promise.allSettled(targets.map((target, index) => {
     const cue = cues[Math.min(index, cues.length - 1)];
     return cue ? applyCue(target, cue) : Promise.resolve();
   }));
+  return settled.some((result) => result.status === 'fulfilled');
 }
 
 /** Remet une lampe dans l'etat releve au demarrage. */
@@ -113,13 +119,12 @@ async function tick(session: Session, scenario: Scenario, step: number): Promise
   if (session.stopped) return;
 
   const frame = scenario.frame(step);
-  try {
-    await applyFrame(frame.cues, session.targets);
+  if (await applyFrame(frame.cues, session.targets)) {
     session.failures = 0;
-  } catch {
+  } else {
     session.failures += 1;
     if (session.failures >= TOLERANCE) {
-      await stop(session.targets[0]?.id);
+      await stopSession(session);
       return;
     }
   }
@@ -130,7 +135,7 @@ async function tick(session: Session, scenario: Scenario, step: number): Promise
 
   const next = step + 1;
   if (!scenario.loops && scenario.steps !== undefined && next >= scenario.steps) {
-    await stop(session.targets[0]?.id);
+    await stopSession(session);
     return;
   }
 
@@ -141,18 +146,19 @@ async function tick(session: Session, scenario: Scenario, step: number): Promise
 }
 
 /**
- * Lance un scenario sur une ou deux ampoules.
+ * Lance un scenario sur une ou plusieurs ampoules.
  *
- * La premiere ampoule de la liste sert de cle : c'est elle qu'on interroge pour
- * savoir si un scenario tourne, et elle qu'on nomme pour l'arreter.
+ * La premiere ampoule de la liste est la principale : elle porte le premier
+ * role. Toute ampoule du groupe permet de savoir si un scenario tourne et de
+ * l'arreter.
  */
 export async function start(scenario: Scenario, targets: readonly Target[]): Promise<void> {
-  const primary = targets[0];
-  if (!primary) return;
+  if (targets.length === 0) return;
 
-  // Liberer la lampe avant de la reprendre, sinon deux scenarios se
-  // disputeraient les memes images.
-  await stop(primary.id);
+  // Liberer TOUTES les lampes avant de les reprendre, sinon deux scenarios se
+  // disputeraient les memes images. On reboucle tant qu'une lampe est occupee :
+  // un autre demarrage a pu s'inscrire pendant qu'on attendait une restauration.
+  for (let busy = occupant(targets); busy; busy = occupant(targets)) await stopSession(busy);
 
   const session: Session = {
     scenarioId: scenario.id,
@@ -162,6 +168,13 @@ export async function start(scenario: Scenario, targets: readonly Target[]): Pro
     targets,
     failures: 0,
   };
+
+  // S'inscrire TOUT DE SUITE, dans le meme tour que le controle ci-dessus et
+  // avant la moindre attente reseau. Releve d'etat compris, la lecture d'une
+  // lampe debranchee dure ~5 s : tant que la session n'est pas indexee, la
+  // touche paraitrait arretee, un second appui lancerait une seconde session, et
+  // la premiere tournerait sans plus jamais pouvoir etre arretee.
+  sessions.add(session);
 
   // Relever l'etat avant la premiere image. Un echec de lecture n'empeche pas
   // de jouer : on renonce seulement a restaurer CETTE lampe, ce qui vaut mieux
@@ -175,17 +188,38 @@ export async function start(scenario: Scenario, targets: readonly Target[]): Pro
     }
   }));
 
-  sessions.set(primary.id, session);
+  // L'utilisateur a pu appuyer de nouveau pendant le releve : rien n'a encore
+  // ete joue, il n'y a donc rien a restaurer, seulement a ne pas demarrer.
+  if (session.stopped) return;
   await tick(session, scenario, 0);
 }
 
-/** Arrete le scenario de cette ampoule et restaure les lampes. Idempotent. */
-export async function stop(bulbId: string | undefined): Promise<void> {
-  if (!bulbId) return;
-  const session = sessions.get(bulbId);
-  if (!session) return;
+/** La session qui occupe l'une de ces lampes, ou undefined. */
+function occupant(targets: readonly Target[]): Session | undefined {
+  for (const target of targets) {
+    const session = sessions.get(target.id);
+    if (session) return session;
+  }
+  return undefined;
+}
 
-  sessions.delete(bulbId);
+/** Arrete le scenario qui occupe cette ampoule et restaure ses lampes. Idempotent. */
+export async function stop(bulbId: string | undefined): Promise<void> {
+  const session = bulbId ? sessions.get(bulbId) : undefined;
+  if (session) await stopSession(session);
+}
+
+/**
+ * Arrete CETTE session, pas celle qui occupe aujourd'hui la meme lampe.
+ *
+ * Par identite plutot que par identifiant d'ampoule : une image en vol qui
+ * echoue pour la troisieme fois peut arriver apres que la session a ete
+ * remplacee, et `stop(id)` arreterait alors la nouvelle a sa place.
+ */
+async function stopSession(session: Session): Promise<void> {
+  if (session.stopped) return;
+
+  sessions.remove(session);
   session.stopped = true;
   if (session.timer) clearTimeout(session.timer);
 
@@ -204,5 +238,5 @@ export async function stop(bulbId: string | undefined): Promise<void> {
 
 /** Arrete tout. Appele a l'extinction du plugin. */
 export async function stopAll(): Promise<void> {
-  await Promise.all([...sessions.keys()].map(stop));
+  await Promise.all(sessions.unique().map(stopSession));
 }

@@ -67,10 +67,7 @@
       }
     },
     "pi": {
-      "bulb": "Bulb",
-      "bulbPlaceholder": "Choose a bulb",
-      "secondBulb": "Second bulb",
-      "secondBulbPlaceholder": "None (optional)",
+      "bulbs": "Bulbs",
       "scenario": "Scenario",
       "scenarioPlaceholder": "Choose a scenario",
       "colour": "Colour",
@@ -101,7 +98,7 @@
       "scenarioHelp": {
         "title": "How does it work?",
         "toggle": "One press starts the scenario, a second stops it. The lamp then returns exactly to the state it was in: same colour, same brightness, on or off.",
-        "second": "The second bulb is optional. Only Police lights uses two today, so they answer each other in red and blue. With one, it alternates both colours on the same lamp.",
+        "second": "Tick one bulb or several. Only Police lights has two roles today: with two bulbs they answer each other in red and blue, with one it alternates both colours on the same lamp, and any further bulb repeats the second role.",
         "oneShot": "Alert and Sunrise stop on their own, after three flashes and five minutes respectively. The others run until you press again.",
         "safety": "Animations are deliberately capped at two alternations per second: beyond that, flashing light can trigger a seizure in a photosensitive person."
       },

@@ -3,7 +3,7 @@
  *
  * Ce que fait ce module : decrire la forme de ce qu'une touche memorise.
  *
- * Choix non evident : une touche ne conserve que l'IDENTIFIANT de l'ampoule
+ * Choix non evident : une touche ne conserve que les IDENTIFIANTS des ampoules
  * qu'elle pilote, plus ce qui lui est propre (pas, couleur, temperature). La cle
  * locale et l'adresse vivent dans le registre partage (voir bulbs.ts), pour ne
  * les saisir qu'une fois quel que soit le nombre de touches.
@@ -14,10 +14,20 @@
  * premier affichage de la touche, puis ils sont ignores.
  */
 
-/** Designation de l'ampoule pilotee, commune a toutes les actions. */
+/** Designation des ampoules pilotees, commune a toutes les actions. */
 export type BulbSettings = {
-  /** Identifiant Tuya de l'ampoule choisie dans le registre. */
+  /**
+   * Identifiants Tuya des ampoules cochees dans le registre, dans l'ordre.
+   *
+   * L'ordre compte pour un scenario : il est celui des roles. La premiere est
+   * l'ampoule principale, celle d'apres laquelle la touche se dessine.
+   */
+  deviceIds?: string[];
+
+  /** @deprecated Une seule ampoule, avant les listes. Lu par `selectedIds`, recopie par `adoptGroup`. */
   deviceId?: string;
+  /** @deprecated Seconde ampoule du scenario, avant les listes. Lu par `selectedIds`, recopie par `adoptGroup`. */
+  deviceId2?: string;
 
   /** @deprecated Heritage des premieres versions. Repris dans le registre, plus jamais ecrit. */
   localKey?: string;
@@ -51,11 +61,4 @@ export type TemperatureSettings = BulbSettings & {
 export type ScenarioSettings = BulbSettings & {
   /** Identifiant du scenario choisi dans le catalogue. */
   scenarioId?: string;
-  /**
-   * Seconde ampoule, pour les scenarios qui savent en exploiter deux.
-   *
-   * Facultative : un scenario a deux roles reste jouable sur une seule lampe,
-   * il n'en joue alors que le premier role.
-   */
-  deviceId2?: string;
 };

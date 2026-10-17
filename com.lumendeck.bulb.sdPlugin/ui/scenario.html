@@ -8,19 +8,13 @@
 </head>
 
 <body>
-    <sdpi-item label="Bulb" data-i18n-label="pi.bulb">
-        <sdpi-select setting="deviceId" datasource="getBulbs" placeholder="Choose a bulb"
-                     data-i18n-placeholder="pi.bulbPlaceholder"></sdpi-select>
+    <sdpi-item label="Bulbs" data-i18n-label="pi.bulbs">
+        <sdpi-checkbox-list setting="deviceIds" datasource="getBulbs" hot-reload></sdpi-checkbox-list>
     </sdpi-item>
 
     <sdpi-item label="Scenario" data-i18n-label="pi.scenario">
         <sdpi-select setting="scenarioId" datasource="getScenarios" placeholder="Choose a scenario"
                      data-i18n-placeholder="pi.scenarioPlaceholder"></sdpi-select>
-    </sdpi-item>
-
-    <sdpi-item label="Second bulb" data-i18n-label="pi.secondBulb">
-        <sdpi-select setting="deviceId2" datasource="getBulbs" placeholder="None (optional)"
-                     data-i18n-placeholder="pi.secondBulbPlaceholder"></sdpi-select>
     </sdpi-item>
 
     <details>
@@ -31,7 +25,7 @@
     <details>
         <summary data-i18n="pi.scenarioHelp.title">How does it work?</summary>
         <p data-i18n="pi.scenarioHelp.toggle">One press starts the scenario, a second stops it. The lamp then returns exactly to the state it was in: same colour, same brightness, on or off.</p>
-        <p data-i18n="pi.scenarioHelp.second">The second bulb is optional. Only Police lights uses two today, so they answer each other in red and blue. With one, it alternates both colours on the same lamp.</p>
+        <p data-i18n="pi.scenarioHelp.second">Tick one bulb or several. Only Police lights has two roles today: with two bulbs they answer each other in red and blue, with one it alternates both colours on the same lamp, and any further bulb repeats the second role.</p>
         <p data-i18n="pi.scenarioHelp.oneShot">Alert and Sunrise stop on their own, after three flashes and five minutes respectively. The others run until you press again.</p>
         <p data-i18n="pi.scenarioHelp.safety">Animations are deliberately capped at two alternations per second: beyond that, flashing light can trigger a seizure in a photosensitive person.</p>
     </details>

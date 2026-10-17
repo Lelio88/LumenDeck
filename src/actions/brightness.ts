@@ -15,9 +15,9 @@ import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent, WillDisappearEvent } from '@elgato/streamdeck';
 import { t } from '../i18n.js';
 import { asImage, brightnessKey } from '../key-art.js';
-import { withRetry } from '../driver/pool.js';
-import { coordinatesFor } from '../bulbs.js';
-import { reportFailure } from './failure.js';
+import { adoptBulbs, coordinatesForMany } from '../bulbs.js';
+import { toggleAll } from './power.js';
+import { applyToAll } from './run.js';
 import { cancelRecovery } from './recovery.js';
 import type { BrightnessSettings } from '../settings.js';
 
@@ -61,6 +61,7 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
   }
 
   override async onWillAppear(ev: WillAppearEvent<BrightnessSettings>): Promise<void> {
+    await adoptBulbs(ev.action, ev.payload.settings);
     await this.refresh(ev.action as unknown as Paintable, ev.payload.settings);
   }
 
@@ -69,16 +70,24 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
     await this.refresh(ev.action as unknown as Paintable, ev.payload.settings);
   }
 
-  /** Lit l'ampoule et reporte son etat REEL, jamais un etat suppose. */
+  /**
+   * Lit les ampoules et reporte leur etat REEL, jamais un etat suppose.
+   *
+   * Le niveau affiche est celui de la premiere ampoule qui repond : sur un
+   * groupe, les lampes n'ont pas forcement la meme intensite, et la touche n'a
+   * la place d'en dessiner qu'une.
+   */
   private async refresh(target: Paintable, settings: BrightnessSettings): Promise<void> {
-    const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, t('key.toSet')); return; }
-    try {
-      const state = await withRetry(coords, (bulb) => bulb.read());
-      await paint(target, state.brightness, state.on);
-    } catch (error) {
-      await reportFailure(target, error, { where: 'brightness.refresh', deviceId: coords.id, recover: () => this.refresh(target, settings) });
-    }
+    const coords = await coordinatesForMany(settings);
+    if (coords.length === 0) { await reset(target, t('key.toSet')); return; }
+
+    const states = await applyToAll(target, coords, (bulb) => bulb.read(), {
+      where: 'brightness.refresh',
+      tolerant: true,
+      recover: () => this.refresh(target, settings),
+    });
+    const [first] = states ?? [];
+    if (first && states) await paint(target, first.brightness, states.some((state) => state.on));
   }
 
   override async onKeyDown(ev: KeyDownEvent<BrightnessSettings>): Promise<void> {
@@ -95,28 +104,45 @@ export class Brightness extends SingletonAction<BrightnessSettings> {
   override async onDialDown(ev: DialDownEvent<BrightnessSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, t('key.toSet')); return; }
-    try {
-      const state = await withRetry(coords, async (bulb) => {
+    const coords = await coordinatesForMany(settings);
+    if (coords.length === 0) { await reset(target, t('key.toSet')); return; }
+
+    const report = { where: 'brightness.toggle', alert: true, recover: () => this.refresh(target, settings) };
+
+    // Une seule lampe : basculer et relire dans le MEME aller-retour. Rouvrir une
+    // relecture complete apres coup coutait un echange de plus a chaque appui de
+    // molette, et pouvait declarer « Hors ligne » une commande qui avait abouti.
+    if (coords.length === 1) {
+      const states = await applyToAll(target, coords, async (bulb) => {
         await bulb.togglePower();
         return bulb.read();
-      });
-      await paint(target, state.brightness, state.on);
-    } catch (error) {
-      await reportFailure(target, error, { where: 'brightness.toggle', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
+      }, report);
+      const [state] = states ?? [];
+      if (state) await paint(target, state.brightness, state.on);
+      return;
     }
+
+    if ((await toggleAll(target, coords, report)) === null) return;
+    await this.refresh(target, settings);
   }
 
+  /**
+   * Chaque ampoule monte ou descend de SON propre niveau, du meme pas.
+   *
+   * Aligner tout le groupe sur la premiere lampe ecraserait les reglages que
+   * l'utilisateur a choisis lampe par lampe ; un pas relatif les preserve.
+   */
   private async nudge(target: Paintable, settings: BrightnessSettings, delta: number): Promise<void> {
-    const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, t('key.toSet')); return; }
-    try {
-      const level = await withRetry(coords, (bulb) => bulb.nudgeBrightness(delta));
-      await paint(target, level, true);
-    } catch (error) {
-      await reportFailure(target, error, { where: 'brightness.nudge', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
-    }
+    const coords = await coordinatesForMany(settings);
+    if (coords.length === 0) { await reset(target, t('key.toSet')); return; }
+
+    const levels = await applyToAll(target, coords, (bulb) => bulb.nudgeBrightness(delta), {
+      where: 'brightness.nudge',
+      alert: true,
+      recover: () => this.refresh(target, settings),
+    });
+    const [level] = levels ?? [];
+    if (level !== undefined) await paint(target, level, true);
   }
 }
 

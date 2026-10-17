@@ -103,6 +103,19 @@ function journalise(error: LightError, report: Report): void {
 }
 
 /**
+ * Qualifie une panne et l'ecrit au journal, sans toucher a la touche.
+ *
+ * Sert aux touches qui visent plusieurs lampes : la touche ne raconte qu'UNE
+ * panne (un mot de 72 px n'en porte pas trois), mais le journal doit nommer
+ * chaque lampe en defaut, faute de quoi on ne sait plus laquelle debrancher.
+ */
+export function logFailure(error: unknown, report: Report): LightError {
+  const failure = asLightError(error);
+  journalise(failure, report);
+  return failure;
+}
+
+/**
  * Qualifie la panne, la journalise, et l'ecrit sur la touche.
  *
  * Efface le dessin au passage : une jauge figee sur la derniere valeur connue
@@ -110,8 +123,7 @@ function journalise(error: LightError, report: Report): void {
  * DESSUS l'image — le mot d'explication y deviendrait illisible.
  */
 export async function reportFailure(target: Reportable, error: unknown, report: Report): Promise<void> {
-  const failure = asLightError(error);
-  journalise(failure, report);
+  const failure = logFailure(error, report);
 
   await target.setImage?.(undefined);
   await target.setTitle(titleFor(failure.failure));

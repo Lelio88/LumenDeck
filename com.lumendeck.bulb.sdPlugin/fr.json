@@ -83,10 +83,7 @@
       }
     },
     "pi": {
-      "bulb": "Ampoule",
-      "bulbPlaceholder": "Choisissez une ampoule",
-      "secondBulb": "Seconde ampoule",
-      "secondBulbPlaceholder": "Aucune (facultatif)",
+      "bulbs": "Ampoules",
       "scenario": "Scénario",
       "scenarioPlaceholder": "Choisissez un scénario",
       "colour": "Couleur",
@@ -117,7 +114,7 @@
       "scenarioHelp": {
         "title": "Comment ça marche ?",
         "toggle": "Un appui lance le scénario, un second l'arrête. La lampe revient alors exactement dans l'état où elle était : même couleur, même intensité, allumée ou éteinte.",
-        "second": "La seconde ampoule est facultative. Seul le Gyrophare sait aujourd'hui en exploiter deux, pour qu'elles se répondent en rouge et bleu. Avec une seule, il alterne les deux couleurs sur la même lampe.",
+        "second": "Cochez une ou plusieurs ampoules. Seul le Gyrophare a deux rôles aujourd'hui : avec deux ampoules elles se répondent en rouge et bleu, avec une seule il alterne les deux couleurs sur la même lampe, et chaque ampoule en plus reprend le second rôle.",
         "oneShot": "Alerte et Lever de soleil s'arrêtent tout seuls, après trois éclats pour le premier et cinq minutes pour le second. Les autres tournent jusqu'à ce que vous appuyiez de nouveau.",
         "safety": "Les animations sont volontairement plafonnées à deux alternances par seconde : au-delà, un clignotement peut déclencher une crise chez une personne photosensible."
       },

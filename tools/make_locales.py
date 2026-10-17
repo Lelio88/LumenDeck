@@ -390,24 +390,9 @@ ARBRE = {
     },
 
     # --- Panneaux de configuration -----------------------------------------
-    "pi.bulb": {
-        "en": "Bulb", "fr": "Ampoule", "de": "Lampe", "es": "Bombilla", "it": "Lampadina",
+    "pi.bulbs": {
+        "en": "Bulbs", "fr": "Ampoules", "de": "Lampen", "es": "Bombillas", "it": "Lampadine",
         "ja": "電球", "ko": "전구", "zh_CN": "灯泡", "zh_TW": "燈泡",
-    },
-    "pi.bulbPlaceholder": {
-        "en": "Choose a bulb", "fr": "Choisissez une ampoule", "de": "Lampe wählen",
-        "es": "Elija una bombilla", "it": "Scegli una lampadina",
-        "ja": "電球を選択", "ko": "전구 선택", "zh_CN": "选择灯泡", "zh_TW": "選擇燈泡",
-    },
-    "pi.secondBulb": {
-        "en": "Second bulb", "fr": "Seconde ampoule", "de": "Zweite Lampe", "es": "Segunda bombilla",
-        "it": "Seconda lampadina", "ja": "2 つ目の電球", "ko": "두 번째 전구",
-        "zh_CN": "第二只灯泡", "zh_TW": "第二顆燈泡",
-    },
-    "pi.secondBulbPlaceholder": {
-        "en": "None (optional)", "fr": "Aucune (facultatif)", "de": "Keine (optional)",
-        "es": "Ninguna (opcional)", "it": "Nessuna (facoltativa)",
-        "ja": "なし（任意）", "ko": "없음(선택)", "zh_CN": "无（可选）", "zh_TW": "無（選填）",
     },
     "pi.scenario": {
         "en": "Scenario", "fr": "Scénario", "de": "Szenario", "es": "Escenario", "it": "Scenario",
@@ -576,15 +561,15 @@ ARBRE = {
         "zh_TW": "按一次啟動情境，再按一次停止。燈泡隨後會準確回到原本的狀態：相同的顏色、相同的亮度、開或關。",
     },
     "pi.scenarioHelp.second": {
-        "en": "The second bulb is optional. Only Police lights uses two today, so they answer each other in red and blue. With one, it alternates both colours on the same lamp.",
-        "fr": "La seconde ampoule est facultative. Seul le Gyrophare sait aujourd'hui en exploiter deux, pour qu'elles se répondent en rouge et bleu. Avec une seule, il alterne les deux couleurs sur la même lampe.",
-        "de": "Die zweite Lampe ist optional. Nur Blaulicht nutzt heute zwei, damit sie sich in Rot und Blau antworten. Mit einer wechselt es beide Farben auf derselben Lampe.",
-        "es": "La segunda bombilla es opcional. Solo Luces de policía usa dos hoy, para que se respondan en rojo y azul. Con una, alterna ambos colores en la misma lámpara.",
-        "it": "La seconda lampadina è facoltativa. Solo Lampeggiante ne usa due oggi, perché si rispondano in rosso e blu. Con una sola, alterna i due colori sulla stessa lampada.",
-        "ja": "2 つ目の電球は任意です。今のところ二つを使うのはパトカーだけで、赤と青で互いに応答します。一つだけなら同じ電球で両色を交互に出します。",
-        "ko": "두 번째 전구는 선택 사항입니다. 현재 두 개를 쓰는 것은 경광등뿐이며, 빨강과 파랑으로 서로 주고받습니다. 하나만 있으면 같은 전구에서 두 색을 번갈아 냅니다.",
-        "zh_CN": "第二只灯泡是可选的。目前只有警灯会用到两只，让它们以红蓝互相呼应。只有一只时，会在同一只灯泡上交替两种颜色。",
-        "zh_TW": "第二顆燈泡是選填的。目前只有警示燈會用到兩顆，讓它們以紅藍互相呼應。只有一顆時，會在同一顆燈泡上交替兩種顏色。",
+        "en": "Tick one bulb or several. Only Police lights has two roles today: with two bulbs they answer each other in red and blue, with one it alternates both colours on the same lamp, and any further bulb repeats the second role.",
+        "fr": "Cochez une ou plusieurs ampoules. Seul le Gyrophare a deux rôles aujourd'hui : avec deux ampoules elles se répondent en rouge et bleu, avec une seule il alterne les deux couleurs sur la même lampe, et chaque ampoule en plus reprend le second rôle.",
+        "de": "Haken Sie eine oder mehrere Lampen an. Nur Blaulicht hat heute zwei Rollen: mit zwei Lampen antworten sie sich in Rot und Blau, mit einer wechselt es beide Farben auf derselben Lampe, und jede weitere Lampe wiederholt die zweite Rolle.",
+        "es": "Marque una o varias bombillas. Solo Luces de policía tiene hoy dos papeles: con dos bombillas se responden en rojo y azul, con una alterna ambos colores en la misma lámpara, y cada bombilla adicional repite el segundo papel.",
+        "it": "Seleziona una o più lampadine. Solo Lampeggiante ha oggi due ruoli: con due lampadine si rispondono in rosso e blu, con una sola alterna i due colori sulla stessa lampada, e ogni lampadina in più ripete il secondo ruolo.",
+        "ja": "電球は一つでも複数でも選べます。今のところ役が二つあるのはパトカーだけです。二つなら赤と青で互いに応答し、一つなら同じ電球で両色を交互に出し、三つ目以降は二つ目の役を繰り返します。",
+        "ko": "전구를 하나 또는 여러 개 선택하세요. 현재 역할이 둘인 것은 경광등뿐입니다. 두 개면 빨강과 파랑으로 서로 주고받고, 하나면 같은 전구에서 두 색을 번갈아 내며, 그 이상은 두 번째 역할을 반복합니다.",
+        "zh_CN": "可勾选一只或多只灯泡。目前只有警灯有两个角色：两只灯泡时以红蓝互相呼应，只有一只时在同一只灯泡上交替两种颜色，多出的灯泡重复第二个角色。",
+        "zh_TW": "可勾選一顆或多顆燈泡。目前只有警示燈有兩個角色：兩顆燈泡時以紅藍互相呼應，只有一顆時在同一顆燈泡上交替兩種顏色，多出的燈泡重複第二個角色。",
     },
     "pi.scenarioHelp.oneShot": {
         "en": "Alert and Sunrise stop on their own, after three flashes and five minutes respectively. The others run until you press again.",

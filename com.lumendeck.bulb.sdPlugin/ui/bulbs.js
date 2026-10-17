@@ -1,5 +1,5 @@
 /**
- * Assistant de declaration des ampoules, partage par les quatre panneaux.
+ * Assistant de declaration des ampoules, partage par les panneaux.
  *
  * Ce que fait ce script : chercher les ampoules sur le reseau, et permettre d'en
  * enregistrer une avec sa cle — UNE SEULE FOIS, dans les reglages globaux du
@@ -323,11 +323,10 @@
       return;
     }
 
-    // Une seule ampoule au registre : la liste deroulante n'a qu'une reponse
-    // possible, on la choisit d'office plutot que d'exiger un clic sans
-    // alternative. Le plugin applique deja ce repli de son cote ; ceci sert a ce
-    // que la liste MONTRE l'ampoule retenue, au lieu de paraitre vide alors que
-    // la touche fonctionne.
+    // Une seule ampoule au registre : la liste n'a qu'une reponse possible, on la
+    // coche d'office plutot que d'exiger un clic sans alternative. Le plugin
+    // applique deja ce repli de son cote ; ceci sert a ce que la liste MONTRE
+    // l'ampoule retenue, au lieu de paraitre vide alors que la touche fonctionne.
     if (payload.event === 'getBulbs') {
       const items = Array.isArray(payload.items) ? payload.items : [];
       if (items.length !== 1) return;
@@ -336,8 +335,9 @@
       // par une lecture prematuree.
       setTimeout(() => {
         try {
-          const select = document.querySelector('sdpi-select[setting="deviceId"]');
-          if (select && !select.value) select.value = items[0].value;
+          const list = document.querySelector('sdpi-checkbox-list[setting="deviceIds"]');
+          const empty = !Array.isArray(list?.value) || list.value.length === 0;
+          if (list && empty) list.value = [items[0].value];
         } catch { /* le repli cote plugin suffit : ne jamais casser le panneau */ }
       }, 0);
       return;

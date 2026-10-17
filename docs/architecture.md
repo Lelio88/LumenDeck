@@ -71,22 +71,26 @@ l'existence de Tuya.
 | `src/driver/tuya.ts` | Adaptateur LAN Tuya 3.3. Traduit le contrat en datapoints, encode/décode les couleurs, borne les échelles. **Seul fichier qui a le droit de connaître un numéro de DP.** |
 | `src/driver/pool.ts` | Réservoir de connexions indexé par ampoule, plus `withRetry` qui rejoue une fois après reconnexion, en conservant la cause la plus précise des deux tentatives. |
 | `src/driver/errors.ts` | Vocabulaire des pannes : `LightFailure` (quatre causes), `LightError`, `classify()`. Traduit les messages de `tuyapi` en causes que l'utilisateur peut distinguer. N'importe rien. |
-| `src/actions/failure.ts` | Report d'une panne : un mot sur la touche, la cause complète au journal. Point de passage unique des cinq actions. |
+| `src/actions/failure.ts` | Report d'une panne : un mot sur la touche, la cause complète au journal. Point de passage unique des cinq actions (`logFailure` nomme, au journal seulement, chaque lampe d'un groupe qui a failli). |
 | `src/actions/face.ts` | Tranche entre la valeur de la touche et celle de la lampe, selon le contrôleur. N'importe rien — la règle est vérifiable sans Stream Deck ni ampoule. |
 | `src/actions/recovery.ts` | Cycle de reprise des touches en panne : relecture replanifiée avec attente croissante, éteinte dès que ça repart. N'importe rien — testable avec des minuteries simulées. |
+| `src/actions/group.ts` | **Plusieurs ampoules par touche** : `selectedIds` (la liste cochée, avec reprise des anciens champs `deviceId`/`deviceId2`), `adoptGroup` (recopie les anciens champs dans la liste), `fanOut` (applique une opération à chaque lampe en parallèle sans qu'une panne n'en prive les autres), `nextPower` (un groupe dont une lampe est allumée s'éteint). N'importe rien — testable sans Stream Deck ni ampoule. |
+| `src/actions/run.ts` | `applyToAll` : le geste unique des cinq actions pour « fais ceci sur mes lampes ». **Appui strict** (une lampe en défaut → alerte et mot sur la touche), **relecture tolérante** (la touche se dessine d'après les lampes qui répondent). Le journal nomme chaque lampe en défaut. |
+| `src/actions/power.ts` | `toggleAll` : bascule d'allumage partagée. Une ampoule garde son aller-retour unique (`togglePower`) ; un groupe lit l'état de chacune puis décide pour tous. |
 | `src/actions/toggle.ts` | Action « allumer / éteindre », touche et molette. |
 | `src/actions/brightness.ts` | Action « intensité » : pas fixe sur touche, rotation continue sur molette, retour visuel sur l'écran de la molette. |
 | `src/actions/color.ts` | Action « couleur » : applique une couleur choisie, ou fait tourner la teinte à la molette en préservant l'intensité courante. |
 | `src/actions/temperature.ts` | Action « blanc chaud / froid », de 2700 K à 6500 K. |
 | `src/actions/scenario.ts` | Action « scénario » : un appui lance une animation, un second l'arrête. N'entretient aucun état local — elle interroge le moteur, ce qui garde deux touches d'accord sur la même ampoule. |
 | `src/scenarios/catalogue.ts` | Les scénarios eux-mêmes, en **données pures** : `frame(step)` rend une image, sans effet de bord. Testable sans ampoule ; en ajouter un ne touche pas au moteur. |
-| `src/scenarios/runner.ts` | Déroule les images dans le temps. Une exécution par ampoule, relevé de l'état avant la première image et restauration à l'arrêt. |
+| `src/scenarios/sessions.ts` | Index des sessions de scénario **par ampoule** : une session est retrouvable depuis chacune de ses lampes, et `remove` ne libère que les lampes qui pointent encore sur elle. N'importe rien — testable seul. |
+| `src/scenarios/runner.ts` | Déroule les images dans le temps. Une exécution par ampoule — une session est retrouvable depuis **chacune** de ses ampoules, pas seulement la principale —, relevé de l'état avant la première image et restauration à l'arrêt. |
 | `src/key-art.ts` | Dessine les faces de touche **à la volée**, en SVG : jauge qui se remplit, goutte à la vraie couleur, disque teinté à la vraie température. N'importe rien — donc testable sans ampoule ni Stream Deck. |
 | `src/color-format.ts` | Conversions hexadécimal ↔ TSV et rotation de teinte. Vit côté présentation : l'hexadécimal est une convention d'interface web, pas un langage d'ampoule. |
-| `src/bulbs.ts` | **Registre des ampoules** (identifiant, clé, adresse, nom, **version de protocole**), dans les réglages globaux du plugin. Une ampoule y est déclarée une fois ; `coordinatesFor()` est le point d'entrée unique des actions. |
+| `src/bulbs.ts` | **Registre des ampoules** (identifiant, clé, adresse, nom, **version de protocole**), dans les réglages globaux du plugin. Une ampoule y est déclarée une fois ; `coordinatesForMany()` est le point d'entrée unique des actions et rend les coordonnées des ampoules d'une touche, dans l'ordre ; `adoptBulbs()` met une ancienne touche à jour à son apparition. |
 | `src/discovery.ts` | Écoute les annonces UDP que les ampoules Tuya diffusent d'elles-mêmes. Trouve identifiant et adresse — jamais la clé, qui n'est pas dans l'annonce. |
 | `src/ui-bridge.ts` | Répond aux panneaux : lister, chercher, enregistrer, oublier une ampoule. La clé entre par ici et n'en ressort jamais. |
-| `src/settings.ts` | Formes des réglages d'une touche. Une touche ne retient que l'**identifiant** de l'ampoule qu'elle pilote, plus ce qui lui est propre. |
+| `src/settings.ts` | Formes des réglages d'une touche. Une touche ne retient que les **identifiants** (`deviceIds`) des ampoules qu'elle pilote, plus ce qui lui est propre. |
 | `src/plugin.ts` | Racine de composition. |
 | `src/tools/probe.mjs` | Sonde de diagnostic : relève les datapoints d'une ampoule. Vit sous `src/` parce qu'il a besoin des dépendances du projet. |
 | `src/tuya-cloud.ts` | Récupère les clés locales par **scan de QR code**. Seul module qui parle à un serveur, et seulement pour l'enrôlement : le pilotage n'y repasse jamais. |
@@ -224,11 +228,12 @@ l'ampoule**.
 Exemple réel : l'utilisateur appuie sur une touche « Intensité » réglée à +10.
 
 1. **Stream Deck** émet `keyDown` sur le WebSocket, avec les réglages persistés de cette touche.
-2. **`Brightness.onKeyDown`** lit le pas dans les réglages (10 par défaut) et vérifie
-   `isConfigured()` : sans identifiant ni clé, la touche affiche « À régler » et s'arrête là.
-3. **`coordinates()`** transforme les réglages en `{ id, key, ip }`. L'adresse est facultative :
-   absente, l'ampoule sera cherchée par diffusion UDP.
-4. **`withRetry`** demande la connexion au réservoir. Si aucune n'existe pour cette ampoule, elle est
+2. **`Brightness.onKeyDown`** lit le pas dans les réglages (10 par défaut). Sans ampoule joignable
+   (liste vide ou clé absente), la touche affiche « À régler » et s'arrête là.
+3. **`coordinatesForMany()`** transforme les réglages en une liste de `{ id, key, ip }`, dans l'ordre
+   des ampoules cochées. L'adresse est facultative : absente, l'ampoule sera cherchée par diffusion UDP.
+4. **`applyToAll`** lance l'opération sur **chaque** ampoule en parallèle, chacune par **`withRetry`**,
+   qui demande la connexion au réservoir. Si aucune n'existe pour cette ampoule, elle est
    ouverte ; sinon celle en cours est réutilisée.
 5. **`nudgeBrightness(+10)`** lit l'état courant, calcule la cible bornée à [1, 100], appelle
    `setBrightness`.
@@ -240,6 +245,44 @@ Exemple réel : l'utilisateur appuie sur une touche « Intensité » réglée à
    l'écran de la molette si l'action tourne sur un Stream Deck+.
 9. **En cas d'échec** à n'importe quelle étape, `withRetry` referme la connexion et rejoue une fois ;
    si le second essai échoue, l'action déclenche `showAlert()`. L'erreur n'est jamais avalée.
+
+## Plusieurs ampoules par touche
+
+Une touche désigne une **liste** d'ampoules (`deviceIds`, cases à cocher dans le panneau). Les
+touches posées avant les listes gardent leur lampe : `selectedIds` lit encore `deviceId` et
+`deviceId2`, et `adoptGroup` les recopie dans la liste au premier affichage — sans cela le
+panneau montrerait une liste vide alors que la touche fonctionne.
+
+Règles de comportement, choisies pour ce qu'une personne attend devant une pièce à plusieurs lampes :
+
+| Geste | Sur un groupe |
+|---|---|
+| Allumer / éteindre | Une lampe allumée suffit à **éteindre tout le groupe** ; tout éteint, on **allume tout**. Inverser chaque lampe échangerait les allumées et les éteintes. |
+| Couleur, blanc | La même valeur pour toutes. Les lampes sans couleur (ou sans blanc réglable) sont laissées telles quelles ; le mot « Sans couleur » n'apparaît que si **aucune** ne sait. |
+| Intensité, molette | Chaque lampe bouge de **son propre** niveau, du même pas : aligner sur la première écraserait les réglages lampe par lampe. |
+| Scénario | L'ordre des ampoules est celui des **rôles**. Au-delà du nombre de rôles, les lampes en trop répètent le dernier. |
+
+**Panne partielle.** Les lampes obéissent en parallèle et indépendamment : une lampe débranchée
+n'empêche pas les autres. Un **appui** est strict — la touche alerte et écrit un mot, le journal
+nomme chaque lampe fautive. Une **relecture** est tolérante : la touche se dessine d'après les lampes
+qui répondent et ne se déclare en panne que si plus aucune ne répond ; sinon une lampe débranchée à
+demeure laisserait « Hors ligne » sur une touche qui marche. Elle n'attend pas non plus la lampe
+muette : une seconde après la première réponse, les retardataires sont laissés de côté (le délai de
+connexion d'une lampe débranchée est de ~5 s). Dans un **scénario**, une lampe morte ne coupe pas
+l'animation des autres ; elle ne s'arrête que si **aucune** lampe ne répond trois images de suite.
+
+**Face de la touche.** Elle montre la **première lampe qui répond** ; « allumé » signifie « au moins une
+lampe allumée », ce que son appui éteindrait.
+
+**Scénarios.** Le moteur indexe une session sous **chacune** de ses ampoules (`sessions.ts`). Lancer un
+scénario sur un groupe arrête d'abord ce qui occupe l'une quelconque de ses lampes, puis **s'inscrit
+aussitôt** — avant le relevé d'état, dont la lecture d'une lampe débranchée dure ~5 s : sinon un second
+appui lancerait une seconde session que plus rien ne saurait arrêter. L'arrêt se fait **par identité de
+session**, pas par ampoule. Un appui n'arrête un scénario que si c'est **le sien** qui tourne ; sinon il
+lance le sien et prend la place de celui d'une touche voisine.
+
+**Migration d'une ancienne touche.** `adoptBulbs` recopie d'abord la clé locale au registre, **puis**
+retire `deviceId` des réglages : dans l'autre sens, une interruption laisserait une clé orpheline.
 
 ## Ce que l'utilisateur voit quand ça casse
 
@@ -336,8 +379,8 @@ fragments de trame chiffrée, pas le secret.
 
 | Depuis | Peut importer | Ne doit jamais importer |
 |---|---|---|
-| `src/actions/` | `driver/types`, `driver/pool`, `bulbs`, `settings`, `color-format` | `driver/tuya`, `tuyapi`, une autre action |
-| `src/bulbs.ts` | `@elgato/streamdeck` (réglages globaux) | `driver/*`, `actions/*` |
+| `src/actions/` | `driver/types`, `driver/pool`, `bulbs`, `settings`, `color-format`, et entre elles `group`, `run`, `power`, `failure`, `recovery`, `face` (les modules transverses — jamais une autre **action**) | `driver/tuya`, `tuyapi`, une autre action |
+| `src/bulbs.ts` | `@elgato/streamdeck` (réglages globaux), `actions/group` (module pur) | `driver/*`, toute autre partie de `actions/` |
 | `src/discovery.ts` | `node:dgram`, `node:crypto` | tout le reste — il n'écoute que le réseau |
 | `src/key-art.ts` | **rien** | tout — c'est un module de dessin pur |
 | `src/driver/pool.ts` | `driver/types`, `driver/tuya` | `@elgato/streamdeck`, `actions/` |
@@ -503,10 +546,6 @@ Cinq actions couvrent l'allumage, l'intensité, la couleur, le blanc réglable e
 animés. Restent hors du périmètre : les **scènes internes de l'ampoule** (datapoint 25, non
 exploité — nos scénarios sont pilotés depuis le plugin, image par image) et tout **adaptateur autre
 que Tuya**.
-
-Le pilotage de plusieurs ampoules par une même touche n'existe que pour les scénarios, et se limite
-à deux rôles. Une animation à trois lampes demanderait de repenser la façon dont une touche désigne
-ses cibles, pas seulement d'élargir une boucle.
 
 Une contrainte matérielle à connaître plutôt qu'un manque : couleur et température **s'excluent
 mutuellement**. Écrire une température fait quitter le mode couleur, et c'est l'ampoule qui

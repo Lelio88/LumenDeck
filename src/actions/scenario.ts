@@ -19,13 +19,13 @@
 import { action, SingletonAction } from '@elgato/streamdeck';
 import type { DialDownEvent, DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent, WillDisappearEvent } from '@elgato/streamdeck';
 
-import { coordinatesFor, resolve } from '../bulbs.js';
+import { adoptBulbs, coordinatesForMany } from '../bulbs.js';
 import { reportFailure } from './failure.js';
 import { cancelRecovery } from './recovery.js';
 import { scenarioName, t } from '../i18n.js';
 import { asImage, scenarioKey } from '../key-art.js';
 import { byId } from '../scenarios/catalogue.js';
-import { runningOn, start, stop, type Target } from '../scenarios/runner.js';
+import { runningOn, start, stop } from '../scenarios/runner.js';
 import type { ScenarioSettings } from '../settings.js';
 
 type Paintable = {
@@ -43,29 +43,6 @@ async function reset(target: Paintable, label: string): Promise<void> {
   await target.setTitle(label);
 }
 
-/**
- * Les ampoules que cette touche pilote, dans l'ordre des roles.
- *
- * La seconde est facultative et n'est retenue que si elle est bien distincte de
- * la premiere : la meme lampe dans les deux roles produirait un scenario qui se
- * contredit d'une image a l'autre.
- */
-async function targetsFor(settings: ScenarioSettings): Promise<Target[]> {
-  const primary = await coordinatesFor(settings);
-  if (!primary) return [];
-
-  if (!settings.deviceId2 || settings.deviceId2 === primary.id) return [primary];
-  const second = await resolve(settings.deviceId2);
-  if (!second?.key) return [primary];
-
-  return [primary, {
-    id: second.id,
-    key: second.key,
-    ...(second.ip ? { ip: second.ip } : {}),
-    ...(second.version ? { version: second.version } : {}),
-  }];
-}
-
 @action({ UUID: 'com.lumendeck.bulb.scenario' })
 export class ScenarioAction extends SingletonAction<ScenarioSettings> {
   /**
@@ -80,6 +57,7 @@ export class ScenarioAction extends SingletonAction<ScenarioSettings> {
   }
 
   override async onWillAppear(ev: WillAppearEvent<ScenarioSettings>): Promise<void> {
+    await adoptBulbs(ev.action, ev.payload.settings);
     await this.repaint(ev.action as unknown as Paintable, ev.payload.settings);
   }
 
@@ -99,7 +77,8 @@ export class ScenarioAction extends SingletonAction<ScenarioSettings> {
   /** Lance le scenario, ou l'arrete s'il tournait deja. */
   private async toggle(target: Paintable, settings: ScenarioSettings): Promise<void> {
     const scenario = byId(settings.scenarioId);
-    const targets = await targetsFor(settings);
+    // Dans l'ordre des roles : la premiere ampoule cochee porte le premier role.
+    const targets = await coordinatesForMany(settings);
     const primary = targets[0];
 
     if (!scenario || !primary) {
@@ -108,7 +87,10 @@ export class ScenarioAction extends SingletonAction<ScenarioSettings> {
     }
 
     try {
-      if (runningOn(primary.id)) await stop(primary.id);
+      // Arreter seulement si C'EST CE scenario qui tourne. Une autre touche peut
+      // occuper cette lampe avec un autre scenario : l'appui doit alors lancer le
+      // sien (start libere les lampes d'abord), pas couper celui de la voisine.
+      if (runningOn(primary.id) === scenario.id) await stop(primary.id);
       else await start(scenario, targets);
     } catch (error) {
       // On NE repeint PAS derriere : paint() remet un titre vide, et le mot
@@ -121,7 +103,7 @@ export class ScenarioAction extends SingletonAction<ScenarioSettings> {
 
   /** Redessine d'apres l'etat reel du moteur. */
   private async repaint(target: Paintable, settings: ScenarioSettings): Promise<void> {
-    if (!byId(settings.scenarioId) || !(await coordinatesFor(settings))) {
+    if (!byId(settings.scenarioId) || (await coordinatesForMany(settings)).length === 0) {
       await reset(target, t('key.toSet'));
       return;
     }
@@ -132,8 +114,8 @@ export class ScenarioAction extends SingletonAction<ScenarioSettings> {
     const scenario = byId(settings.scenarioId);
     if (!scenario) return;
 
-    const coords = await coordinatesFor(settings);
-    const running = runningOn(coords?.id) === scenario.id;
+    const [primary] = await coordinatesForMany(settings);
+    const running = runningOn(primary?.id) === scenario.id;
 
     await target.setImage?.(asImage(scenarioKey(scenarioName(scenario.id), running)));
     await target.setTitle('');

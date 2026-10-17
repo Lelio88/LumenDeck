@@ -21,12 +21,12 @@ import type { DialDownEvent, DialRotateEvent, DidReceiveSettingsEvent, KeyDownEv
 import { hexToHsv, hsvToHex, rotateHue } from '../color-format.js';
 import { t } from '../i18n.js';
 import { asImage, colorKey } from '../key-art.js';
-import { withRetry } from '../driver/pool.js';
 import type { Hsv } from '../driver/types.js';
-import { coordinatesFor } from '../bulbs.js';
-import { reportFailure } from './failure.js';
+import { adoptBulbs, coordinatesForMany } from '../bulbs.js';
 import { cancelRecovery } from './recovery.js';
 import { faceValue } from './face.js';
+import { toggleAll } from './power.js';
+import { applyToAll } from './run.js';
 import type { ColorSettings } from '../settings.js';
 
 /**
@@ -94,30 +94,37 @@ export class Color extends SingletonAction<ColorSettings> {
   }
 
   override async onWillAppear(ev: WillAppearEvent<ColorSettings>): Promise<void> {
+    await adoptBulbs(ev.action, ev.payload.settings);
     await this.refresh(ev.action as unknown as Paintable, ev.payload.settings);
   }
 
-  /** Lit l'ampoule et reporte son etat REEL. Sert aussi de point de reprise. */
+  /** Lit les ampoules et reporte leur etat REEL. Sert aussi de point de reprise. */
   private async refresh(target: Paintable, settings: ColorSettings): Promise<void> {
-    const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, t('key.toSet')); return; }
-    try {
-      // On LIT l'ampoule plutot que de la supposer allumee : elle a pu etre
-      // eteinte depuis l'application Calex, et une touche qui ment est pire
-      // qu'une touche muette.
-      // On releve l'etat ET ce que la lampe sait faire dans le meme aller-retour.
-      const snapshot = await withRetry(coords, async (bulb) => ({
-        state: await bulb.read(),
-        supported: bulb.capabilities.supportsColor,
-      }));
-      // Une ampoule blanche seule n'expose pas le datapoint de couleur. Le dire
-      // vaut mieux que d'echouer en silence : sans ce mot, l'utilisateur conclut
-      // que le plugin est casse alors que c'est son materiel qui ne sait pas.
-      if (!snapshot.supported) { await reset(target, t('key.noColour')); return; }
-      await paint(target, faceValue(target, snapshot.state.color, configured(settings)), snapshot.state.on);
-    } catch (error) {
-      await reportFailure(target, error, { where: 'color.refresh', deviceId: coords.id, recover: () => this.refresh(target, settings) });
-    }
+    const coords = await coordinatesForMany(settings);
+    if (coords.length === 0) { await reset(target, t('key.toSet')); return; }
+
+    // On LIT les ampoules plutot que de les supposer allumees : elles ont pu etre
+    // eteintes depuis l'application Calex, et une touche qui ment est pire
+    // qu'une touche muette. On releve l'etat ET ce que chaque lampe sait faire
+    // dans le meme aller-retour.
+    const snapshots = await applyToAll(target, coords, async (bulb) => ({
+      state: await bulb.read(),
+      supported: bulb.capabilities.supportsColor,
+    }), {
+      where: 'color.refresh',
+      tolerant: true,
+      recover: () => this.refresh(target, settings),
+    });
+    if (!snapshots) return;
+
+    // Une ampoule blanche seule n'expose pas le datapoint de couleur. Le dire
+    // vaut mieux que d'echouer en silence : sans ce mot, l'utilisateur conclut
+    // que le plugin est casse alors que c'est son materiel qui ne sait pas. Dans
+    // un groupe mixte, la touche se dessine d'apres les lampes qui savent.
+    const capable = snapshots.filter((snapshot) => snapshot.supported);
+    const [first] = capable;
+    if (!first) { await reset(target, t('key.noColour')); return; }
+    await paint(target, faceValue(target, first.state.color, configured(settings)), capable.some((c) => c.state.on));
   }
 
   /**
@@ -131,65 +138,66 @@ export class Color extends SingletonAction<ColorSettings> {
   override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<ColorSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    if (!(await coordinatesFor(settings))) { await reset(target, t('key.toSet')); return; }
+    if ((await coordinatesForMany(settings)).length === 0) { await reset(target, t('key.toSet')); return; }
     await paint(target, configured(settings), true);
   }
 
   override async onKeyDown(ev: KeyDownEvent<ColorSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, t('key.toSet')); return; }
+    const coords = await coordinatesForMany(settings);
+    if (coords.length === 0) { await reset(target, t('key.toSet')); return; }
 
     const wanted = configured(settings);
-    try {
-      const supported = await withRetry(coords, async (bulb) => {
-        if (!bulb.capabilities.supportsColor) return false;
-        // Allumer d'abord : appliquer une couleur a une ampoule eteinte est
-        // silencieux, et l'utilisateur croirait la touche cassee.
-        await bulb.setPower(true);
-        await bulb.setColor(wanted);
-        return true;
-      });
-      if (!supported) { await reset(target, t('key.noColour')); return; }
-      await paint(target, wanted);
-    } catch (error) {
-      await reportFailure(target, error, { where: 'color.apply', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
-    }
+    const applied = await applyToAll(target, coords, async (bulb) => {
+      if (!bulb.capabilities.supportsColor) return false;
+      // Allumer d'abord : appliquer une couleur a une ampoule eteinte est
+      // silencieux, et l'utilisateur croirait la touche cassee.
+      await bulb.setPower(true);
+      await bulb.setColor(wanted);
+      return true;
+    }, { where: 'color.apply', alert: true, recover: () => this.refresh(target, settings) });
+    if (!applied) return;
+
+    // Les lampes sans couleur sont simplement laissees telles quelles : le mot
+    // n'apparait que si AUCUNE ne sait appliquer la teinte.
+    if (!applied.some(Boolean)) { await reset(target, t('key.noColour')); return; }
+    await paint(target, wanted);
   }
 
+  /**
+   * Chaque ampoule fait tourner SA teinte du meme angle.
+   *
+   * Les lampes d'un groupe n'ont pas forcement la meme couleur : les aligner sur
+   * celle de la premiere effacerait ce que l'utilisateur a compose. Une lampe en
+   * blanc, qui n'a pas de couleur courante, part de la couleur configuree.
+   */
   override async onDialRotate(ev: DialRotateEvent<ColorSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    const coords = await coordinatesFor(settings);
-    if (!coords) { await reset(target, t('key.toSet')); return; }
+    const coords = await coordinatesForMany(settings);
+    if (coords.length === 0) { await reset(target, t('key.toSet')); return; }
 
     const step = Math.abs(settings.step ?? DEFAULT_STEP);
-    try {
-      const applied = await withRetry(coords, async (bulb) => {
-        const state = await bulb.read();
-        const base = state.color ?? configured(settings);
-        const next = rotateHue(base, ev.payload.ticks * step);
-        await bulb.setColor(next);
-        return next;
-      });
-      await paint(target, applied);
-    } catch (error) {
-      await reportFailure(target, error, { where: 'color.rotate', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
-    }
+    const applied = await applyToAll(target, coords, async (bulb) => {
+      const state = await bulb.read();
+      const base = state.color ?? configured(settings);
+      const next = rotateHue(base, ev.payload.ticks * step);
+      await bulb.setColor(next);
+      return next;
+    }, { where: 'color.rotate', alert: true, recover: () => this.refresh(target, settings) });
+    const [first] = applied ?? [];
+    if (first) await paint(target, first);
   }
 
   override async onDialDown(ev: DialDownEvent<ColorSettings>): Promise<void> {
     const target = ev.action as unknown as Paintable;
     const { settings } = ev.payload;
-    const coords = await coordinatesFor(settings);
-    if (!coords) return;
-    try {
-      const on = await withRetry(coords, (bulb) => bulb.togglePower());
-      await paint(target, configured(settings), on);
-    } catch (error) {
-      await reportFailure(target, error, { where: 'color.toggle', deviceId: coords.id, alert: true, recover: () => this.refresh(target, settings) });
-    }
+    const coords = await coordinatesForMany(settings);
+    if (coords.length === 0) return;
+
+    const on = await toggleAll(target, coords, { where: 'color.toggle', alert: true, recover: () => this.refresh(target, settings) });
+    if (on !== null) await paint(target, configured(settings), on);
   }
 }
 
