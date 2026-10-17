@@ -6,17 +6,19 @@ réseau ; elle est créée au moment où vous appairez l'ampoule dans l'applicat
 
 Comptez cinq minutes. Vous n'aurez à le faire qu'une fois par ampoule.
 
-> **Depuis la version 0.14, tout se fait dans le panneau.** Dépliez « Ajouter ou modifier une
-> ampoule », collez votre **code utilisateur**, cliquez sur « Afficher le QR code » et scannez-le
-> avec l'application Calex ou Smart Life (**+** → **Scanner**). Toutes les ampoules du compte sont
-> enregistrées, clés comprises. Ni terminal, ni Python, ni copier-coller.
+> **Tout se fait dans le panneau.** Dans le panneau de réglages d'une touche, rubrique « Ajouter
+> des ampoules », onglet **Appli Calex (QR)** : collez votre **code utilisateur**, cliquez sur
+> « Afficher le QR code » et scannez-le avec l'application Calex ou Smart Life (**+** → **Scanner**).
+> Toutes les ampoules du compte sont enregistrées, clés comprises, et LumenDeck retrouve seul leur
+> adresse sur votre réseau. Ni terminal, ni Python, ni copier-coller.
 >
 > La procédure manuelle ci-dessous reste documentée pour qui préfère la ligne de commande, ou si le
 > panneau échoue.
 >
-> Si la recherche ne trouve rien alors que l'ampoule fonctionne, c'est presque toujours le
-> **pare-feu** : les annonces arrivent en UDP entrant, et Windows les bloque tant que Stream Deck
-> n'y est pas autorisé.
+> Si une ampoule reste « Hors ligne », l'onglet **Sur le réseau** la retrouve et met son adresse à
+> jour. S'il ne trouve rien alors que l'ampoule fonctionne, c'est presque toujours le **pare-feu** :
+> les annonces arrivent en UDP entrant, et Windows les bloque tant que Stream Deck n'y est pas
+> autorisé.
 
 ## Ce dont vous avez besoin
 
@@ -57,8 +59,10 @@ L'outil demande votre code utilisateur, puis affiche un QR code. Scannez-le et c
 
 ### 4. Récupérez vos informations
 
-L'outil liste vos appareils. Pour chacun, retenez `id` et `local_key` : ce sont les deux champs à
-recopier dans le panneau de réglages de la touche LumenDeck.
+L'outil liste vos appareils. Pour chacun, retenez `id` et `local_key`. Dans le panneau de réglages
+d'une touche LumenDeck, onglet **Sur le réseau**, lancez la recherche : chaque ampoule nouvelle
+apparaît avec un champ pour sa clé (et pour son identifiant si la recherche n'a pas pu le lire).
+Pour une ampoule déjà enregistrée, « Mes ampoules » → **Modifier** permet de changer sa clé.
 
 ## Deux pièges à connaître
 
