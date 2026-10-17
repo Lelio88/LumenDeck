@@ -84,8 +84,33 @@ async function sendBulbList(): Promise<void> {
   const known = await bulbs.list();
   await reply({
     event: 'getBulbs',
-    items: known.map((b) => ({ label: bulbs.label(b), value: b.id })),
+    items: known.map((b) => ({ label: bulbs.label(b), value: b.id, ip: b.ip ?? null, hasKey: b.key.length > 0 })),
   });
+}
+
+/**
+ * Dit au panneau quelles ampoules repondent.
+ *
+ * Une lecture par ampoule, en parallele, par le reservoir : une ampoule deja
+ * connectee repond en quelques millisecondes, une ampoule debranchee met
+ * quelques secondes a echouer — le panneau affiche « verification » en
+ * attendant. Rien d'autre que l'identifiant et un booleen ne repart.
+ */
+async function sendBulbStatus(): Promise<void> {
+  const known = await bulbs.list();
+  const items = await Promise.all(known.map(async (b) => {
+    if (!b.key) return { id: b.id, online: false };
+    try {
+      await pool.withRetry(
+        { id: b.id, key: b.key, ...(b.ip ? { ip: b.ip } : {}), ...(b.version ? { version: b.version } : {}) },
+        (driver) => driver.read(),
+      );
+      return { id: b.id, online: true };
+    } catch {
+      return { id: b.id, online: false };
+    }
+  }));
+  await reply({ event: 'getBulbStatus', items });
 }
 
 /**
@@ -135,6 +160,12 @@ async function identify(ip: string, known: bulbs.KnownBulb[]): Promise<bulbs.Kno
  * Chaque resultat dit s'il est deja enregistre, pour que le panneau distingue
  * « nouvelle ampoule a configurer » de « celle-ci est deja la ».
  */
+/** Nom affichable d'une ampoule connue, pour que le panneau dise « Bureau est a jour » plutot qu'un identifiant. */
+function nameOf(known: bulbs.KnownBulb[], id: string): string | null {
+  const bulb = known.find((b) => b.id === id);
+  return bulb ? bulbs.label(bulb) : null;
+}
+
 async function sendDiscovery(): Promise<void> {
   const known = await bulbs.list();
   const configured = new Set(known.filter((b) => b.key).map((b) => b.id));
@@ -152,7 +183,7 @@ async function sendDiscovery(): Promise<void> {
     await reply({
       event: 'discoverBulbs',
       method: 'annonces',
-      items: heard.map((b) => ({ id: b.id, ip: b.ip, version: b.version, known: configured.has(b.id) })),
+      items: heard.map((b) => ({ id: b.id, ip: b.ip, version: b.version, known: configured.has(b.id), name: nameOf(known, b.id) })),
     });
     return;
   }
@@ -163,7 +194,7 @@ async function sendDiscovery(): Promise<void> {
     const match = await identify(ip, known);
     items.push(
       match
-        ? { id: match.id, ip, version: match.version ?? null, known: true }
+        ? { id: match.id, ip, version: match.version ?? null, known: true, name: bulbs.label(match) }
         : { id: null, ip, version: null, known: false },
     );
   }
@@ -312,6 +343,10 @@ export function installUiBridge(): void {
           await sendBulbList();
           break;
 
+        case 'getBulbStatus':
+          await sendBulbStatus();
+          break;
+
         case 'twitchStatus':
           await sendTwitchStatus();
           break;
@@ -324,6 +359,10 @@ export function installUiBridge(): void {
 
         case 'twitchCancel':
           twitch.cancelPairing();
+          break;
+
+        case 'twitchPause':
+          await twitch.togglePaused();
           break;
 
         case 'twitchRetry':

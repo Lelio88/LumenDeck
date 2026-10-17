@@ -8,9 +8,7 @@
 </head>
 
 <body>
-    <sdpi-item label="Bulbs" data-i18n-label="pi.bulbs">
-        <sdpi-checkbox-list setting="deviceIds" datasource="getBulbs" hot-reload></sdpi-checkbox-list>
-    </sdpi-item>
+    <div id="bulb-picker"></div>
 
     <sdpi-item label="Temperature" data-i18n-label="pi.temperature">
         <sdpi-range setting="kelvin" min="2700" max="6500" step="100" default="4000" showlabels></sdpi-range>
@@ -20,10 +18,7 @@
         <sdpi-range setting="step" min="50" max="500" step="50" default="200" showlabels></sdpi-range>
     </sdpi-item>
 
-    <details>
-        <summary data-i18n="pi.manage">Add or edit a bulb</summary>
-        <div id="bulb-manager"></div>
-    </details>
+    <div id="bulb-manager"></div>
 
     <details>
         <summary data-i18n="pi.tempHelp.title">Temperature landmarks</summary>

@@ -91,7 +91,7 @@ export class ScenarioAction extends SingletonAction<ScenarioSettings> {
       // occuper cette lampe avec un autre scenario : l'appui doit alors lancer le
       // sien (start libere les lampes d'abord), pas couper celui de la voisine.
       if (runningOn(primary.id) === scenario.id) await stop(primary.id);
-      else await start(scenario, targets);
+      else await start(scenario, targets, { together: settings.together === true });
     } catch (error) {
       // On NE repeint PAS derriere : paint() remet un titre vide, et le mot
       // d'explication disparaitrait aussitot ecrit.

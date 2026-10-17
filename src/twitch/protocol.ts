@@ -35,6 +35,8 @@ export type Redemption = {
   readonly id: string;
   readonly rewardId: string;
   readonly rewardTitle: string;
+  /** Prix paye, en points. Sert a la duree d'un scenario ; 0 s'il est illisible (duree minimale). */
+  readonly rewardCost: number;
   readonly userName: string;
   /** Texte saisi par le viewer. Vide s'il n'y en avait pas. NON FIABLE : voir viewer-color.ts. */
   readonly userInput: string;
@@ -102,6 +104,7 @@ function readRedemption(event: unknown): Message {
       id,
       rewardId,
       rewardTitle: typeof event.reward.title === 'string' ? event.reward.title : '',
+      rewardCost: typeof event.reward.cost === 'number' && Number.isFinite(event.reward.cost) ? event.reward.cost : 0,
       userName,
       userInput: input ?? '',
     },

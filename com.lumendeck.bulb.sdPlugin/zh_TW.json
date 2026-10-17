@@ -53,41 +53,48 @@
     "scenario": {
       "clignotement": {
         "name": "閃爍",
-        "description": "燈泡不停地亮滅。適合當作遠處也看得見的計時提示。"
+        "description": "燈泡不停地亮滅。適合當作遠處也看得見的計時提示。",
+        "together": "跑馬燈：燈光依序在燈泡間跳動。"
       },
       "gyrophare": {
         "name": "警示燈",
-        "description": "紅藍交替，如同警車。若有兩顆燈泡，它們會互相呼應。"
+        "description": "紅藍交替，如同警車。若有兩顆燈泡，它們會互相呼應。",
+        "together": "紅色依序繞過所有燈泡，其餘保持藍色。"
       },
       "respiration": {
         "name": "呼吸",
-        "description": "亮度緩緩起伏，顏色保持不變。安靜，適合工作時使用。"
+        "description": "亮度緩緩起伏，顏色保持不變。安靜，適合工作時使用。",
+        "together": "波浪：呼吸效果在燈泡間傳遞。"
       },
       "bougie": {
         "name": "燭光",
-        "description": "溫暖的火焰搖曳不定，從不重複。這一組裡最好看的一個。"
+        "description": "溫暖的火焰搖曳不定，從不重複。這一組裡最好看的一個。",
+        "together": "每支火焰依自己的節奏搖曳，像真正的蠟燭。"
       },
       "orage": {
         "name": "雷雨",
-        "description": "泛藍的幽暗，被不規則的白色閃電劃破。"
+        "description": "泛藍的幽暗，被不規則的白色閃電劃破。",
+        "together": "閃電一次擊中一顆燈泡，有時全部。"
       },
       "arc-en-ciel": {
         "name": "彩虹",
-        "description": "色相沿著整個色環緩緩轉動。"
+        "description": "色相沿著整個色環緩緩轉動。",
+        "together": "顏色分布在各顆燈泡上：彩虹鋪滿房間並旋轉。"
       },
       "alerte": {
         "name": "警報",
-        "description": "紅光閃三下，然後燈泡準確回到原本的狀態。用於提示某個事件。"
+        "description": "紅光閃三下，然後燈泡準確回到原本的狀態。用於提示某個事件。",
+        "together": "相鄰燈泡交替閃爍。"
       },
       "lever-de-soleil": {
         "name": "日出",
-        "description": "五分鐘，從暗紅餘燼到明亮白晝。適合用來溫柔地醒來。"
+        "description": "五分鐘，從暗紅餘燼到明亮白晝。適合用來溫柔地醒來。",
+        "together": "燈泡依序亮起，如同太陽升起。"
       }
     },
     "pi": {
       "bulbs": "燈泡",
       "scenario": "情境",
-      "scenarioPlaceholder": "選擇情境",
       "colour": "顏色",
       "step": "級距",
       "hueStep": "色相級距",
@@ -116,7 +123,7 @@
       "scenarioHelp": {
         "title": "它是怎麼運作的？",
         "toggle": "按一次啟動情境，再按一次停止。燈泡隨後會準確回到原本的狀態：相同的顏色、相同的亮度、開或關。",
-        "second": "可勾選一顆或多顆燈泡。目前只有警示燈有兩個角色：兩顆燈泡時以紅藍互相呼應，只有一顆時在同一顆燈泡上交替兩種顏色，多出的燈泡重複第二個角色。",
+        "second": "勾選一顆或多顆燈泡，並用箭頭排序。勾選「燈泡協同演出」後，燈光依此順序在房間中移動；否則每顆燈泡各自播放情境。",
         "oneShot": "警報和日出會自行停止，分別在閃三下之後和五分鐘之後。其餘情境會一直執行，直到你再次按下。",
         "safety": "動畫被刻意限制在每秒兩次交替：超過此頻率，閃爍可能誘發光敏感族群的癲癇發作。"
       },
@@ -132,24 +139,10 @@
         "ignored": "個其他裝置已忽略：不是燈具。",
         "expired": "QR code 在掃描前已過期。請重試。"
       },
-      "scan": {
-        "note": "搜尋會先監聽燈泡自己廣播的通告；若沒有回應，再逐一敲擊網路上的每個位址。最壞情況約需二十秒。它能找到位址和識別碼，但永遠找不到金鑰：金鑰仍需為每顆燈泡手動貼上一次。",
-        "button": "搜尋網路",
-        "running": "正在搜尋…",
-        "none": "找不到裝置。請確認燈泡已通電，並與這台電腦位於同一網路。",
-        "found": "個裝置已找到",
-        "sweep": "（透過掃描網路找到：燈泡的廣播沒有傳到這裡，有線電腦與 Wi-Fi 燈泡之間很常見）"
-      },
       "field": {
         "id": "燈泡識別碼",
-        "name": "名稱（選填）— 例如：書桌",
         "key": "本機金鑰",
         "keyKept": "留空則保留原金鑰"
-      },
-      "found": {
-        "already": "已登記",
-        "device": "Tuya 裝置",
-        "noId": "識別碼未知"
       },
       "save": {
         "button": "儲存",
@@ -158,26 +151,33 @@
         "failed": "儲存失敗。",
         "needKey": "這顆燈泡需要本機金鑰才能被控制。"
       },
+      "scan": {
+        "button": "搜尋網路",
+        "running": "正在搜尋…",
+        "none": "找不到裝置。請確認燈泡已通電，並與這台電腦位於同一網路。",
+        "intro": "尋找你的燈泡並更新其位址。新燈泡仍需貼上一次本機金鑰。",
+        "upToDate": "已更新：",
+        "sweepShort": "透過掃描網路找到：燈泡的廣播沒有傳到這裡。",
+        "newDevice": "新裝置",
+        "add": "新增",
+        "namePlaceholder": "例如：走廊"
+      },
       "twitch": {
-        "intro": "觀眾花費頻道點數來選擇燈泡的顏色。只需連接一次 Twitch 帳號，獎勵由 LumenDeck 自動建立。",
+        "intro": "觀眾花費頻道點數來改變你的燈泡。只需連接一次 Twitch 帳號，獎勵由 LumenDeck 自動建立。",
         "connect": "連接 Twitch",
         "pairing": "請在剛開啟的 Twitch 頁面上核對此代碼：",
         "waiting": "正在等待你在 Twitch 上核准...",
         "cancel": "取消",
         "connectedAs": "已連接為",
-        "rewardOk": "獎勵已在你的頻道上線。可在 Twitch 控制台中修改其價格或冷卻時間。",
-        "rewardWait": "正在設定獎勵...",
-        "disconnect": "中斷連接",
-        "disconnectHelp": "中斷連接會從你的頻道刪除該獎勵，並撤銷 LumenDeck 的存取權限。",
-        "bulbsHelp": "這些是觀眾可以更改的燈泡。如果一個都不勾選，且只登記了一顆燈泡，則使用該燈泡。",
-        "pauseHelp": "按下按鍵即可暫停或恢復觀眾操作。暫停期間，所有兌換都會被退還。",
+        "disconnect": "中斷 Twitch 連接",
+        "disconnectHelp": "從你的頻道刪除這些獎勵，並撤銷 LumenDeck 的存取權限。",
         "inputHelp": "觀眾輸入顏色名稱（red、blue、pink 等）或 #ff8800 這樣的代碼。黑色與無法辨識的內容會自動退還。",
-        "last": "最近一次兌換",
+        "last": "最近的兌換",
         "outcome": {
-          "applied": "已套用顏色",
+          "applied": "已套用",
           "refunded": "已退還",
-          "unsettled": "顏色已套用，但 Twitch 未能完成處理：請在控制台中手動處理",
-          "refundFailed": "顏色未套用，且 Twitch 拒絕了退款：請在控制台中手動退還"
+          "unsettled": "已套用，請在 Twitch 處理",
+          "refundFailed": "未套用，請在 Twitch 退還"
         },
         "retry": "重試",
         "err": {
@@ -190,13 +190,90 @@
           "revoked": "存取權限已在 Twitch 上被移除，請重新連接。",
           "forbidden": "Twitch 拒絕了此帳號。頻道點數需要 Affiliate 或 Partner 資格。",
           "duplicate": "你的頻道上已有同名獎勵，且並非由 LumenDeck 建立。請重新命名或刪除後再試。"
+        },
+        "liveLine": "線上 · 觀眾掌控中",
+        "pausedLine": "已暫停 · 兌換將被退還",
+        "blockedLine": "受阻",
+        "connecting": "連線中…",
+        "pause": "暫停",
+        "resume": "恢復",
+        "keyPause": "Stream Deck 按鍵與此按鈕作用相同。",
+        "less": "減少",
+        "more": "增加",
+        "colours": "顏色",
+        "rewards": "個獎勵",
+        "coloursHelp": "每個勾選的顏色都會成為頻道點數選單中的一個按鈕。觀眾只需點擊，無需輸入。",
+        "surprise": "驚喜顏色",
+        "surpriseAside": "隨機",
+        "freeText": "選擇顏色",
+        "freeTextAside": "觀眾輸入",
+        "scenarios": "情境",
+        "flashes": "閃爍",
+        "durationTitle": "依價格決定時長",
+        "rate": "每 100 點的秒數",
+        "cap": "最長時長",
+        "example": "範例：用 300 點購買的情境持續",
+        "exampleTail": "在 Twitch 控制台修改價格，時長會隨之改變。",
+        "colour": {
+          "rouge": "紅色",
+          "orange": "橙色",
+          "jaune": "黃色",
+          "vert": "綠色",
+          "cyan": "青色",
+          "bleu": "藍色",
+          "violet": "紫色",
+          "rose": "粉紅色",
+          "blanc": "白色"
         }
-      }
+      },
+      "status": {
+        "online": "線上",
+        "offline": "離線",
+        "checking": "檢查中…"
+      },
+      "picker": {
+        "orderHint": "燈光從 1 號依序移動",
+        "empty": "還沒有燈泡：請在下方新增。",
+        "up": "上移",
+        "down": "下移"
+      },
+      "mine": {
+        "title": "我的燈泡",
+        "edit": "編輯",
+        "close": "關閉",
+        "name": "名稱",
+        "forget": "移除此燈泡",
+        "forgetConfirm": "再次點擊以確認",
+        "noKey": "缺少密鑰"
+      },
+      "add": {
+        "title": "新增燈泡",
+        "qrTab": "Calex App（QR）",
+        "scanTab": "在網路中"
+      },
+      "together": "燈泡協同演出",
+      "scenarioAlone": "每顆燈泡同時各自播放情境。"
     },
     "twitch": {
       "reward": {
         "colorTitle": "選擇顏色",
-        "colorPrompt": "輸入顏色名稱（red、blue、pink 等）或 #ff8800 這樣的代碼。其他內容將被退還。"
+        "colorPrompt": "輸入顏色名稱（red、blue、pink 等）或 #ff8800 這樣的代碼。其他內容將被退還。",
+        "palettePrompt": "主播的燈光會變成這個顏色。",
+        "surprise": "驚喜顏色",
+        "surprisePrompt": "燈光會隨機變成一種顏色。",
+        "scenarioPrefix": "氛圍：",
+        "scenarioPrompt": "播放這段燈光效果一會兒，之後燈光恢復原樣。價格越高，持續越久。",
+        "palette": {
+          "rouge": "紅色燈光",
+          "orange": "橙色燈光",
+          "jaune": "黃色燈光",
+          "vert": "綠色燈光",
+          "cyan": "青色燈光",
+          "bleu": "藍色燈光",
+          "violet": "紫色燈光",
+          "rose": "粉紅色燈光",
+          "blanc": "白色燈光"
+        }
       }
     }
   }

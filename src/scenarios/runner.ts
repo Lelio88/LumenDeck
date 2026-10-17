@@ -32,14 +32,29 @@
  */
 import { withRetry } from '../driver/pool.js';
 import type { LightDriver, LightState } from '../driver/types.js';
-import { MIN_HOLD_MS, type Cue, type Scenario } from './catalogue.js';
+import { MIN_HOLD_MS, frameFor, type Cue, type Scenario } from './catalogue.js';
 import { createRegistry } from './sessions.js';
 
 /** Coordonnees d'une ampoule, telles que les rend `coordinatesForMany`. */
 export type Target = { id: string; key: string; ip?: string; version?: string };
 
+/** Comment jouer : ensemble ou chacune dans son coin, et combien de temps au plus. */
+export type StartOptions = {
+  /** Les lampes jouent la version de groupe du scenario (voir catalogue.ts). */
+  readonly together?: boolean;
+  /**
+   * Duree maximale, en millisecondes. Passe ce delai, le scenario s'arrete et
+   * les lampes reviennent a leur etat d'avant. Absente : jusqu'a l'arret.
+   * Sert aux scenarios lances par un viewer, dont la duree depend du prix paye.
+   */
+  readonly maxMs?: number;
+};
+
 type Session = {
   readonly scenarioId: string;
+  readonly together: boolean;
+  /** Instant (ms) ou le scenario doit s'arreter de lui-meme, ou undefined. */
+  readonly deadline: number | undefined;
   timer: ReturnType<typeof setTimeout> | undefined;
   stopped: boolean;
   /** Etat releve au demarrage, par ampoule. Vide si la lecture a echoue. */
@@ -114,35 +129,41 @@ async function restore(target: Target, state: LightState): Promise<void> {
   });
 }
 
-/** Deroule une image puis programme la suivante. */
-async function tick(session: Session, scenario: Scenario, step: number): Promise<void> {
-  if (session.stopped) return;
+/** Deroule une image puis programme la suivante. Rend vrai si l'image a atteint au moins une lampe. */
+async function tick(session: Session, scenario: Scenario, step: number): Promise<boolean> {
+  if (session.stopped) return false;
+  if (session.deadline !== undefined && Date.now() >= session.deadline) {
+    await stopSession(session);
+    return false;
+  }
 
-  const frame = scenario.frame(step);
-  if (await applyFrame(frame.cues, session.targets)) {
+  const frame = frameFor(scenario, step, session.targets.length, session.together);
+  const reached = await applyFrame(frame.cues, session.targets);
+  if (reached) {
     session.failures = 0;
   } else {
     session.failures += 1;
     if (session.failures >= TOLERANCE) {
       await stopSession(session);
-      return;
+      return false;
     }
   }
 
   // Relire APRES l'attente reseau : l'utilisateur a pu demander l'arret pendant
   // que l'image partait.
-  if (session.stopped) return;
+  if (session.stopped) return reached;
 
   const next = step + 1;
   if (!scenario.loops && scenario.steps !== undefined && next >= scenario.steps) {
     await stopSession(session);
-    return;
+    return reached;
   }
 
-  session.timer = setTimeout(
-    () => void tick(session, scenario, next),
-    Math.max(MIN_HOLD_MS, frame.holdMs),
-  );
+  // Une image longue (5 s au lever du soleil) ne doit pas faire depasser l'echeance.
+  const hold = Math.max(MIN_HOLD_MS, frame.holdMs);
+  const left = session.deadline === undefined ? hold : Math.max(MIN_HOLD_MS, session.deadline - Date.now());
+  session.timer = setTimeout(() => void tick(session, scenario, next), Math.min(hold, left));
+  return reached;
 }
 
 /**
@@ -152,8 +173,14 @@ async function tick(session: Session, scenario: Scenario, step: number): Promise
  * role. Toute ampoule du groupe permet de savoir si un scenario tourne et de
  * l'arreter.
  */
-export async function start(scenario: Scenario, targets: readonly Target[]): Promise<void> {
-  if (targets.length === 0) return;
+/**
+ * Rend vrai si le scenario joue VRAIMENT : sa premiere image a atteint au moins
+ * une lampe, et personne ne l'a arrete pendant le releve d'etat. Une touche peut
+ * l'ignorer ; un rachat de viewer s'en sert pour rembourser plutot que d'encaisser
+ * un scenario qui n'a rien montre.
+ */
+export async function start(scenario: Scenario, targets: readonly Target[], options: StartOptions = {}): Promise<boolean> {
+  if (targets.length === 0) return false;
 
   // Liberer TOUTES les lampes avant de les reprendre, sinon deux scenarios se
   // disputeraient les memes images. On reboucle tant qu'une lampe est occupee :
@@ -162,6 +189,8 @@ export async function start(scenario: Scenario, targets: readonly Target[]): Pro
 
   const session: Session = {
     scenarioId: scenario.id,
+    together: options.together === true,
+    deadline: options.maxMs === undefined ? undefined : Date.now() + options.maxMs,
     timer: undefined,
     stopped: false,
     snapshots: new Map(),
@@ -190,8 +219,8 @@ export async function start(scenario: Scenario, targets: readonly Target[]): Pro
 
   // L'utilisateur a pu appuyer de nouveau pendant le releve : rien n'a encore
   // ete joue, il n'y a donc rien a restaurer, seulement a ne pas demarrer.
-  if (session.stopped) return;
-  await tick(session, scenario, 0);
+  if (session.stopped) return false;
+  return tick(session, scenario, 0);
 }
 
 /** La session qui occupe l'une de ces lampes, ou undefined. */

@@ -8,29 +8,24 @@
 </head>
 
 <body>
-    <sdpi-item label="Bulbs" data-i18n-label="pi.bulbs">
-        <sdpi-checkbox-list setting="deviceIds" datasource="getBulbs" hot-reload></sdpi-checkbox-list>
-    </sdpi-item>
+    <div id="scenario-panel"></div>
 
-    <sdpi-item label="Scenario" data-i18n-label="pi.scenario">
-        <sdpi-select setting="scenarioId" datasource="getScenarios" placeholder="Choose a scenario"
-                     data-i18n-placeholder="pi.scenarioPlaceholder"></sdpi-select>
-    </sdpi-item>
+    <div id="bulb-picker" data-ordered="true"></div>
 
-    <details>
-        <summary data-i18n="pi.manage">Add or edit a bulb</summary>
-        <div id="bulb-manager"></div>
-    </details>
+    <div id="scenario-together"></div>
+
+    <div id="bulb-manager"></div>
 
     <details>
         <summary data-i18n="pi.scenarioHelp.title">How does it work?</summary>
         <p data-i18n="pi.scenarioHelp.toggle">One press starts the scenario, a second stops it. The lamp then returns exactly to the state it was in: same colour, same brightness, on or off.</p>
-        <p data-i18n="pi.scenarioHelp.second">Tick one bulb or several. Only Police lights has two roles today: with two bulbs they answer each other in red and blue, with one it alternates both colours on the same lamp, and any further bulb repeats the second role.</p>
+        <p data-i18n="pi.scenarioHelp.second">Tick one bulb or several, and put them in order with the arrows. Ticking "The bulbs play together" makes the light travel through the room in that order; otherwise every bulb plays the scenario on its own.</p>
         <p data-i18n="pi.scenarioHelp.oneShot">Alert and Sunrise stop on their own, after three flashes and five minutes respectively. The others run until you press again.</p>
         <p data-i18n="pi.scenarioHelp.safety">Animations are deliberately capped at two alternations per second: beyond that, flashing light can trigger a seizure in a photosensitive person.</p>
     </details>
 
     <script src="bulbs.js"></script>
+    <script src="scenario.js"></script>
 </body>
 
 </html>

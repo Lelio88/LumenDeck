@@ -53,41 +53,48 @@
     "scenario": {
       "clignotement": {
         "name": "Lampeggio",
-        "description": "La lampadina si accende e si spegne senza fine. Utile come timer visibile da lontano."
+        "description": "La lampadina si accende e si spegne senza fine. Utile come timer visibile da lontano.",
+        "together": "Inseguimento: la luce salta da una lampadina all'altra, in ordine."
       },
       "gyrophare": {
         "name": "Lampeggiante",
-        "description": "Rosso e blu alternati, come un'auto della polizia. Con due lampadine si rispondono."
+        "description": "Rosso e blu alternati, come un'auto della polizia. Con due lampadine si rispondono.",
+        "together": "Il rosso fa il giro di tutte le lampadine; le altre restano blu."
       },
       "respiration": {
         "name": "Respiro",
-        "description": "L'intensità sale e scende lentamente, mantenendo il colore. Calmo, per lavorare."
+        "description": "L'intensità sale e scende lentamente, mantenendo il colore. Calmo, per lavorare.",
+        "together": "Un'onda: il respiro passa da una lampadina all'altra."
       },
       "bougie": {
         "name": "Candela",
-        "description": "Una fiamma calda che tremola, mai due volte uguale. Il più bello della serie."
+        "description": "Una fiamma calda che tremola, mai due volte uguale. Il più bello della serie.",
+        "together": "Ogni fiamma tremola al suo ritmo, come candele vere."
       },
       "orage": {
         "name": "Temporale",
-        "description": "Una penombra bluastra, squarciata da lampi bianchi a intervalli irregolari."
+        "description": "Una penombra bluastra, squarciata da lampi bianchi a intervalli irregolari.",
+        "together": "I fulmini colpiscono una lampadina alla volta, a volte tutte."
       },
       "arc-en-ciel": {
         "name": "Arcobaleno",
-        "description": "La tonalità ruota dolcemente su tutto il cerchio cromatico."
+        "description": "La tonalità ruota dolcemente su tutto il cerchio cromatico.",
+        "together": "I colori si distribuiscono tra le lampadine: l'arcobaleno riempie la stanza e ruota."
       },
       "alerte": {
         "name": "Allerta",
-        "description": "Tre lampi rossi, poi la lampada torna esattamente com'era. Per segnalare un evento."
+        "description": "Tre lampi rossi, poi la lampada torna esattamente com'era. Per segnalare un evento.",
+        "together": "Le lampadine vicine si alternano."
       },
       "lever-de-soleil": {
         "name": "Alba",
-        "description": "Cinque minuti da brace scura a pieno giorno. Da avviare per svegliarsi dolcemente."
+        "description": "Cinque minuti da brace scura a pieno giorno. Da avviare per svegliarsi dolcemente.",
+        "together": "Le lampadine si accendono una dopo l'altra, come il sole che sorge."
       }
     },
     "pi": {
       "bulbs": "Lampadine",
       "scenario": "Scenario",
-      "scenarioPlaceholder": "Scegli uno scenario",
       "colour": "Colore",
       "step": "Passo",
       "hueStep": "Passo di tonalità",
@@ -116,7 +123,7 @@
       "scenarioHelp": {
         "title": "Come funziona?",
         "toggle": "Una pressione avvia lo scenario, una seconda lo ferma. La lampada torna esattamente allo stato precedente: stesso colore, stessa intensità, accesa o spenta.",
-        "second": "Seleziona una o più lampadine. Solo Lampeggiante ha oggi due ruoli: con due lampadine si rispondono in rosso e blu, con una sola alterna i due colori sulla stessa lampada, e ogni lampadina in più ripete il secondo ruolo.",
+        "second": "Seleziona una o più lampadine e ordinale con le frecce. Con «Le lampadine agiscono insieme» la luce attraversa la stanza in quest'ordine; altrimenti ogni lampadina riproduce lo scenario per conto suo.",
         "oneShot": "Allerta e Alba si fermano da soli, dopo tre lampi e cinque minuti rispettivamente. Gli altri proseguono finché non premi di nuovo.",
         "safety": "Le animazioni sono volutamente limitate a due alternanze al secondo: oltre, un lampeggio può scatenare una crisi in una persona fotosensibile."
       },
@@ -132,24 +139,10 @@
         "ignored": "altro/i dispositivo/i ignorato/i: non sono luci.",
         "expired": "Il codice QR è scaduto prima della scansione. Riprova."
       },
-      "scan": {
-        "note": "La ricerca ascolta prima gli annunci che le tue lampadine diffondono, poi, se non arriva nulla, bussa a ogni indirizzo della rete. Conta una ventina di secondi nel caso peggiore. Trova indirizzo e identificativo, ma mai la chiave: quella resta da incollare una volta per lampadina.",
-        "button": "Cerca nella rete",
-        "running": "Ricerca in corso…",
-        "none": "Nessun dispositivo trovato. Verifica che la lampadina sia alimentata e sulla stessa rete di questo computer.",
-        "found": "dispositivo/i trovato/i",
-        "sweep": " (trovato tramite scansione della rete: le tue lampadine non trasmettono fin qui, frequente tra un computer via cavo e una lampadina wifi)"
-      },
       "field": {
         "id": "Identificativo della lampadina",
-        "name": "Nome (facoltativo) — es. Scrivania",
         "key": "Chiave locale",
         "keyKept": "Lascia vuoto per mantenere la chiave"
-      },
-      "found": {
-        "already": "già salvata",
-        "device": "Dispositivo Tuya a",
-        "noId": "identificativo sconosciuto"
       },
       "save": {
         "button": "Salva",
@@ -158,26 +151,33 @@
         "failed": "Salvataggio non riuscito.",
         "needKey": "Questa lampadina ha bisogno della sua chiave locale per essere controllabile."
       },
+      "scan": {
+        "button": "Cerca nella rete",
+        "running": "Ricerca in corso…",
+        "none": "Nessun dispositivo trovato. Verifica che la lampadina sia alimentata e sulla stessa rete di questo computer.",
+        "intro": "Trova le tue lampadine e aggiorna il loro indirizzo. Una lampadina nuova richiede comunque la sua chiave locale, da incollare una volta.",
+        "upToDate": "Aggiornate:",
+        "sweepShort": "Trovato scansionando la rete: le tue lampadine non trasmettono fin qui.",
+        "newDevice": "Nuovo dispositivo",
+        "add": "Aggiungi",
+        "namePlaceholder": "es. Corridoio"
+      },
       "twitch": {
-        "intro": "I tuoi spettatori spendono punti del canale per scegliere il colore delle tue lampadine. Collega il tuo account Twitch una sola volta: LumenDeck crea da solo la ricompensa.",
+        "intro": "I tuoi spettatori spendono punti del canale per cambiare le tue lampadine. Collega il tuo account Twitch una sola volta: LumenDeck crea da solo le ricompense.",
         "connect": "Collega Twitch",
         "pairing": "Verifica questo codice nella pagina di Twitch appena aperta:",
         "waiting": "In attesa della tua approvazione su Twitch...",
         "cancel": "Annulla",
         "connectedAs": "Collegato come",
-        "rewardOk": "La ricompensa è attiva sul tuo canale. Cambia costo e tempo di recupero nella dashboard di Twitch.",
-        "rewardWait": "Configurazione della ricompensa...",
-        "disconnect": "Scollega",
-        "disconnectHelp": "Scollegando si elimina la ricompensa dal tuo canale e si rimuove l'accesso di LumenDeck.",
-        "bulbsHelp": "Sono le lampadine che cambiano i tuoi spettatori. Se non ne selezioni nessuna, si usa l'unica lampadina dichiarata.",
-        "pauseHelp": "Premi il tasto per mettere in pausa o riattivare gli spettatori. In pausa, ogni riscatto viene rimborsato.",
+        "disconnect": "Scollega Twitch",
+        "disconnectHelp": "Elimina le ricompense dal tuo canale e rimuove l'accesso di LumenDeck.",
         "inputHelp": "Gli spettatori scrivono il nome di un colore (rosso, blu, rosa...) o un codice come #ff8800. Il nero e tutto ciò che è illeggibile vengono rimborsati automaticamente.",
-        "last": "Ultimo riscatto",
+        "last": "Ultimi riscatti",
         "outcome": {
-          "applied": "colore applicato",
+          "applied": "applicato",
           "refunded": "rimborsato",
-          "unsettled": "colore applicato, ma Twitch non l'ha chiuso: sistemalo a mano nella dashboard",
-          "refundFailed": "colore non applicato, e Twitch ha rifiutato il rimborso: rimborsalo a mano nella dashboard"
+          "unsettled": "applicato, chiudilo su Twitch",
+          "refundFailed": "non applicato, rimborsalo su Twitch"
         },
         "retry": "Riprova",
         "err": {
@@ -190,13 +190,90 @@
           "revoked": "L'accesso è stato rimosso su Twitch. Collega di nuovo.",
           "forbidden": "Twitch ha rifiutato questo account. I punti del canale richiedono lo status di Affiliato o Partner.",
           "duplicate": "Sul tuo canale esiste già una ricompensa con questo nome, non creata da LumenDeck. Rinominala o eliminala, poi riprova."
+        },
+        "liveLine": "Online · gli spettatori hanno il controllo",
+        "pausedLine": "In pausa · i riscatti vengono rimborsati",
+        "blockedLine": "Bloccato",
+        "connecting": "Connessione…",
+        "pause": "Pausa",
+        "resume": "Riprendi",
+        "keyPause": "Il tasto dello Stream Deck fa la stessa cosa di questo pulsante.",
+        "less": "Meno",
+        "more": "Più",
+        "colours": "Colori",
+        "rewards": "ricompense",
+        "coloursHelp": "Ogni colore selezionato diventa un pulsante nel menu dei punti del canale. Lo spettatore clicca, senza scrivere nulla.",
+        "surprise": "Colore a sorpresa",
+        "surpriseAside": "a caso",
+        "freeText": "Scegli il colore",
+        "freeTextAside": "lo scrive lo spettatore",
+        "scenarios": "Scenari",
+        "flashes": "lampeggia",
+        "durationTitle": "Durata in base al prezzo",
+        "rate": "Secondi per 100 punti",
+        "cap": "Durata massima",
+        "example": "Esempio: uno scenario acquistato per 300 punti dura",
+        "exampleTail": "Cambia il prezzo nella dashboard di Twitch: la durata si adegua.",
+        "colour": {
+          "rouge": "Rosso",
+          "orange": "Arancione",
+          "jaune": "Giallo",
+          "vert": "Verde",
+          "cyan": "Ciano",
+          "bleu": "Blu",
+          "violet": "Viola",
+          "rose": "Rosa",
+          "blanc": "Bianco"
         }
-      }
+      },
+      "status": {
+        "online": "Online",
+        "offline": "Non in linea",
+        "checking": "Verifica…"
+      },
+      "picker": {
+        "orderHint": "La luce va dalla 1 all'ultima",
+        "empty": "Nessuna lampadina per ora: aggiungine una qui sotto.",
+        "up": "Sposta su",
+        "down": "Sposta giù"
+      },
+      "mine": {
+        "title": "Le mie lampadine",
+        "edit": "Modifica",
+        "close": "Chiudi",
+        "name": "Nome",
+        "forget": "Dimentica questa lampadina",
+        "forgetConfirm": "Fai clic di nuovo per confermare",
+        "noKey": "Chiave mancante"
+      },
+      "add": {
+        "title": "Aggiungi lampadine",
+        "qrTab": "App Calex (QR)",
+        "scanTab": "Sulla rete"
+      },
+      "together": "Le lampadine agiscono insieme",
+      "scenarioAlone": "Ogni lampadina riproduce lo scenario per conto suo, tutte insieme."
     },
     "twitch": {
       "reward": {
         "colorTitle": "Scegli il colore",
-        "colorPrompt": "Scrivi il nome di un colore (rosso, blu, rosa...) o un codice come #ff8800. Tutto il resto viene rimborsato."
+        "colorPrompt": "Scrivi il nome di un colore (rosso, blu, rosa...) o un codice come #ff8800. Tutto il resto viene rimborsato.",
+        "palettePrompt": "Le luci della live prendono questo colore.",
+        "surprise": "Colore a sorpresa",
+        "surprisePrompt": "Le luci prendono un colore a caso.",
+        "scenarioPrefix": "Atmosfera: ",
+        "scenarioPrompt": "Riproduce questa animazione luminosa per un po', poi le luci tornano normali. Più alto è il prezzo, più dura.",
+        "palette": {
+          "rouge": "Luce rossa",
+          "orange": "Luce arancione",
+          "jaune": "Luce gialla",
+          "vert": "Luce verde",
+          "cyan": "Luce ciano",
+          "bleu": "Luce blu",
+          "violet": "Luce viola",
+          "rose": "Luce rosa",
+          "blanc": "Luce bianca"
+        }
       }
     }
   }

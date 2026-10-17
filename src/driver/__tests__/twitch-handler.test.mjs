@@ -11,15 +11,25 @@ import { test } from 'node:test';
 
 import { createRedemptionHandler, staleRedemptions } from '../../twitch/handler.ts';
 
-const redemption = (over = {}) => ({ id: 'r-1', rewardId: 'rw-color', rewardTitle: 'Choisis la couleur', userName: 'Viewer', userInput: 'rouge', ...over });
+const redemption = (over = {}) => ({ id: 'r-1', rewardId: 'rw-color', rewardTitle: 'Choisis la couleur', rewardCost: 200, userName: 'Viewer', userInput: 'rouge', ...over });
+
+/** Les recompenses connues du test : la saisie libre, une couleur fixe, la surprise, un scenario. */
+const ACTIONS = {
+  'rw-color': { kind: 'free' },
+  'rw-bleu': { kind: 'color', color: { h: 230, s: 100, v: 100 } },
+  'rw-surprise': { kind: 'surprise' },
+  'rw-orage': { kind: 'scenario', scenarioId: 'orage' },
+};
 
 /** Monte un gestionnaire dont les effets sont enregistres dans `log`. */
 function setup(over = {}) {
   const log = [];
   const handle = createRedemptionHandler({
-    colorRewardId: () => 'rw-color',
+    actionFor: (id) => ACTIONS[id],
     enabled: () => true,
     applyColor: async (color) => { log.push(['apply', color]); return true; },
+    playScenario: async (id, cost) => { log.push(['play', id, cost]); return true; },
+    random: () => 0.5,
     settle: async (r, outcome) => { log.push(['settle', r.id, outcome]); },
     report: (event) => { log.push(['report', event.outcome, event.reason]); },
     ...over,
@@ -74,7 +84,7 @@ test('une recompense qui n est pas la notre est laissee tranquille', async () =>
 });
 
 test('sans recompense connue, rien n est fait', async () => {
-  const { handle, log } = setup({ colorRewardId: () => undefined });
+  const { handle, log } = setup({ actionFor: () => undefined });
   await handle(redemption());
   assert.deepEqual(log, []);
 });
@@ -129,9 +139,10 @@ test('un remboursement refuse par Twitch est dit tel quel : la couleur n a PAS e
 test('un rapport qui plante n empeche pas le rachat suivant', async () => {
   const seen = [];
   const handle = createRedemptionHandler({
-    colorRewardId: () => 'rw-color',
+    actionFor: (id) => ACTIONS[id],
     enabled: () => true,
     applyColor: async () => true,
+    playScenario: async () => true,
     settle: async () => {},
     report: (event) => { seen.push(event.redemption.id); if (event.redemption.id === 'a') throw new Error('boum'); },
   });
@@ -165,4 +176,34 @@ test('le balayage ne touche jamais un rachat que le gestionnaire connait deja', 
   const now = 1_000_000;
   const stale = staleRedemptions([pending('connu', 120_000, now), pending('autre', 120_000, now)], now, 60_000, handle.isKnown);
   assert.deepEqual(stale.map((p) => p.id), ['autre']);
+});
+
+test('une couleur de la palette s applique sans lire le texte du viewer', async () => {
+  const { handle, log } = setup();
+  await handle(redemption({ rewardId: 'rw-bleu', userInput: 'rouge vif, peu importe' }));
+  assert.deepEqual(log, [['apply', { h: 230, s: 100, v: 100 }], ['settle', 'r-1', 'fulfil'], ['report', 'applied', undefined]]);
+});
+
+test('la couleur surprise suit le tirage', async () => {
+  const { handle, log } = setup();
+  await handle(redemption({ rewardId: 'rw-surprise', userInput: '' }));
+  assert.deepEqual(log[0], ['apply', { h: 180, s: 100, v: 100 }]);
+});
+
+test('un scenario se lance avec le prix paye, qui decide de sa duree', async () => {
+  const { handle, log } = setup();
+  await handle(redemption({ rewardId: 'rw-orage', rewardCost: 500, userInput: '' }));
+  assert.deepEqual(log, [['play', 'orage', 500], ['settle', 'r-1', 'fulfil'], ['report', 'applied', undefined]]);
+});
+
+test('un scenario qui ne peut pas se lancer est rembourse', async () => {
+  const { handle, log } = setup({ playScenario: async () => false });
+  await handle(redemption({ rewardId: 'rw-orage', userInput: '' }));
+  assert.deepEqual(log, [['settle', 'r-1', 'refund'], ['report', 'refunded', 'bulbs-unreachable']]);
+});
+
+test('en pause, un scenario n est pas lance et le viewer est rembourse', async () => {
+  const { handle, log } = setup({ enabled: () => false });
+  await handle(redemption({ rewardId: 'rw-orage', userInput: '' }));
+  assert.deepEqual(log, [['settle', 'r-1', 'refund'], ['report', 'refunded', 'paused']]);
 });

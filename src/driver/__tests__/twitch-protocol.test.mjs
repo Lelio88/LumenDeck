@@ -49,7 +49,7 @@ test('un rachat devient un rachat lisible', () => {
   assert.deepEqual(parseMessage(notification(REDEMPTION)), {
     kind: 'redemption',
     redemption: {
-      id: 'r-1', rewardId: 'rw-1', rewardTitle: 'Choisis la couleur', userName: 'Viewer', userInput: 'rouge',
+      id: 'r-1', rewardId: 'rw-1', rewardTitle: 'Choisis la couleur', rewardCost: 200, userName: 'Viewer', userInput: 'rouge',
     },
   });
 });
@@ -110,4 +110,9 @@ test('un message illisible ne fait pas tomber le plugin', () => {
 test('un type de message inconnu est ignore', () => {
   const raw = JSON.stringify({ metadata: { message_type: 'quelque_chose_de_neuf' }, payload: {} });
   assert.deepEqual(parseMessage(raw), { kind: 'ignored' });
+});
+
+test('un rachat sans prix lisible compte zero point : la duree tombe au minimum, jamais au-dela', () => {
+  const { redemption } = parseMessage(notification({ ...REDEMPTION, reward: { id: 'rw-1', title: 't', cost: 'beaucoup' } }));
+  assert.equal(redemption.rewardCost, 0);
 });

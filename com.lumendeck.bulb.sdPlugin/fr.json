@@ -53,41 +53,48 @@
     "scenario": {
       "clignotement": {
         "name": "Clignotement",
-        "description": "L'ampoule s'allume et s'éteint sans fin. Utile comme minuteur visible de loin."
+        "description": "L'ampoule s'allume et s'éteint sans fin. Utile comme minuteur visible de loin.",
+        "together": "Chenillard : la lumière saute d'une ampoule à l'autre, dans l'ordre."
       },
       "gyrophare": {
         "name": "Gyrophare",
-        "description": "Rouge et bleu alternés, façon voiture de police. Avec deux ampoules, elles se répondent."
+        "description": "Rouge et bleu alternés, façon voiture de police. Avec deux ampoules, elles se répondent.",
+        "together": "Le rouge fait le tour de toutes les ampoules ; les autres restent bleues."
       },
       "respiration": {
         "name": "Respiration",
-        "description": "L'intensité monte et descend lentement, en gardant la couleur en place. Calme, pour travailler."
+        "description": "L'intensité monte et descend lentement, en gardant la couleur en place. Calme, pour travailler.",
+        "together": "Une vague : la respiration passe d'ampoule en ampoule."
       },
       "bougie": {
         "name": "Bougie",
-        "description": "Une flamme chaude qui vacille, jamais deux fois pareil. Le plus joli de la série."
+        "description": "Une flamme chaude qui vacille, jamais deux fois pareil. Le plus joli de la série.",
+        "together": "Chaque flamme vacille à son rythme, comme de vraies bougies."
       },
       "orage": {
         "name": "Orage",
-        "description": "Une pénombre bleutée, déchirée par des éclairs blancs à intervalles irréguliers."
+        "description": "Une pénombre bleutée, déchirée par des éclairs blancs à intervalles irréguliers.",
+        "together": "Les éclairs frappent une ampoule à la fois, parfois toutes."
       },
       "arc-en-ciel": {
         "name": "Arc-en-ciel",
-        "description": "La teinte tourne doucement sur tout le cercle chromatique."
+        "description": "La teinte tourne doucement sur tout le cercle chromatique.",
+        "together": "Les couleurs sont décalées d'une ampoule à l'autre : l'arc-en-ciel s'étale dans la pièce et tourne."
       },
       "alerte": {
         "name": "Alerte",
-        "description": "Trois éclats rouges, puis la lampe revient exactement comme elle était. Pour signaler un événement."
+        "description": "Trois éclats rouges, puis la lampe revient exactement comme elle était. Pour signaler un événement.",
+        "together": "Les ampoules voisines alternent."
       },
       "lever-de-soleil": {
         "name": "Lever de soleil",
-        "description": "Cinq minutes d'une braise sombre jusqu'au plein jour. À lancer pour se réveiller en douceur."
+        "description": "Cinq minutes d'une braise sombre jusqu'au plein jour. À lancer pour se réveiller en douceur.",
+        "together": "Les ampoules s'allument l'une après l'autre, comme le soleil qui monte."
       }
     },
     "pi": {
       "bulbs": "Ampoules",
       "scenario": "Scénario",
-      "scenarioPlaceholder": "Choisissez un scénario",
       "colour": "Couleur",
       "step": "Pas",
       "hueStep": "Pas de teinte",
@@ -116,7 +123,7 @@
       "scenarioHelp": {
         "title": "Comment ça marche ?",
         "toggle": "Un appui lance le scénario, un second l'arrête. La lampe revient alors exactement dans l'état où elle était : même couleur, même intensité, allumée ou éteinte.",
-        "second": "Cochez une ou plusieurs ampoules. Seul le Gyrophare a deux rôles aujourd'hui : avec deux ampoules elles se répondent en rouge et bleu, avec une seule il alterne les deux couleurs sur la même lampe, et chaque ampoule en plus reprend le second rôle.",
+        "second": "Cochez une ou plusieurs ampoules, et rangez-les avec les flèches. Avec « Les ampoules jouent ensemble », la lumière parcourt la pièce dans cet ordre ; sinon chaque ampoule joue le scénario de son côté.",
         "oneShot": "Alerte et Lever de soleil s'arrêtent tout seuls, après trois éclats pour le premier et cinq minutes pour le second. Les autres tournent jusqu'à ce que vous appuyiez de nouveau.",
         "safety": "Les animations sont volontairement plafonnées à deux alternances par seconde : au-delà, un clignotement peut déclencher une crise chez une personne photosensible."
       },
@@ -132,24 +139,10 @@
         "ignored": "autre(s) appareil(s) ignoré(s) : ce ne sont pas des lampes.",
         "expired": "Le QR code a expiré avant d'être scanné. Recommencez."
       },
-      "scan": {
-        "note": "La recherche écoute d'abord les annonces que vos ampoules diffusent, puis, si rien n'arrive, frappe à chaque adresse du réseau. Comptez une vingtaine de secondes dans le pire cas. Elle trouve adresse et identifiant, mais jamais la clé : celle-ci reste à coller une fois par ampoule.",
-        "button": "Chercher sur le réseau",
-        "running": "Recherche en cours…",
-        "none": "Aucun appareil trouvé. Vérifiez que l'ampoule est alimentée et sur le même réseau que cet ordinateur.",
-        "found": "appareil(s) trouvé(s)",
-        "sweep": " (trouvé par balayage du réseau : vos ampoules ne diffusent pas jusqu'ici, c'est fréquent entre un ordinateur filaire et une ampoule en wifi)"
-      },
       "field": {
         "id": "Identifiant de l'ampoule",
-        "name": "Nom (facultatif) — ex. Bureau",
         "key": "Clé locale",
         "keyKept": "Clé inchangée si vide"
-      },
-      "found": {
-        "already": "déjà enregistrée",
-        "device": "Appareil Tuya à",
-        "noId": "identifiant inconnu"
       },
       "save": {
         "button": "Enregistrer",
@@ -158,26 +151,33 @@
         "failed": "Échec de l'enregistrement.",
         "needKey": "Cette ampoule a besoin de sa clé locale pour être pilotable."
       },
+      "scan": {
+        "button": "Chercher sur le réseau",
+        "running": "Recherche en cours…",
+        "none": "Aucun appareil trouvé. Vérifiez que l'ampoule est alimentée et sur le même réseau que cet ordinateur.",
+        "intro": "Trouve vos ampoules et met à jour leur adresse. Une ampoule nouvelle demande encore sa clé locale, à coller une fois.",
+        "upToDate": "À jour :",
+        "sweepShort": "Trouvé en balayant le réseau : vos ampoules ne diffusent pas jusqu'ici.",
+        "newDevice": "Nouvel appareil",
+        "add": "Ajouter",
+        "namePlaceholder": "ex. Couloir"
+      },
       "twitch": {
-        "intro": "Vos viewers dépensent des points de chaîne pour choisir la couleur de vos ampoules. Connectez votre compte Twitch une seule fois : LumenDeck crée la récompense lui-même.",
+        "intro": "Vos viewers dépensent des points de chaîne pour changer vos ampoules. Connectez votre compte Twitch une seule fois : LumenDeck crée les récompenses lui-même.",
         "connect": "Connecter Twitch",
         "pairing": "Vérifiez ce code sur la page Twitch qui vient de s'ouvrir :",
         "waiting": "En attente de votre accord sur Twitch...",
         "cancel": "Annuler",
         "connectedAs": "Connecté en tant que",
-        "rewardOk": "La récompense est active sur votre chaîne. Changez son prix ou son délai dans votre tableau de bord Twitch.",
-        "rewardWait": "Mise en place de la récompense...",
-        "disconnect": "Déconnecter",
-        "disconnectHelp": "Se déconnecter supprime la récompense de votre chaîne et retire l'accès de LumenDeck.",
-        "bulbsHelp": "Ce sont les ampoules que vos viewers changent. Si aucune n'est cochée, l'unique ampoule déclarée est utilisée.",
-        "pauseHelp": "Appuyez sur la touche pour mettre vos viewers en pause ou les réactiver. En pause, chaque rachat est remboursé.",
+        "disconnect": "Déconnecter Twitch",
+        "disconnectHelp": "Supprime les récompenses de votre chaîne et retire l'accès de LumenDeck.",
         "inputHelp": "Les viewers saisissent un nom de couleur (rouge, bleu, rose...) ou un code comme #ff8800. Le noir et tout texte illisible sont remboursés automatiquement.",
-        "last": "Dernier rachat",
+        "last": "Derniers rachats",
         "outcome": {
-          "applied": "couleur appliquée",
+          "applied": "appliqué",
           "refunded": "remboursé",
-          "unsettled": "couleur appliquée, mais Twitch ne l'a pas clôturé : à régler à la main dans votre tableau de bord",
-          "refundFailed": "couleur non appliquée, et Twitch a refusé le remboursement : à rembourser à la main dans votre tableau de bord"
+          "unsettled": "appliqué, à clore sur Twitch",
+          "refundFailed": "non appliqué, à rembourser sur Twitch"
         },
         "retry": "Réessayer",
         "err": {
@@ -190,13 +190,90 @@
           "revoked": "L'accès a été retiré sur Twitch. Reconnectez-vous.",
           "forbidden": "Twitch a refusé ce compte. Les points de chaîne exigent le statut Affilié ou Partenaire.",
           "duplicate": "Une récompense de ce nom existe déjà sur votre chaîne et n'a pas été créée par LumenDeck. Renommez-la ou supprimez-la, puis réessayez."
+        },
+        "liveLine": "En ligne · les viewers ont la main",
+        "pausedLine": "En pause · rachats remboursés",
+        "blockedLine": "Bloqué",
+        "connecting": "Connexion…",
+        "pause": "Pause",
+        "resume": "Reprendre",
+        "keyPause": "La touche du Stream Deck fait la même chose que ce bouton.",
+        "less": "Moins",
+        "more": "Plus",
+        "colours": "Couleurs",
+        "rewards": "récompenses",
+        "coloursHelp": "Chaque couleur cochée devient un bouton dans le menu des points de chaîne. Le viewer clique, rien à écrire.",
+        "surprise": "Couleur surprise",
+        "surpriseAside": "au hasard",
+        "freeText": "Choisis la couleur",
+        "freeTextAside": "le viewer l'écrit",
+        "scenarios": "Scénarios",
+        "flashes": "clignote",
+        "durationTitle": "Durée selon le prix",
+        "rate": "Secondes pour 100 points",
+        "cap": "Durée maximale",
+        "example": "Exemple : un scénario acheté 300 points dure",
+        "exampleTail": "Changez le prix dans votre tableau de bord Twitch : la durée suit.",
+        "colour": {
+          "rouge": "Rouge",
+          "orange": "Orange",
+          "jaune": "Jaune",
+          "vert": "Vert",
+          "cyan": "Cyan",
+          "bleu": "Bleu",
+          "violet": "Violet",
+          "rose": "Rose",
+          "blanc": "Blanc"
         }
-      }
+      },
+      "status": {
+        "online": "En ligne",
+        "offline": "Hors ligne",
+        "checking": "Vérification…"
+      },
+      "picker": {
+        "orderHint": "La lumière va de 1 à la dernière",
+        "empty": "Aucune ampoule pour l'instant : ajoutez-en une plus bas.",
+        "up": "Monter",
+        "down": "Descendre"
+      },
+      "mine": {
+        "title": "Mes ampoules",
+        "edit": "Modifier",
+        "close": "Fermer",
+        "name": "Nom",
+        "forget": "Oublier cette ampoule",
+        "forgetConfirm": "Cliquez encore pour confirmer",
+        "noKey": "Clé manquante"
+      },
+      "add": {
+        "title": "Ajouter des ampoules",
+        "qrTab": "Appli Calex (QR)",
+        "scanTab": "Sur le réseau"
+      },
+      "together": "Les ampoules jouent ensemble",
+      "scenarioAlone": "Chaque ampoule joue le scénario de son côté, toutes en même temps."
     },
     "twitch": {
       "reward": {
         "colorTitle": "Choisis la couleur",
-        "colorPrompt": "Écris un nom de couleur (rouge, bleu, rose...) ou un code comme #ff8800. Tout le reste est remboursé."
+        "colorPrompt": "Écris un nom de couleur (rouge, bleu, rose...) ou un code comme #ff8800. Tout le reste est remboursé.",
+        "palettePrompt": "Les lumières du stream prennent cette couleur.",
+        "surprise": "Couleur surprise",
+        "surprisePrompt": "Les lumières prennent une couleur tirée au hasard.",
+        "scenarioPrefix": "Ambiance : ",
+        "scenarioPrompt": "Joue cette animation lumineuse un moment, puis les lumières reviennent à la normale. Plus le prix est élevé, plus elle dure.",
+        "palette": {
+          "rouge": "Lumière rouge",
+          "orange": "Lumière orange",
+          "jaune": "Lumière jaune",
+          "vert": "Lumière verte",
+          "cyan": "Lumière cyan",
+          "bleu": "Lumière bleue",
+          "violet": "Lumière violette",
+          "rose": "Lumière rose",
+          "blanc": "Lumière blanche"
+        }
       }
     }
   }

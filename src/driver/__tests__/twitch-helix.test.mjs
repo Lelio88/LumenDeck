@@ -189,3 +189,15 @@ test('la cloture abandonne apres trois tentatives', async () => {
   await assert.rejects(settleWithRetry(SESSION, REDEMPTION, 'refund', fetcher, NOWAIT), (e) => e instanceof HelixError && e.code === 'network');
   assert.equal(calls.length, 3);
 });
+
+test('une recompense sans saisie ne demande rien au viewer', async () => {
+  const { fetcher, calls } = fakeFetch(json(200, { data: [{ id: 'rw-9', title: 'Lumiere rouge', cost: 100, prompt: '', is_enabled: true }] }));
+  await createReward(SESSION, { title: 'Lumiere rouge', cost: 100, prompt: '', userInput: false }, fetcher);
+  assert.equal(calls[0].body.is_user_input_required, false);
+});
+
+test('sans recompense precisee, l abonnement couvre toute la chaine', async () => {
+  const { fetcher, calls } = fakeFetch(json(202, { data: [{ id: 'sub-1' }] }));
+  await subscribeToRedemptions(SESSION, { sessionId: 'S1' }, fetcher);
+  assert.deepEqual(calls[0].body.condition, { broadcaster_user_id: '1337' });
+});

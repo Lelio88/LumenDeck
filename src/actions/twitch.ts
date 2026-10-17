@@ -18,10 +18,10 @@
  *   - Toutes les touches Twitch affichees se repeignent ensemble quand l'etat
  *     change : il n'y a qu'un seul service, donc qu'un seul etat a montrer.
  *
- *   - Le choix des ampoules est transmis au service a chaque apparition et a
- *     chaque changement de reglage. Le service le CONSERVE : une touche sur une
- *     page non affichee n'emet aucun evenement, et ne doit pas rendre les
- *     viewers muets.
+ *   - Le choix des ampoules et des recompenses est transmis au service a chaque
+ *     apparition et a chaque changement de reglage. Le service le CONSERVE : une
+ *     touche sur une page non affichee n'emet aucun evenement, et ne doit pas
+ *     rendre les viewers muets.
  *
  * Une touche, pas de molette : la pause est un geste binaire, et la molette
  * n'aurait ni sens ni ecran utile ici.
@@ -31,7 +31,7 @@ import type { DidReceiveSettingsEvent, KeyDownEvent, WillAppearEvent, WillDisapp
 
 import { t } from '../i18n.js';
 import { asImage, twitchKey } from '../key-art.js';
-import type { BulbSettings } from '../settings.js';
+import type { TwitchSettings } from '../settings.js';
 import { twitchFace } from '../twitch/face.js';
 import * as twitch from '../twitch/service.js';
 import { selectedIds } from './group.js';
@@ -42,6 +42,11 @@ type Face = {
   setTitle(title: string): Promise<void>;
   showAlert(): Promise<void>;
 };
+
+/** Transmet au service les ampoules et les recompenses choisies dans le panneau. */
+function configure(settings: TwitchSettings): Promise<void> {
+  return twitch.configure({ deviceIds: selectedIds(settings), config: settings as Record<string, unknown> });
+}
 
 /** Touches Twitch actuellement affichees, par identifiant d'instance. */
 const visible = new Map<string, Face>();
@@ -59,26 +64,26 @@ async function paintAll(status: twitch.Status): Promise<void> {
 }
 
 @action({ UUID: 'com.lumendeck.bulb.twitch' })
-export class TwitchAction extends SingletonAction<BulbSettings> {
-  override async onWillAppear(ev: WillAppearEvent<BulbSettings>): Promise<void> {
+export class TwitchAction extends SingletonAction<TwitchSettings> {
+  override async onWillAppear(ev: WillAppearEvent<TwitchSettings>): Promise<void> {
     const face = ev.action as unknown as Face;
     visible.set(face.id, face);
     // Un seul abonnement pour toutes les touches : il se cree avec la premiere.
     following ??= twitch.onStatus((status) => { void paintAll(status); });
 
-    await twitch.setBulbs(selectedIds(ev.payload.settings));
+    await configure(ev.payload.settings);
     await paint(face, twitch.getStatus());
   }
 
-  override onWillDisappear(ev: WillDisappearEvent<BulbSettings>): void {
+  override onWillDisappear(ev: WillDisappearEvent<TwitchSettings>): void {
     visible.delete(ev.action.id);
   }
 
-  override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<BulbSettings>): Promise<void> {
-    await twitch.setBulbs(selectedIds(ev.payload.settings));
+  override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<TwitchSettings>): Promise<void> {
+    await configure(ev.payload.settings);
   }
 
-  override async onKeyDown(ev: KeyDownEvent<BulbSettings>): Promise<void> {
+  override async onKeyDown(ev: KeyDownEvent<TwitchSettings>): Promise<void> {
     const status = twitch.getStatus();
     // Pas de pause sans liaison : l'appui n'aurait rien a mettre en pause, et un
     // faux « Pause » ferait croire que les viewers sont coupes alors qu'ils ne

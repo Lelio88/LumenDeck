@@ -30,11 +30,12 @@
  * qui permet de tester chaque cas de remboursement sans Twitch ni ampoule.
  *
  * Usage canonique :
- *   const handle = createRedemptionHandler({ colorRewardId, enabled, applyColor, settle, report });
+ *   const handle = createRedemptionHandler({ actionFor, enabled, applyColor, playScenario, settle, report });
  *   socket.onRedemption = (redemption) => void handle(redemption);
  */
 import type { Hsv } from '../driver/types.ts';
 import type { Redemption } from './protocol.ts';
+import { surpriseColor, type RewardAction } from './rewards.ts';
 import { parseViewerColor, type RejectReason } from './viewer-color.ts';
 
 /** Pourquoi un viewer a ete rembourse. */
@@ -42,7 +43,7 @@ export type RefundReason = RejectReason | 'paused' | 'bulbs-unreachable';
 
 /** Ce qui s'est passe pour un rachat, pour le journal et pour la touche. */
 export type Outcome =
-  | { readonly redemption: Redemption; readonly outcome: 'applied'; readonly reason?: undefined; readonly color: Hsv }
+  | { readonly redemption: Redemption; readonly outcome: 'applied'; readonly reason?: undefined; readonly action: RewardAction; readonly color?: Hsv }
   | { readonly redemption: Redemption; readonly outcome: 'refunded'; readonly reason: RefundReason }
   /** La couleur est appliquee mais Twitch n'a pas accepte la cloture : a regler a la main. */
   | { readonly redemption: Redemption; readonly outcome: 'unsettled'; readonly reason?: undefined }
@@ -50,12 +51,16 @@ export type Outcome =
   | { readonly redemption: Redemption; readonly outcome: 'refund-failed'; readonly reason: RefundReason };
 
 export type HandlerDeps = {
-  /** Identifiant de la recompense « couleur » creee par le plugin, ou rien si elle n'existe pas encore. */
-  readonly colorRewardId: () => string | undefined;
+  /** Ce que declenche la recompense rachetee, ou undefined si elle n'est pas au plugin : le rachat est alors ignore. */
+  readonly actionFor: (rewardId: string) => RewardAction | undefined;
   /** Faux quand le streamer a mis les viewers en pause. */
   readonly enabled: () => boolean;
   /** Applique la couleur a toutes les ampoules visees. Vrai si au moins une a obei. */
   readonly applyColor: (color: Hsv) => Promise<boolean>;
+  /** Lance un scenario pour une duree tiree du prix paye. Vrai s'il a demarre. */
+  readonly playScenario: (scenarioId: string, cost: number) => Promise<boolean>;
+  /** Tirage de la couleur surprise, dans [0, 1). Absent : Math.random. */
+  readonly random?: () => number;
   /** Cloture le rachat chez Twitch : `refund` rend les points, `fulfil` les garde. */
   readonly settle: (redemption: Redemption, outcome: 'refund' | 'fulfil') => Promise<void>;
   readonly report: (outcome: Outcome) => void;
@@ -99,26 +104,39 @@ export function createRedemptionHandler(deps: HandlerDeps): ((redemption: Redemp
   }
 
   async function process(redemption: Redemption): Promise<void> {
-    const rewardId = deps.colorRewardId();
-    if (rewardId === undefined || redemption.rewardId !== rewardId) return;
+    // Un rachat d'une recompense qui n'est pas au plugin est ignore SANS etre lu :
+    // l'abonnement couvre toute la chaine, et le texte des autres ne nous regarde pas.
+    const action = deps.actionFor(redemption.rewardId);
+    if (action === undefined) return;
     if (seen.has(redemption.id)) return;
     remember(redemption.id);
 
     if (!deps.enabled()) return refund(redemption, 'paused');
 
-    const read = parseViewerColor(redemption.userInput);
-    if (!read.ok) return refund(redemption, read.reason);
+    // Seule la saisie libre lit le texte du viewer ; les boutons l'ignorent.
+    let color: Hsv | undefined;
+    if (action.kind === 'free') {
+      const read = parseViewerColor(redemption.userInput);
+      if (!read.ok) return refund(redemption, read.reason);
+      color = read.color;
+    } else if (action.kind === 'color') {
+      color = action.color;
+    } else if (action.kind === 'surprise') {
+      color = surpriseColor(deps.random ?? Math.random);
+    }
 
     let applied = false;
     try {
-      applied = await deps.applyColor(read.color);
+      applied = action.kind === 'scenario'
+        ? await deps.playScenario(action.scenarioId, redemption.rewardCost)
+        : await deps.applyColor(color as Hsv);
     } catch {
       // Un plantage cote ampoules vaut une ampoule injoignable : le viewer est rembourse.
     }
     if (!applied) return refund(redemption, 'bulbs-unreachable');
 
     deps.report((await settle(redemption, 'fulfil'))
-      ? { redemption, outcome: 'applied', color: read.color }
+      ? { redemption, outcome: 'applied', action, ...(color ? { color } : {}) }
       : { redemption, outcome: 'unsettled' });
   }
 

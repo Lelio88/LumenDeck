@@ -57,8 +57,36 @@ export type TemperatureSettings = BulbSettings & {
   step?: number;
 };
 
+/**
+ * Reglages de la touche Twitch : les ampoules des viewers, et les recompenses
+ * proposees. Ces champs viennent d'une page web : `normalizeConfig`
+ * (twitch/rewards.ts) les nettoie avant tout usage.
+ */
+export type TwitchSettings = BulbSettings & {
+  /** Couleurs de la palette proposees comme recompenses (`rouge`, `bleu`...). */
+  colors?: string[];
+  /** Recompense « couleur surprise ». */
+  surprise?: boolean;
+  /** Recompense « choisis la couleur », ou le viewer ecrit. */
+  freeText?: boolean;
+  /** Scenarios proposes comme recompenses. */
+  scenarios?: string[];
+  /** Secondes de scenario pour 100 points depenses. */
+  secondsPer100?: number;
+  /** Duree maximale d'un scenario, en secondes. */
+  maxSeconds?: number;
+  /** Les ampoules jouent ensemble les scenarios des viewers. */
+  together?: boolean;
+};
+
 /** Reglages de l'action de scenario. */
 export type ScenarioSettings = BulbSettings & {
   /** Identifiant du scenario choisi dans le catalogue. */
   scenarioId?: string;
+  /**
+   * Les ampoules jouent la version de GROUPE du scenario (chenillard, vague,
+   * arc-en-ciel etale...) plutot que chacune la meme chose dans son coin.
+   * L'ordre de `deviceIds` est alors le sens dans lequel la lumiere se deplace.
+   */
+  together?: boolean;
 };

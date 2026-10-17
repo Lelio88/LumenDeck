@@ -13,9 +13,14 @@
  *     recompenses « gerables » — les autres ne nous concernent pas et on ne
  *     doit pas y toucher.
  *
- *   - La saisie du viewer est OBLIGATOIRE (`is_user_input_required`). Une
- *     recompense « choisis la couleur » sans zone de texte ferait payer des
- *     points pour rien.
+ *   - La saisie du viewer est OBLIGATOIRE par defaut (`is_user_input_required`) :
+ *     une recompense « choisis la couleur » sans zone de texte ferait payer des
+ *     points pour rien. Les boutons (une couleur, un scenario) la desactivent
+ *     explicitement (`userInput: false`).
+ *
+ *   - L'abonnement aux rachats peut couvrir toute la chaine (voir
+ *     `subscribeToRedemptions`) : le tri des rachats qui ne sont pas au plugin
+ *     se fait chez l'appelant, sans lire leur texte.
  *
  *   - Le cooldown et le quota par viewer sont ceux de Twitch, pas les notres :
  *     ils sont appliques cote Twitch AVANT le rachat, donc le viewer n'est
@@ -52,6 +57,8 @@ export type RewardDefinition = {
   readonly cooldownSeconds?: number;
   /** Rachats maximum par viewer et par direct. Absent : illimite. */
   readonly perUserPerStream?: number;
+  /** Le viewer doit ecrire un texte. Absent : oui (« Choisis la couleur »). Un bouton de couleur fixe : non. */
+  readonly userInput?: boolean;
 };
 
 /** Une recompense telle que Twitch la connait. */
@@ -165,7 +172,7 @@ export async function listOwnRewards(session: HelixSession, fetcher: Fetcher): P
   return readRewards(await call(session, fetcher, '/channel_points/custom_rewards', { only_manageable_rewards: 'true' }));
 }
 
-/** Cree une recompense a saisie obligatoire. */
+/** Cree une recompense ; la saisie est obligatoire sauf si `userInput` vaut faux. */
 export async function createReward(session: HelixSession, definition: RewardDefinition, fetcher: Fetcher): Promise<Reward> {
   const cooldown = definition.cooldownSeconds;
   const quota = definition.perUserPerStream;
@@ -175,7 +182,7 @@ export async function createReward(session: HelixSession, definition: RewardDefi
       title: definition.title,
       cost: definition.cost,
       prompt: definition.prompt,
-      is_user_input_required: true,
+      is_user_input_required: definition.userInput !== false,
       is_global_cooldown_enabled: cooldown !== undefined,
       ...(cooldown !== undefined ? { global_cooldown_seconds: cooldown } : {}),
       is_max_per_user_per_stream_enabled: quota !== undefined,
@@ -193,16 +200,17 @@ export async function deleteReward(session: HelixSession, rewardId: string, fetc
 }
 
 /**
- * Abonne la socket EventSub aux rachats d'UNE recompense.
+ * Abonne la socket EventSub aux rachats d'une recompense, ou de toute la chaine.
  *
- * Filtrer sur la recompense est un choix de confidentialite autant que de
- * sobriete : sans `reward_id`, le plugin recevrait le texte saisi par les
- * viewers pour TOUTES les recompenses de la chaine, alors qu'il n'a besoin que
- * de la sienne.
+ * Avec `rewardId`, on ne recoit que cette recompense. Sans, on recoit tous les
+ * rachats de la chaine : c'est ce que fait le plugin des qu'il gere PLUSIEURS
+ * recompenses (palette, scenarios), un abonnement par recompense obligeant a
+ * suivre chaque ajout ou retrait du panneau. Les rachats qui ne sont pas les
+ * siens sont ignores sans etre lus ni journalises (voir handler.ts).
  */
 export async function subscribeToRedemptions(
   session: HelixSession,
-  target: { readonly sessionId: string; readonly rewardId: string },
+  target: { readonly sessionId: string; readonly rewardId?: string },
   fetcher: Fetcher,
 ): Promise<void> {
   await call(session, fetcher, '/eventsub/subscriptions', {}, {
@@ -211,7 +219,7 @@ export async function subscribeToRedemptions(
     body: {
       type: 'channel.channel_points_custom_reward_redemption.add',
       version: '1',
-      condition: { broadcaster_user_id: session.userId, reward_id: target.rewardId },
+      condition: { broadcaster_user_id: session.userId, ...(target.rewardId ? { reward_id: target.rewardId } : {}) },
       transport: { method: 'websocket', session_id: target.sessionId },
     },
   });

@@ -81,16 +81,16 @@ l'existence de Tuya.
 | `src/actions/brightness.ts` | Action « intensité » : pas fixe sur touche, rotation continue sur molette, retour visuel sur l'écran de la molette. |
 | `src/actions/color.ts` | Action « couleur » : applique une couleur choisie, ou fait tourner la teinte à la molette en préservant l'intensité courante. |
 | `src/actions/temperature.ts` | Action « blanc chaud / froid », de 2700 K à 6500 K. |
-| `src/actions/twitch.ts` | Action « Twitch » : tableau de bord des points de chaîne. Montre si les viewers peuvent agir, un appui les met en pause. Son panneau porte la connexion du compte et le choix des ampoules. |
+| `src/actions/twitch.ts` | Action « Twitch » : tableau de bord des points de chaîne. Montre si les viewers peuvent agir, un appui les met en pause. Son panneau porte la connexion du compte, les ampoules des viewers et le choix des récompenses (palette, couleur surprise, saisie libre, scénarios, durée selon le prix). |
 | `src/actions/scenario.ts` | Action « scénario » : un appui lance une animation, un second l'arrête. N'entretient aucun état local — elle interroge le moteur, ce qui garde deux touches d'accord sur la même ampoule. |
-| `src/scenarios/catalogue.ts` | Les scénarios eux-mêmes, en **données pures** : `frame(step)` rend une image, sans effet de bord. Testable sans ampoule ; en ajouter un ne touche pas au moteur. |
+| `src/scenarios/catalogue.ts` | Les scénarios eux-mêmes, en **données pures**. Chacun a deux écritures : `frame(step)`, ce que fait une lampe, et `group(step, count)`, le scénario écrit pour toute la pièce (chenillard, vague, arc-en-ciel étalé, éclair qui frappe une lampe). `frameFor` choisit selon « les ampoules jouent ensemble ». Testable sans ampoule ; en ajouter un ne touche pas au moteur. |
 | `src/scenarios/sessions.ts` | Index des sessions de scénario **par ampoule** : une session est retrouvable depuis chacune de ses lampes, et `remove` ne libère que les lampes qui pointent encore sur elle. N'importe rien — testable seul. |
-| `src/scenarios/runner.ts` | Déroule les images dans le temps. Une exécution par ampoule — une session est retrouvable depuis **chacune** de ses ampoules, pas seulement la principale —, relevé de l'état avant la première image et restauration à l'arrêt. |
+| `src/scenarios/runner.ts` | Déroule les images dans le temps. Une exécution par ampoule — une session est retrouvable depuis **chacune** de ses ampoules —, relevé de l'état avant la première image et restauration à l'arrêt. Options : `together` (version de groupe) et `maxMs`, une durée après laquelle le scénario s'arrête seul et rend les lampes dans leur état d'avant (scénarios achetés par un viewer). |
 | `src/key-art.ts` | Dessine les faces de touche **à la volée**, en SVG : jauge qui se remplit, goutte à la vraie couleur, disque teinté à la vraie température. N'importe rien — donc testable sans ampoule ni Stream Deck. |
 | `src/color-format.ts` | Conversions hexadécimal ↔ TSV et rotation de teinte. Vit côté présentation : l'hexadécimal est une convention d'interface web, pas un langage d'ampoule. |
 | `src/bulbs.ts` | **Registre des ampoules** (identifiant, clé, adresse, nom, **version de protocole**), dans les réglages globaux du plugin. Une ampoule y est déclarée une fois ; `coordinatesForMany()` est le point d'entrée unique des actions et rend les coordonnées des ampoules d'une touche, dans l'ordre ; `adoptBulbs()` met une ancienne touche à jour à son apparition. |
 | `src/discovery.ts` | Écoute les annonces UDP que les ampoules Tuya diffusent d'elles-mêmes. Trouve identifiant et adresse — jamais la clé, qui n'est pas dans l'annonce. |
-| `src/ui-bridge.ts` | Répond aux panneaux : lister, chercher, enregistrer, oublier une ampoule. La clé entre par ici et n'en ressort jamais. |
+| `src/ui-bridge.ts` | Répond aux panneaux : lister les ampoules et dire lesquelles répondent, chercher, enregistrer, oublier ; relayer la connexion Twitch et la pause. La clé entre par ici et n'en ressort jamais. |
 | `src/settings.ts` | Formes des réglages d'une touche. Une touche ne retient que les **identifiants** (`deviceIds`) des ampoules qu'elle pilote, plus ce qui lui est propre. |
 | `src/plugin.ts` | Racine de composition. |
 | `src/tools/probe.mjs` | Sonde de diagnostic : relève les datapoints d'une ampoule. Vit sous `src/` parce qu'il a besoin des dépendances du projet. |
@@ -103,11 +103,13 @@ l'existence de Tuya.
 | `src/twitch/eventsub.ts` | Connexion temps réel : chien de garde sur le silence, reconnexion à délai croissant, bascule sans perte sur demande de Twitch. Socket, horloge et abonnement injectés. |
 | `src/twitch/auth.ts` | Connexion du compte (code à saisir, application **publique**, aucun secret) et renouvellement des jetons. Réseau, horloge et attente injectés. |
 | `src/twitch/helix.ts` | Appels à l'API Twitch : créer, lister, supprimer la récompense ; s'abonner aux rachats ; valider ou rembourser un rachat (avec reprises sur panne passagère) ; lister les rachats restés en attente. Erreurs classées, jamais de jeton dans un message. |
-| `src/twitch/handler.ts` | La décision pour chaque rachat : appliquer la couleur puis valider, **ou** rembourser avec sa raison. Un par un, dans l'ordre ; chaque rachat une seule fois. Effets injectés. |
+| `src/twitch/handler.ts` | La décision pour chaque rachat : appliquer la couleur (fixe, surprise ou tapée) ou lancer le scénario acheté, puis valider, **ou** rembourser avec sa raison. Un par un, dans l'ordre ; chaque rachat une seule fois ; un rachat d'une récompense qui n'est pas au plugin est ignoré sans être lu. Effets injectés. |
 | `src/twitch/face.ts` | Ce que la touche Twitch montre selon l'état du service. Rend une clé de traduction, pas un mot. Pur. |
+| `src/twitch/rewards.ts` | Le catalogue des récompenses : la palette de 9 couleurs, et la traduction des choix du panneau en récompenses à créer (une par couleur, scénario, surprise, saisie libre), chacune repérée par une **clé** stable (`color:rouge`, `scenario:orage`…), jamais par son titre. Nettoie les réglages venus du panneau, calcule la durée d'un scénario d'après le prix payé, et `planRewards` dit quoi garder, créer et supprimer chez Twitch (reprise par titre après réinstallation, jamais de suppression d'une récompense inconnue). Pur. |
 | `src/twitch/state.ts` | Quel état montrer après un échec ou une annulation d'appairage : une session encore présente mais sans écoute redevient « à refaire » au lieu de bloquer le panneau. Pur. |
 | `src/twitch/service.ts` | La colle, seule partie liée au SDK : session persistée, renouvellement sérialisé, récompense, socket, ampoules visées. Aucune règle métier — elles sont dans les modules ci-dessus. |
 | `src/i18n.ts` | Raccourci unique vers le dictionnaire du SDK. Les clés y sont **structurées** (`key.off`), jamais des phrases : une phrase corrigée pour un détail de style ferait retomber toutes les traductions sur l'anglais, en silence. |
+| `ui/bulbs.js` | Socle des panneaux : traduction, liste des ampoules de la touche (pastille en ligne / hors ligne, ordre par flèches avec `data-ordered`) et gestionnaire « Mes ampoules / Ajouter ». Écrit `deviceIds` par `SDPIComponents.useSettings`, qui partage le stockage des composants sdpi : écrire les réglages autrement les ferait s'écraser avec une copie périmée. |
 | `tools/make_promo.mjs` | Compose les visuels de présentation. Les faces de touches y viennent de `key-art.ts`, **le module que le plugin appelle vraiment** : une image promotionnelle dessinée à part finit par mentir dès que le produit évolue. |
 | `tools/make_locales.py` | Produit les cinq `<langue>.json` depuis une table unique où chaque texte figure dans toutes les langues. Une entrée incomplète fait **échouer** la génération. |
 | `tools/make_icons.py` | Génère les 24 PNG du plugin. Hors chaîne Node, d'où son emplacement séparé. |
@@ -150,23 +152,48 @@ Les viewers dépensent des points de chaîne pour choisir la couleur des ampoule
 alors à Twitch — c'est la seule autre porte ouverte vers l'extérieur, avec l'enrôlement Tuya.
 
 **Ce que Twitch fait, et ne fait jamais.** Il apprend au plugin qu'un viewer a payé, et permet de
-clore ce rachat. Il ne commande **jamais** une lampe : la couleur arrive au plugin sous forme de
-texte, le plugin la lit, puis la pose sur les ampoules **en LAN**, comme n'importe quelle touche.
+clore ce rachat. Il ne commande **jamais** une lampe : le rachat arrive au plugin comme un message,
+le plugin en déduit une couleur ou un scénario, puis l'applique aux ampoules **en LAN**, comme
+n'importe quelle touche.
+
+**Les récompenses.** Twitch n'a pas de sélecteur de couleur : un viewer ne peut que cliquer un
+bouton, ou taper un texte. Chaque choix du panneau devient donc **sa** récompense : une par couleur
+cochée dans la palette, « Couleur surprise » (tirée au hasard), « Choisis la couleur » (le viewer
+écrit), et une par scénario coché. Seule la saisie libre fait écrire le viewer. Un scénario acheté
+dure `prix ÷ 100 × secondes pour 100 points`, entre 5 s et le plafond du panneau, puis les lampes
+reviennent à leur état d'avant : le streamer change le prix dans son tableau de bord Twitch et la
+durée suit, le prix venant du rachat lui-même. Les récompenses **suivent le panneau** : cocher crée,
+décocher supprime, un instant après le dernier clic. Les synchronisations passent **une par une**
+(deux en parallèle créeraient deux fois la même récompense) ; un changement fait pendant la
+connexion est rejoué dès qu'elle aboutit ; une suppression qui échoue garde la récompense en
+service et sera retentée. Sans réglage du panneau, ce sont les choix par défaut qui s'appliquent
+(cinq couleurs, surprise, saisie libre, cinq scénarios) : ils sont **créés** chez Twitch à la
+première connexion, comme le panneau les montre cochés.
+
+**Couleur contre scénario.** Une couleur achetée arrête le scénario en cours sur les mêmes lampes,
+même s'il a été acheté par un autre viewer : sa prochaine image effacerait sinon la couleur. Un
+scénario qui n'atteint **aucune** lampe à sa première image est arrêté et le viewer remboursé.
+
+**Un abonnement pour toute la chaîne.** Un abonnement par récompense obligerait à suivre chaque case
+du panneau. Le plugin reçoit donc tous les rachats de la chaîne, et ignore **sans les lire** ceux des
+récompenses qui ne sont pas les siennes : ni texte journalisé, ni texte affiché.
 Aucune lecture du chat : les deux seules permissions demandées sont `channel:read:redemptions` et
 `channel:manage:redemptions`, et le plugin vérifie à la connexion que les deux ont été accordées.
 
 **Le flux d'un rachat.**
 
-1. Le viewer rachète « Choisis la couleur » et tape un texte.
+1. Le viewer rachète une récompense du plugin (et tape un texte, pour la saisie libre).
 2. `eventsub.ts` reçoit le message sur la socket ; `protocol.ts` le lit, et ne rend que les rachats
    encore en attente.
-3. `handler.ts` lit la couleur (`viewer-color.ts`), la pose sur les ampoules choisies (`service.ts`
-   arrête d'abord un scénario en cours sur ces lampes, qui repeindrait la couleur à sa prochaine
-   image), puis **valide** le rachat. Si le texte est illisible, trop sombre, si les ampoules ne
-   répondent pas, ou si les viewers sont en pause, le rachat est **remboursé**.
+3. `handler.ts` retrouve l'action de la récompense (`rewards.ts`). Pour une couleur — de la palette,
+   tirée au hasard, ou lue dans le texte par `viewer-color.ts` —, `service.ts` arrête d'abord un
+   scénario en cours sur les lampes (sa prochaine image repeindrait la couleur), puis la pose. Pour un
+   scénario, il le lance pour la durée payée. Le rachat est alors **validé**. Si le texte est
+   illisible ou trop sombre, si les ampoules ne répondent pas, ou si les viewers sont en pause, il
+   est **remboursé**.
 
 **Un viewer ne perd pas ses points pour rien.** C'est l'invariant du module. Seule une couleur
-réellement appliquée est validée. La clôture est retentée deux fois sur une panne passagère
+réellement appliquée, ou un scénario réellement lancé, est validé. La clôture est retentée deux fois sur une panne passagère
 (réseau, limitation). Si Twitch la refuse malgré tout, le panneau le dit en distinguant deux cas :
 `unsettled` (la couleur est posée, la validation a échoué) et `refund-failed` (la couleur n'est
 **pas** posée et le viewer est toujours débité). Dans les deux cas, le streamer règle ce rachat à la
@@ -188,11 +215,12 @@ la pièce pour le prix d'un rachat. La longueur est contrôlée avant toute autr
 récompense est posté sur Twitch dans la langue de Stream Deck : **chaque exemple qu'il cite doit être
 accepté** dans cette langue, un test relit les textes réels pour le garantir.
 
-**Pourquoi le plugin crée la récompense lui-même.** Twitch ne laisse clore ou rembourser un rachat
+**Pourquoi le plugin crée les récompenses lui-même.** Twitch ne laisse clore ou rembourser un rachat
 qu'à l'application qui a créé la récompense. Une récompense faite à la main dans le tableau de bord
-ne pourrait jamais être remboursée. Le plugin la crée donc à la connexion (saisie obligatoire, délai
-de 30 s entre deux rachats) ; le prix et le délai se changent ensuite dans le tableau de bord Twitch.
-Un titre déjà pris par une récompense qui n'est pas la sienne est signalé (`duplicate`), jamais écrasé.
+ne pourrait jamais être remboursée. Le plugin les crée donc lui-même (délai de 30 s entre deux
+rachats, prix par défaut de 100 à 300 points) ; prix et délai se changent ensuite dans le tableau de
+bord Twitch. Il ne touche jamais aux récompenses qu'il n'a pas créées : un titre déjà pris par l'une
+d'elles est signalé (`duplicate`), les autres récompenses fonctionnent quand même.
 
 **La session.** L'application est **publique** (flux « Device Code », aucun secret embarqué) : le
 Client ID de `auth.ts` identifie l'application et n'ouvre rien. Les jetons vivent dans les réglages
@@ -351,7 +379,7 @@ Règles de comportement, choisies pour ce qu'une personne attend devant une piè
 | Allumer / éteindre | Une lampe allumée suffit à **éteindre tout le groupe** ; tout éteint, on **allume tout**. Inverser chaque lampe échangerait les allumées et les éteintes. |
 | Couleur, blanc | La même valeur pour toutes. Les lampes sans couleur (ou sans blanc réglable) sont laissées telles quelles ; le mot « Sans couleur » n'apparaît que si **aucune** ne sait. |
 | Intensité, molette | Chaque lampe bouge de **son propre** niveau, du même pas : aligner sur la première écraserait les réglages lampe par lampe. |
-| Scénario | L'ordre des ampoules est celui des **rôles**. Au-delà du nombre de rôles, les lampes en trop répètent le dernier. |
+| Scénario | L'ordre des ampoules se règle par flèches dans le panneau. Par défaut, chaque lampe joue le scénario dans son coin (seul le gyrophare répartit deux rôles). Avec « les ampoules jouent ensemble », le scénario est joué **pour la pièce** et cet ordre est le sens dans lequel la lumière se déplace. |
 
 **Panne partielle.** Les lampes obéissent en parallèle et indépendamment : une lampe débranchée
 n'empêche pas les autres. Un **appui** est strict — la touche alerte et écrit un mot, le journal
@@ -650,9 +678,9 @@ parfaitement en TCP. Symptôme trompeur, cause bête.
 ## Ce qui n'existe pas encore
 
 Six actions couvrent l'allumage, l'intensité, la couleur, le blanc réglable, les scénarios animés
-et le tableau de bord Twitch. Une seule récompense existe côté Twitch : la **couleur choisie par le
-viewer**. Déclencher un scénario par points de chaîne n'existe pas encore — il demanderait un plafond
-de durée et une liste blanche, à cause des scénarios à éclats (photosensibilité). Restent hors du périmètre : les **scènes internes de l'ampoule** (datapoint 25, non
+et le tableau de bord Twitch. Côté Twitch, les scénarios qui clignotent sont signalés dans le panneau
+mais restent autorisés : c'est le choix du streamer, le plafond de deux alternances par seconde
+(`MIN_HOLD_MS`) s'appliquant de toute façon. Restent hors du périmètre : les **scènes internes de l'ampoule** (datapoint 25, non
 exploité — nos scénarios sont pilotés depuis le plugin, image par image) et tout **adaptateur autre
 que Tuya**.
 

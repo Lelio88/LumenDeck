@@ -53,41 +53,48 @@
     "scenario": {
       "clignotement": {
         "name": "Blinken",
-        "description": "Die Lampe schaltet endlos ein und aus. Nützlich als von weitem sichtbarer Timer."
+        "description": "Die Lampe schaltet endlos ein und aus. Nützlich als von weitem sichtbarer Timer.",
+        "together": "Lauflicht: Das Licht springt der Reihe nach von Lampe zu Lampe."
       },
       "gyrophare": {
         "name": "Blaulicht",
-        "description": "Rot und Blau im Wechsel, wie ein Polizeiwagen. Mit zwei Lampen antworten sie einander."
+        "description": "Rot und Blau im Wechsel, wie ein Polizeiwagen. Mit zwei Lampen antworten sie einander.",
+        "together": "Rot wandert durch alle Lampen; die anderen bleiben blau."
       },
       "respiration": {
         "name": "Atmen",
-        "description": "Die Helligkeit steigt und fällt langsam, die Farbe bleibt. Ruhig, zum Arbeiten."
+        "description": "Die Helligkeit steigt und fällt langsam, die Farbe bleibt. Ruhig, zum Arbeiten.",
+        "together": "Eine Welle: Das Atmen wandert von Lampe zu Lampe."
       },
       "bougie": {
         "name": "Kerze",
-        "description": "Eine warme Flamme, die flackert, nie zweimal gleich. Der schönste der Reihe."
+        "description": "Eine warme Flamme, die flackert, nie zweimal gleich. Der schönste der Reihe.",
+        "together": "Jede Flamme flackert in ihrem eigenen Takt, wie echte Kerzen."
       },
       "orage": {
         "name": "Gewitter",
-        "description": "Ein blaues Halbdunkel, zerrissen von weißen Blitzen in unregelmäßigen Abständen."
+        "description": "Ein blaues Halbdunkel, zerrissen von weißen Blitzen in unregelmäßigen Abständen.",
+        "together": "Blitze schlagen in eine Lampe nach der anderen ein, manchmal in alle."
       },
       "arc-en-ciel": {
         "name": "Regenbogen",
-        "description": "Der Farbton wandert sanft über den ganzen Farbkreis."
+        "description": "Der Farbton wandert sanft über den ganzen Farbkreis.",
+        "together": "Die Farben verteilen sich auf die Lampen: Der Regenbogen füllt den Raum und dreht sich."
       },
       "alerte": {
         "name": "Alarm",
-        "description": "Drei rote Blitze, dann kehrt die Lampe genau in ihren Zustand zurück. Um ein Ereignis zu melden."
+        "description": "Drei rote Blitze, dann kehrt die Lampe genau in ihren Zustand zurück. Um ein Ereignis zu melden.",
+        "together": "Benachbarte Lampen wechseln sich ab."
       },
       "lever-de-soleil": {
         "name": "Sonnenaufgang",
-        "description": "Fünf Minuten von dunkler Glut bis zum hellen Tag. Zum sanften Aufwachen."
+        "description": "Fünf Minuten von dunkler Glut bis zum hellen Tag. Zum sanften Aufwachen.",
+        "together": "Die Lampen gehen nacheinander an, wie die aufgehende Sonne."
       }
     },
     "pi": {
       "bulbs": "Lampen",
       "scenario": "Szenario",
-      "scenarioPlaceholder": "Szenario wählen",
       "colour": "Farbe",
       "step": "Schritt",
       "hueStep": "Farbton-Schritt",
@@ -116,7 +123,7 @@
       "scenarioHelp": {
         "title": "Wie funktioniert das?",
         "toggle": "Ein Druck startet das Szenario, ein zweiter stoppt es. Die Lampe kehrt dann genau in ihren vorherigen Zustand zurück: gleiche Farbe, gleiche Helligkeit, ein oder aus.",
-        "second": "Haken Sie eine oder mehrere Lampen an. Nur Blaulicht hat heute zwei Rollen: mit zwei Lampen antworten sie sich in Rot und Blau, mit einer wechselt es beide Farben auf derselben Lampe, und jede weitere Lampe wiederholt die zweite Rolle.",
+        "second": "Kreuzen Sie eine oder mehrere Lampen an und ordnen Sie sie mit den Pfeilen. Mit „Die Lampen spielen zusammen“ wandert das Licht in dieser Reihenfolge durch den Raum; sonst spielt jede Lampe das Szenario für sich.",
         "oneShot": "Alarm und Sonnenaufgang stoppen von selbst, nach drei Blitzen bzw. fünf Minuten. Die anderen laufen, bis Sie erneut drücken.",
         "safety": "Animationen sind bewusst auf zwei Wechsel pro Sekunde begrenzt: darüber hinaus kann Blinklicht bei photosensiblen Menschen einen Anfall auslösen."
       },
@@ -132,24 +139,10 @@
         "ignored": "weitere(s) Gerät(e) ignoriert: keine Leuchten.",
         "expired": "Der QR-Code ist abgelaufen, bevor er gescannt wurde. Bitte erneut versuchen."
       },
-      "scan": {
-        "note": "Die Suche hört zuerst auf die Ankündigungen Ihrer Lampen und klopft dann, falls nichts eintrifft, an jede Adresse im Netzwerk. Rechnen Sie im schlimmsten Fall mit rund zwanzig Sekunden. Sie findet Adresse und Kennung, aber nie den Schlüssel: den muss man weiterhin einmal pro Lampe einfügen.",
-        "button": "Netzwerk durchsuchen",
-        "running": "Suche läuft…",
-        "none": "Kein Gerät gefunden. Prüfen Sie, ob die Lampe mit Strom versorgt ist und im selben Netzwerk wie dieser Rechner hängt.",
-        "found": "Gerät(e) gefunden",
-        "sweep": " (per Netzwerk-Scan gefunden: Ihre Lampen senden nicht bis hierher, häufig zwischen einem kabelgebundenen Rechner und einer WLAN-Lampe)"
-      },
       "field": {
         "id": "Lampen-Kennung",
-        "name": "Name (optional) — z. B. Schreibtisch",
         "key": "Lokaler Schlüssel",
         "keyKept": "Leer lassen, um den Schlüssel zu behalten"
-      },
-      "found": {
-        "already": "bereits gespeichert",
-        "device": "Tuya-Gerät an",
-        "noId": "Kennung unbekannt"
       },
       "save": {
         "button": "Speichern",
@@ -158,26 +151,33 @@
         "failed": "Speichern fehlgeschlagen.",
         "needKey": "Diese Lampe braucht ihren lokalen Schlüssel, um steuerbar zu sein."
       },
+      "scan": {
+        "button": "Netzwerk durchsuchen",
+        "running": "Suche läuft…",
+        "none": "Kein Gerät gefunden. Prüfen Sie, ob die Lampe mit Strom versorgt ist und im selben Netzwerk wie dieser Rechner hängt.",
+        "intro": "Findet Ihre Lampen und aktualisiert ihre Adresse. Eine neue Lampe braucht trotzdem einmalig ihren lokalen Schlüssel.",
+        "upToDate": "Aktualisiert:",
+        "sweepShort": "Durch Absuchen des Netzwerks gefunden: Ihre Lampen senden nicht bis hierher.",
+        "newDevice": "Neues Gerät",
+        "add": "Hinzufügen",
+        "namePlaceholder": "z. B. Flur"
+      },
       "twitch": {
-        "intro": "Zuschauer geben Kanalpunkte aus, um die Farbe Ihrer Lampen zu wählen. Verbinden Sie Ihr Twitch-Konto einmalig: LumenDeck erstellt die Belohnung selbst.",
+        "intro": "Zuschauer geben Kanalpunkte aus, um Ihre Lampen zu verändern. Verbinden Sie Ihr Twitch-Konto einmalig: LumenDeck erstellt die Belohnungen selbst.",
         "connect": "Twitch verbinden",
         "pairing": "Prüfen Sie diesen Code auf der soeben geöffneten Twitch-Seite:",
         "waiting": "Warte auf Ihre Zustimmung bei Twitch...",
         "cancel": "Abbrechen",
         "connectedAs": "Verbunden als",
-        "rewardOk": "Die Belohnung ist auf Ihrem Kanal aktiv. Preis und Abklingzeit ändern Sie im Twitch-Dashboard.",
-        "rewardWait": "Belohnung wird eingerichtet...",
-        "disconnect": "Trennen",
-        "disconnectHelp": "Beim Trennen wird die Belohnung von Ihrem Kanal gelöscht und der Zugriff von LumenDeck entfernt.",
-        "bulbsHelp": "Dies sind die Lampen, die Ihre Zuschauer ändern. Ist keine angekreuzt, wird die einzige hinterlegte Lampe verwendet.",
-        "pauseHelp": "Drücken Sie die Taste, um Zuschauer zu pausieren oder wieder zuzulassen. Während der Pause wird jede Einlösung erstattet.",
+        "disconnect": "Twitch trennen",
+        "disconnectHelp": "Löscht die Belohnungen von Ihrem Kanal und entfernt den Zugriff von LumenDeck.",
         "inputHelp": "Zuschauer geben einen Farbnamen (rot, blau, rosa...) oder einen Code wie #ff8800 ein. Schwarz und alles Unlesbare wird automatisch erstattet.",
-        "last": "Letzte Einlösung",
+        "last": "Letzte Einlösungen",
         "outcome": {
-          "applied": "Farbe gesetzt",
+          "applied": "umgesetzt",
           "refunded": "erstattet",
-          "unsettled": "Farbe gesetzt, aber Twitch hat es nicht abgeschlossen: bitte im Dashboard von Hand erledigen",
-          "refundFailed": "Farbe nicht gesetzt, und Twitch hat die Erstattung abgelehnt: bitte im Dashboard von Hand erstatten"
+          "unsettled": "umgesetzt, auf Twitch abschließen",
+          "refundFailed": "nicht umgesetzt, auf Twitch erstatten"
         },
         "retry": "Erneut versuchen",
         "err": {
@@ -190,13 +190,90 @@
           "revoked": "Der Zugriff wurde bei Twitch entfernt. Verbinden Sie erneut.",
           "forbidden": "Twitch hat dieses Konto abgelehnt. Kanalpunkte erfordern den Affiliate- oder Partner-Status.",
           "duplicate": "Auf Ihrem Kanal existiert bereits eine Belohnung mit diesem Namen, die nicht von LumenDeck stammt. Benennen Sie sie um oder löschen Sie sie und versuchen Sie es erneut."
+        },
+        "liveLine": "Online · die Zuschauer steuern",
+        "pausedLine": "Pausiert · Einlösungen werden erstattet",
+        "blockedLine": "Blockiert",
+        "connecting": "Verbinde…",
+        "pause": "Pause",
+        "resume": "Fortsetzen",
+        "keyPause": "Die Stream-Deck-Taste macht dasselbe wie dieser Knopf.",
+        "less": "Weniger",
+        "more": "Mehr",
+        "colours": "Farben",
+        "rewards": "Belohnungen",
+        "coloursHelp": "Jede angekreuzte Farbe wird zu einer Schaltfläche im Kanalpunkte-Menü. Der Zuschauer klickt, ohne etwas zu tippen.",
+        "surprise": "Überraschungsfarbe",
+        "surpriseAside": "zufällig",
+        "freeText": "Wähl die Farbe",
+        "freeTextAside": "der Zuschauer tippt sie",
+        "scenarios": "Szenarien",
+        "flashes": "blinkt",
+        "durationTitle": "Dauer nach Preis",
+        "rate": "Sekunden pro 100 Punkte",
+        "cap": "Höchstdauer",
+        "example": "Beispiel: Ein für 300 Punkte gekauftes Szenario dauert",
+        "exampleTail": "Ändern Sie den Preis im Twitch-Dashboard: Die Dauer passt sich an.",
+        "colour": {
+          "rouge": "Rot",
+          "orange": "Orange",
+          "jaune": "Gelb",
+          "vert": "Grün",
+          "cyan": "Cyan",
+          "bleu": "Blau",
+          "violet": "Lila",
+          "rose": "Rosa",
+          "blanc": "Weiß"
         }
-      }
+      },
+      "status": {
+        "online": "Online",
+        "offline": "Offline",
+        "checking": "Prüfung…"
+      },
+      "picker": {
+        "orderHint": "Das Licht wandert ab 1",
+        "empty": "Noch keine Lampe: Fügen Sie unten eine hinzu.",
+        "up": "Nach oben",
+        "down": "Nach unten"
+      },
+      "mine": {
+        "title": "Meine Lampen",
+        "edit": "Bearbeiten",
+        "close": "Schließen",
+        "name": "Name",
+        "forget": "Diese Lampe entfernen",
+        "forgetConfirm": "Zum Bestätigen erneut klicken",
+        "noKey": "Schlüssel fehlt"
+      },
+      "add": {
+        "title": "Lampen hinzufügen",
+        "qrTab": "Calex-App (QR)",
+        "scanTab": "Im Netzwerk"
+      },
+      "together": "Die Lampen spielen zusammen",
+      "scenarioAlone": "Jede Lampe spielt das Szenario für sich, alle gleichzeitig."
     },
     "twitch": {
       "reward": {
         "colorTitle": "Wähl die Farbe",
-        "colorPrompt": "Gib einen Farbnamen (rot, blau, rosa...) oder einen Code wie #ff8800 ein. Alles andere wird erstattet."
+        "colorPrompt": "Gib einen Farbnamen (rot, blau, rosa...) oder einen Code wie #ff8800 ein. Alles andere wird erstattet.",
+        "palettePrompt": "Die Lichter des Streams nehmen diese Farbe an.",
+        "surprise": "Überraschungsfarbe",
+        "surprisePrompt": "Die Lichter nehmen eine zufällige Farbe an.",
+        "scenarioPrefix": "Stimmung: ",
+        "scenarioPrompt": "Spielt diese Lichtshow eine Weile ab, dann kehren die Lichter zum Normalzustand zurück. Je höher der Preis, desto länger dauert sie.",
+        "palette": {
+          "rouge": "Rotes Licht",
+          "orange": "Oranges Licht",
+          "jaune": "Gelbes Licht",
+          "vert": "Grünes Licht",
+          "cyan": "Cyanfarbenes Licht",
+          "bleu": "Blaues Licht",
+          "violet": "Lila Licht",
+          "rose": "Rosa Licht",
+          "blanc": "Weißes Licht"
+        }
       }
     }
   }

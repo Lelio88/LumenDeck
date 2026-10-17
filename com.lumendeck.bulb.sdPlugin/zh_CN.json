@@ -53,41 +53,48 @@
     "scenario": {
       "clignotement": {
         "name": "闪烁",
-        "description": "灯泡不停地亮灭。适合当作远处也能看见的计时提示。"
+        "description": "灯泡不停地亮灭。适合当作远处也能看见的计时提示。",
+        "together": "跑马灯：灯光按顺序在灯泡间跳动。"
       },
       "gyrophare": {
         "name": "警灯",
-        "description": "红蓝交替，如同警车。若有两只灯泡，它们会互相呼应。"
+        "description": "红蓝交替，如同警车。若有两只灯泡，它们会互相呼应。",
+        "together": "红色依次绕过所有灯泡，其余保持蓝色。"
       },
       "respiration": {
         "name": "呼吸",
-        "description": "亮度缓缓起伏，颜色保持不变。安静，适合工作时使用。"
+        "description": "亮度缓缓起伏，颜色保持不变。安静，适合工作时使用。",
+        "together": "波浪：呼吸效果在灯泡间传递。"
       },
       "bougie": {
         "name": "烛光",
-        "description": "温暖的火焰摇曳不定，从不重复。这一组里最好看的一个。"
+        "description": "温暖的火焰摇曳不定，从不重复。这一组里最好看的一个。",
+        "together": "每支火焰按自己的节奏摇曳，像真正的蜡烛。"
       },
       "orage": {
         "name": "雷雨",
-        "description": "泛蓝的幽暗，被不规则的白色闪电划破。"
+        "description": "泛蓝的幽暗，被不规则的白色闪电划破。",
+        "together": "闪电一次击中一只灯泡，有时全部。"
       },
       "arc-en-ciel": {
         "name": "彩虹",
-        "description": "色相沿着整个色环缓缓转动。"
+        "description": "色相沿着整个色环缓缓转动。",
+        "together": "颜色分布在各个灯泡上：彩虹铺满房间并旋转。"
       },
       "alerte": {
         "name": "警报",
-        "description": "红光闪三下，然后灯泡准确回到原来的状态。用于提示某个事件。"
+        "description": "红光闪三下，然后灯泡准确回到原来的状态。用于提示某个事件。",
+        "together": "相邻灯泡交替闪烁。"
       },
       "lever-de-soleil": {
         "name": "日出",
-        "description": "五分钟，从暗红余烬到明亮白昼。适合用来温柔地醒来。"
+        "description": "五分钟，从暗红余烬到明亮白昼。适合用来温柔地醒来。",
+        "together": "灯泡依次亮起，如同太阳升起。"
       }
     },
     "pi": {
       "bulbs": "灯泡",
       "scenario": "情景",
-      "scenarioPlaceholder": "选择情景",
       "colour": "颜色",
       "step": "步长",
       "hueStep": "色相步长",
@@ -116,7 +123,7 @@
       "scenarioHelp": {
         "title": "它是怎么工作的？",
         "toggle": "按一次启动情景，再按一次停止。灯泡随后会准确回到原来的状态：相同的颜色、相同的亮度、开或关。",
-        "second": "可勾选一只或多只灯泡。目前只有警灯有两个角色：两只灯泡时以红蓝互相呼应，只有一只时在同一只灯泡上交替两种颜色，多出的灯泡重复第二个角色。",
+        "second": "勾选一只或多只灯泡，并用箭头排序。勾选“灯泡协同演出”后，灯光按此顺序在房间中移动；否则每只灯泡各自播放情景。",
         "oneShot": "警报和日出会自行停止，分别在闪三下之后和五分钟之后。其余情景会一直运行，直到你再次按下。",
         "safety": "动画被有意限制在每秒两次交替：超过这个频率，闪烁可能诱发光敏感人群的癫痫发作。"
       },
@@ -132,24 +139,10 @@
         "ignored": "个其他设备已忽略：不是灯具。",
         "expired": "二维码在扫描前已过期。请重试。"
       },
-      "scan": {
-        "note": "搜索会先监听灯泡自己广播的通告；若没有回应，再逐个敲击网络上的每个地址。最坏情况约需二十秒。它能找到地址和标识符，但永远找不到密钥：密钥仍需为每只灯泡手动粘贴一次。",
-        "button": "搜索网络",
-        "running": "正在搜索…",
-        "none": "未找到设备。请确认灯泡已通电，并与这台电脑处于同一网络。",
-        "found": "个设备已找到",
-        "sweep": "（通过扫描网络找到：灯泡的广播没有传到这里，有线电脑与 Wi-Fi 灯泡之间很常见）"
-      },
       "field": {
         "id": "灯泡标识符",
-        "name": "名称（可选）— 例如：书桌",
         "key": "本地密钥",
         "keyKept": "留空则保留原密钥"
-      },
-      "found": {
-        "already": "已登记",
-        "device": "Tuya 设备",
-        "noId": "标识符未知"
       },
       "save": {
         "button": "保存",
@@ -158,26 +151,33 @@
         "failed": "保存失败。",
         "needKey": "这只灯泡需要本地密钥才能被控制。"
       },
+      "scan": {
+        "button": "搜索网络",
+        "running": "正在搜索…",
+        "none": "未找到设备。请确认灯泡已通电，并与这台电脑处于同一网络。",
+        "intro": "查找你的灯泡并更新其地址。新灯泡仍需粘贴一次本地密钥。",
+        "upToDate": "已更新：",
+        "sweepShort": "通过扫描网络找到：灯泡的广播没有传到这里。",
+        "newDevice": "新设备",
+        "add": "添加",
+        "namePlaceholder": "例如：走廊"
+      },
       "twitch": {
-        "intro": "观众花费频道积分来选择灯泡的颜色。只需连接一次 Twitch 账号，奖励由 LumenDeck 自动创建。",
+        "intro": "观众花费频道积分来改变你的灯泡。只需连接一次 Twitch 账号，奖励由 LumenDeck 自动创建。",
         "connect": "连接 Twitch",
         "pairing": "请在刚打开的 Twitch 页面上核对此代码：",
         "waiting": "正在等待你在 Twitch 上批准...",
         "cancel": "取消",
         "connectedAs": "已连接为",
-        "rewardOk": "奖励已在你的频道上线。可在 Twitch 控制台中修改其价格或冷却时间。",
-        "rewardWait": "正在设置奖励...",
-        "disconnect": "断开连接",
-        "disconnectHelp": "断开连接会从你的频道删除该奖励，并撤销 LumenDeck 的访问权限。",
-        "bulbsHelp": "这些是观众可以更改的灯泡。如果一个都不勾选，且只登记了一只灯泡，则使用该灯泡。",
-        "pauseHelp": "按下按键即可暂停或恢复观众操作。暂停期间，所有兑换都会被退还。",
+        "disconnect": "断开 Twitch",
+        "disconnectHelp": "从你的频道删除这些奖励，并撤销 LumenDeck 的访问权限。",
         "inputHelp": "观众输入颜色名称（red、blue、pink 等）或 #ff8800 这样的代码。黑色和无法识别的内容会自动退还。",
-        "last": "最近一次兑换",
+        "last": "最近的兑换",
         "outcome": {
-          "applied": "已应用颜色",
+          "applied": "已应用",
           "refunded": "已退还",
-          "unsettled": "颜色已应用，但 Twitch 未能完成处理：请在控制台中手动处理",
-          "refundFailed": "颜色未应用，且 Twitch 拒绝了退款：请在控制台中手动退还"
+          "unsettled": "已应用，请在 Twitch 处理",
+          "refundFailed": "未应用，请在 Twitch 退还"
         },
         "retry": "重试",
         "err": {
@@ -190,13 +190,90 @@
           "revoked": "访问权限已在 Twitch 上被移除，请重新连接。",
           "forbidden": "Twitch 拒绝了此账号。频道积分需要 Affiliate 或 Partner 资格。",
           "duplicate": "你的频道上已有同名奖励，且并非由 LumenDeck 创建。请重命名或删除后重试。"
+        },
+        "liveLine": "在线 · 观众掌控中",
+        "pausedLine": "已暂停 · 兑换将被退还",
+        "blockedLine": "受阻",
+        "connecting": "连接中…",
+        "pause": "暂停",
+        "resume": "恢复",
+        "keyPause": "Stream Deck 按键与此按钮作用相同。",
+        "less": "减少",
+        "more": "增加",
+        "colours": "颜色",
+        "rewards": "个奖励",
+        "coloursHelp": "每个勾选的颜色都会成为频道积分菜单中的一个按钮。观众只需点击，无需输入。",
+        "surprise": "惊喜颜色",
+        "surpriseAside": "随机",
+        "freeText": "选择颜色",
+        "freeTextAside": "观众输入",
+        "scenarios": "情景",
+        "flashes": "闪烁",
+        "durationTitle": "按价格决定时长",
+        "rate": "每 100 积分的秒数",
+        "cap": "最长时长",
+        "example": "示例：用 300 积分购买的情景持续",
+        "exampleTail": "在 Twitch 控制台修改价格，时长会随之改变。",
+        "colour": {
+          "rouge": "红色",
+          "orange": "橙色",
+          "jaune": "黄色",
+          "vert": "绿色",
+          "cyan": "青色",
+          "bleu": "蓝色",
+          "violet": "紫色",
+          "rose": "粉色",
+          "blanc": "白色"
         }
-      }
+      },
+      "status": {
+        "online": "在线",
+        "offline": "离线",
+        "checking": "检查中…"
+      },
+      "picker": {
+        "orderHint": "灯光从 1 号依次移动",
+        "empty": "还没有灯泡：请在下方添加。",
+        "up": "上移",
+        "down": "下移"
+      },
+      "mine": {
+        "title": "我的灯泡",
+        "edit": "编辑",
+        "close": "关闭",
+        "name": "名称",
+        "forget": "移除此灯泡",
+        "forgetConfirm": "再次点击以确认",
+        "noKey": "缺少密钥"
+      },
+      "add": {
+        "title": "添加灯泡",
+        "qrTab": "Calex 应用（二维码）",
+        "scanTab": "在网络中"
+      },
+      "together": "灯泡协同演出",
+      "scenarioAlone": "每只灯泡同时各自播放情景。"
     },
     "twitch": {
       "reward": {
         "colorTitle": "选择颜色",
-        "colorPrompt": "输入颜色名称（red、blue、pink 等）或 #ff8800 这样的代码。其他内容将被退还。"
+        "colorPrompt": "输入颜色名称（red、blue、pink 等）或 #ff8800 这样的代码。其他内容将被退还。",
+        "palettePrompt": "主播的灯光会变成这个颜色。",
+        "surprise": "惊喜颜色",
+        "surprisePrompt": "灯光会随机变成一种颜色。",
+        "scenarioPrefix": "氛围：",
+        "scenarioPrompt": "播放这段灯光效果一会儿，之后灯光恢复原样。价格越高，持续越久。",
+        "palette": {
+          "rouge": "红色灯光",
+          "orange": "橙色灯光",
+          "jaune": "黄色灯光",
+          "vert": "绿色灯光",
+          "cyan": "青色灯光",
+          "bleu": "蓝色灯光",
+          "violet": "紫色灯光",
+          "rose": "粉色灯光",
+          "blanc": "白色灯光"
+        }
       }
     }
   }

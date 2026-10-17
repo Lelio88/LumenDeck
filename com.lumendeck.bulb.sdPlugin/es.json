@@ -53,41 +53,48 @@
     "scenario": {
       "clignotement": {
         "name": "Parpadeo",
-        "description": "La bombilla se enciende y se apaga sin fin. Útil como temporizador visible de lejos."
+        "description": "La bombilla se enciende y se apaga sin fin. Útil como temporizador visible de lejos.",
+        "together": "Persecución: la luz salta de una bombilla a la siguiente, en orden."
       },
       "gyrophare": {
         "name": "Luces de policía",
-        "description": "Rojo y azul alternos, como un coche de policía. Con dos bombillas, se responden."
+        "description": "Rojo y azul alternos, como un coche de policía. Con dos bombillas, se responden.",
+        "together": "El rojo recorre todas las bombillas; las demás quedan azules."
       },
       "respiration": {
         "name": "Respiración",
-        "description": "La intensidad sube y baja lentamente, manteniendo el color. Tranquilo, para trabajar."
+        "description": "La intensidad sube y baja lentamente, manteniendo el color. Tranquilo, para trabajar.",
+        "together": "Una ola: la respiración pasa de bombilla en bombilla."
       },
       "bougie": {
         "name": "Vela",
-        "description": "Una llama cálida que titila, nunca dos veces igual. El más bonito de la serie."
+        "description": "Una llama cálida que titila, nunca dos veces igual. El más bonito de la serie.",
+        "together": "Cada llama parpadea a su ritmo, como velas de verdad."
       },
       "orage": {
         "name": "Tormenta",
-        "description": "Una penumbra azulada, rasgada por destellos blancos a intervalos irregulares."
+        "description": "Una penumbra azulada, rasgada por destellos blancos a intervalos irregulares.",
+        "together": "Los rayos caen en una bombilla a la vez, a veces en todas."
       },
       "arc-en-ciel": {
         "name": "Arcoíris",
-        "description": "El tono gira suavemente por todo el círculo cromático."
+        "description": "El tono gira suavemente por todo el círculo cromático.",
+        "together": "Los colores se reparten entre las bombillas: el arcoíris llena la sala y gira."
       },
       "alerte": {
         "name": "Alerta",
-        "description": "Tres destellos rojos, luego la lámpara vuelve exactamente a su estado. Para señalar un evento."
+        "description": "Tres destellos rojos, luego la lámpara vuelve exactamente a su estado. Para señalar un evento.",
+        "together": "Las bombillas vecinas se alternan."
       },
       "lever-de-soleil": {
         "name": "Amanecer",
-        "description": "Cinco minutos de brasa oscura hasta la plena luz del día. Para despertar suavemente."
+        "description": "Cinco minutos de brasa oscura hasta la plena luz del día. Para despertar suavemente.",
+        "together": "Las bombillas se encienden una tras otra, como el sol al salir."
       }
     },
     "pi": {
       "bulbs": "Bombillas",
       "scenario": "Escenario",
-      "scenarioPlaceholder": "Elija un escenario",
       "colour": "Color",
       "step": "Paso",
       "hueStep": "Paso de tono",
@@ -116,7 +123,7 @@
       "scenarioHelp": {
         "title": "¿Cómo funciona?",
         "toggle": "Una pulsación inicia el escenario, otra lo detiene. La lámpara vuelve exactamente al estado en que estaba: mismo color, misma intensidad, encendida o apagada.",
-        "second": "Marque una o varias bombillas. Solo Luces de policía tiene hoy dos papeles: con dos bombillas se responden en rojo y azul, con una alterna ambos colores en la misma lámpara, y cada bombilla adicional repite el segundo papel.",
+        "second": "Marca una o varias bombillas y ordénalas con las flechas. Con «Las bombillas juegan juntas», la luz recorre la sala en ese orden; si no, cada bombilla reproduce el escenario por su cuenta.",
         "oneShot": "Alerta y Amanecer se detienen solos, tras tres destellos y cinco minutos respectivamente. Los demás siguen hasta que vuelva a pulsar.",
         "safety": "Las animaciones están limitadas a propósito a dos alternancias por segundo: más allá, un parpadeo puede provocar una crisis en una persona fotosensible."
       },
@@ -132,24 +139,10 @@
         "ignored": "otro(s) dispositivo(s) ignorado(s): no son luces.",
         "expired": "El código QR caducó antes de escanearse. Inténtelo de nuevo."
       },
-      "scan": {
-        "note": "La búsqueda escucha primero los anuncios que emiten sus bombillas y luego, si no llega nada, llama a cada dirección de la red. Cuente unos veinte segundos en el peor caso. Encuentra dirección e identificador, pero nunca la clave: esa hay que pegarla una vez por bombilla.",
-        "button": "Buscar en la red",
-        "running": "Buscando…",
-        "none": "No se encontró ningún dispositivo. Compruebe que la bombilla tiene corriente y está en la misma red que este ordenador.",
-        "found": "dispositivo(s) encontrado(s)",
-        "sweep": " (encontrado por barrido de red: sus bombillas no difunden hasta aquí, algo frecuente entre un ordenador por cable y una bombilla wifi)"
-      },
       "field": {
         "id": "Identificador de la bombilla",
-        "name": "Nombre (opcional) — p. ej. Escritorio",
         "key": "Clave local",
         "keyKept": "Dejar vacío para conservar la clave"
-      },
-      "found": {
-        "already": "ya guardada",
-        "device": "Dispositivo Tuya en",
-        "noId": "identificador desconocido"
       },
       "save": {
         "button": "Guardar",
@@ -158,26 +151,33 @@
         "failed": "Error al guardar.",
         "needKey": "Esta bombilla necesita su clave local para poder controlarse."
       },
+      "scan": {
+        "button": "Buscar en la red",
+        "running": "Buscando…",
+        "none": "No se encontró ningún dispositivo. Compruebe que la bombilla tiene corriente y está en la misma red que este ordenador.",
+        "intro": "Encuentra tus bombillas y actualiza su dirección. Una bombilla nueva aún necesita su clave local, pegada una vez.",
+        "upToDate": "Actualizadas:",
+        "sweepShort": "Encontrado barriendo la red: tus bombillas no emiten hasta aquí.",
+        "newDevice": "Dispositivo nuevo",
+        "add": "Añadir",
+        "namePlaceholder": "p. ej. Pasillo"
+      },
       "twitch": {
-        "intro": "Tus espectadores gastan puntos del canal para elegir el color de tus bombillas. Conecta tu cuenta de Twitch una sola vez: LumenDeck crea la recompensa por sí mismo.",
+        "intro": "Tus espectadores gastan puntos del canal para cambiar tus bombillas. Conecta tu cuenta de Twitch una sola vez: LumenDeck crea las recompensas por sí mismo.",
         "connect": "Conectar Twitch",
         "pairing": "Comprueba este código en la página de Twitch que se acaba de abrir:",
         "waiting": "Esperando tu aprobación en Twitch...",
         "cancel": "Cancelar",
         "connectedAs": "Conectado como",
-        "rewardOk": "La recompensa está activa en tu canal. Cambia su precio o su enfriamiento en tu panel de Twitch.",
-        "rewardWait": "Configurando la recompensa...",
-        "disconnect": "Desconectar",
-        "disconnectHelp": "Al desconectar se elimina la recompensa de tu canal y se retira el acceso de LumenDeck.",
-        "bulbsHelp": "Son las bombillas que cambian tus espectadores. Si no marcas ninguna, se usa la única bombilla declarada.",
-        "pauseHelp": "Pulsa la tecla para pausar o reactivar a tus espectadores. En pausa, cada canje se reembolsa.",
+        "disconnect": "Desconectar Twitch",
+        "disconnectHelp": "Elimina las recompensas de tu canal y retira el acceso de LumenDeck.",
         "inputHelp": "Los espectadores escriben un nombre de color (rojo, azul, rosa...) o un código como #ff8800. El negro y todo lo ilegible se reembolsan automáticamente.",
-        "last": "Último canje",
+        "last": "Últimos canjes",
         "outcome": {
-          "applied": "color aplicado",
+          "applied": "aplicado",
           "refunded": "reembolsado",
-          "unsettled": "color aplicado, pero Twitch no lo cerró: resuélvelo a mano en tu panel",
-          "refundFailed": "color no aplicado, y Twitch rechazó el reembolso: reembólsalo a mano en tu panel"
+          "unsettled": "aplicado, ciérralo en Twitch",
+          "refundFailed": "no aplicado, reembólsalo en Twitch"
         },
         "retry": "Reintentar",
         "err": {
@@ -190,13 +190,90 @@
           "revoked": "Se retiró el acceso en Twitch. Vuelve a conectar.",
           "forbidden": "Twitch rechazó esta cuenta. Los puntos del canal requieren ser Afiliado o Socio.",
           "duplicate": "Ya existe en tu canal una recompensa con este nombre que no creó LumenDeck. Cámbiale el nombre o elimínala y vuelve a intentarlo."
+        },
+        "liveLine": "En línea · los espectadores mandan",
+        "pausedLine": "En pausa · los canjes se reembolsan",
+        "blockedLine": "Bloqueado",
+        "connecting": "Conectando…",
+        "pause": "Pausa",
+        "resume": "Reanudar",
+        "keyPause": "La tecla del Stream Deck hace lo mismo que este botón.",
+        "less": "Menos",
+        "more": "Más",
+        "colours": "Colores",
+        "rewards": "recompensas",
+        "coloursHelp": "Cada color marcado se convierte en un botón del menú de puntos del canal. El espectador hace clic, sin escribir nada.",
+        "surprise": "Color sorpresa",
+        "surpriseAside": "al azar",
+        "freeText": "Elige el color",
+        "freeTextAside": "el espectador lo escribe",
+        "scenarios": "Escenarios",
+        "flashes": "parpadea",
+        "durationTitle": "Duración según el precio",
+        "rate": "Segundos por 100 puntos",
+        "cap": "Duración máxima",
+        "example": "Ejemplo: un escenario comprado por 300 puntos dura",
+        "exampleTail": "Cambia el precio en tu panel de Twitch: la duración lo sigue.",
+        "colour": {
+          "rouge": "Rojo",
+          "orange": "Naranja",
+          "jaune": "Amarillo",
+          "vert": "Verde",
+          "cyan": "Cian",
+          "bleu": "Azul",
+          "violet": "Morado",
+          "rose": "Rosa",
+          "blanc": "Blanco"
         }
-      }
+      },
+      "status": {
+        "online": "En línea",
+        "offline": "Sin conexión",
+        "checking": "Comprobando…"
+      },
+      "picker": {
+        "orderHint": "La luz va de la 1 a la última",
+        "empty": "Aún no hay bombillas: añade una más abajo.",
+        "up": "Subir",
+        "down": "Bajar"
+      },
+      "mine": {
+        "title": "Mis bombillas",
+        "edit": "Editar",
+        "close": "Cerrar",
+        "name": "Nombre",
+        "forget": "Olvidar esta bombilla",
+        "forgetConfirm": "Haz clic otra vez para confirmar",
+        "noKey": "Falta la clave"
+      },
+      "add": {
+        "title": "Añadir bombillas",
+        "qrTab": "App Calex (QR)",
+        "scanTab": "En la red"
+      },
+      "together": "Las bombillas juegan juntas",
+      "scenarioAlone": "Cada bombilla reproduce el escenario por su cuenta, todas a la vez."
     },
     "twitch": {
       "reward": {
         "colorTitle": "Elige el color",
-        "colorPrompt": "Escribe un nombre de color (rojo, azul, rosa...) o un código como #ff8800. Todo lo demás se reembolsa."
+        "colorPrompt": "Escribe un nombre de color (rojo, azul, rosa...) o un código como #ff8800. Todo lo demás se reembolsa.",
+        "palettePrompt": "Las luces del stream toman este color.",
+        "surprise": "Color sorpresa",
+        "surprisePrompt": "Las luces toman un color al azar.",
+        "scenarioPrefix": "Ambiente: ",
+        "scenarioPrompt": "Reproduce esta animación de luz un rato y luego las luces vuelven a la normalidad. Cuanto más alto el precio, más dura.",
+        "palette": {
+          "rouge": "Luz roja",
+          "orange": "Luz naranja",
+          "jaune": "Luz amarilla",
+          "vert": "Luz verde",
+          "cyan": "Luz cian",
+          "bleu": "Luz azul",
+          "violet": "Luz morada",
+          "rose": "Luz rosa",
+          "blanc": "Luz blanca"
+        }
       }
     }
   }
