@@ -96,5 +96,5 @@ npx streamdeck restart com.lumendeck.bulb           # recharge après build
 
 ## VIII. Contexte de Session
 
-- **Dernier focus** : —
-- **Focus immédiat** : —
+- **Dernier focus** : 0.15 — groupes d'ampoules, Twitch (palette, scénarios, pause native), scénarios de groupe, panneaux refaits ; validé sur le PC.
+- **Focus immédiat** : publier la release GitHub v0.15 ; rendre plus visible l'orage en mode ensemble.
