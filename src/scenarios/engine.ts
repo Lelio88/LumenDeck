@@ -75,6 +75,12 @@ export type Engine = {
   stopAll(): Promise<void>;
   /** Le scenario en cours sur cette ampoule, principale ou non, ou undefined. */
   runningOn(bulbId: string | undefined): string | undefined;
+  /**
+   * Se termine quand le scenario qui occupe cette ampoule s'arrete, lampes
+   * restaurees ; tout de suite si rien ne tourne. Sert a faire attendre la fin
+   * d'un scenario achete par un viewer avant de servir le suivant.
+   */
+  untilStopped(bulbId: string | undefined): Promise<void>;
 };
 
 type Session = {
@@ -89,6 +95,10 @@ type Session = {
   readonly targets: readonly Target[];
   /** Echecs reseau consecutifs. Au-dela de TOLERANCE, on renonce. */
   failures: number;
+  /** Se termine a l'arret, une fois les lampes restaurees. */
+  readonly ended: Promise<void>;
+  /** Termine `ended`. */
+  readonly markEnded: () => void;
 };
 
 /**
@@ -222,6 +232,7 @@ export function createEngine(deps: EngineDeps): Engine {
         // bloquerait l'arret, qui doit rester immediat pour l'utilisateur.
       }
     }));
+    session.markEnded();
   }
 
   return {
@@ -233,7 +244,11 @@ export function createEngine(deps: EngineDeps): Engine {
       // attendait une restauration.
       for (let busy = occupant(targets); busy; busy = occupant(targets)) await stopSession(busy);
 
+      let markEnded!: () => void;
+      const ended = new Promise<void>((resolve) => { markEnded = resolve; });
       const session: Session = {
+        ended,
+        markEnded,
         scenarioId: scenario.id,
         together: options.together === true,
         deadline: options.maxMs === undefined ? undefined : now() + options.maxMs,
@@ -276,6 +291,11 @@ export function createEngine(deps: EngineDeps): Engine {
 
     runningOn(bulbId) {
       return bulbId ? sessions.get(bulbId)?.scenarioId : undefined;
+    },
+
+    untilStopped(bulbId) {
+      const session = bulbId ? sessions.get(bulbId) : undefined;
+      return session ? session.ended : Promise.resolve();
     },
   };
 }

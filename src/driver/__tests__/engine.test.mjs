@@ -153,3 +153,31 @@ test('stopAll arrete tout et ne laisse aucune minuterie', async () => {
   assert.equal(engine.runningOn('b'), undefined);
   assert.equal(clock.count(), 0);
 });
+
+test('untilStopped attend la fin du scenario en cours, restauration comprise', async () => {
+  const { engine, clock, lamps } = setup();
+  await engine.start(byId('arc-en-ciel'), [lamp('a')], { maxMs: 2000 });
+  let done = false;
+  const waiting = engine.untilStopped('a').then(() => { done = true; });
+  await clock.advance(1000);
+  assert.equal(done, false, 'le scenario tourne encore');
+  await clock.advance(2000);
+  await waiting;
+  assert.equal(done, true);
+  // La restauration est faite AVANT que l'attente ne se termine.
+  assert.deepEqual(lamps.calls.at(-1), ['a', 'brightness', 40]);
+});
+
+test('untilStopped rend la main tout de suite quand rien ne tourne', async () => {
+  const { engine } = setup();
+  await engine.untilStopped('a');
+  await engine.untilStopped(undefined);
+});
+
+test('untilStopped se termine aussi sur un arret manuel', async () => {
+  const { engine } = setup();
+  await engine.start(byId('arc-en-ciel'), [lamp('a')]);
+  const waiting = engine.untilStopped('a');
+  await engine.stop('a');
+  await waiting;
+});

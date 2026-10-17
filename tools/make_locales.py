@@ -47,15 +47,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent / "com.lumendeck.bulb.sdPl
 
 # --- Manifeste : la cle EST le texte anglais du manifeste --------------------
 PLAT = {
-    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": {
-        "fr": "Pilotage local d'ampoules Tuya (compatibles Calex Smart) : allumage, intensité, couleur et blanc réglable, sans cloud, en une vingtaine de millisecondes.",
-        "de": "Lokale Steuerung von Tuya-Lampen (Calex Smart und kompatible): Ein/Aus, Helligkeit, Farbe und Weißabgleich, ohne Cloud, in rund zwanzig Millisekunden.",
-        "es": "Control local de bombillas Tuya (Calex Smart y compatibles): encendido, intensidad, color y blanco regulable, sin nube, en unos veinte milisegundos.",
-        "it": "Controllo locale di lampadine Tuya (Calex Smart e compatibili): accensione, intensità, colore e bianco regolabile, senza cloud, in circa venti millisecondi.",
-        "ja": "Tuya スマート電球（Calex Smart 互換）をローカルで制御。電源・明るさ・色・白色温度を、クラウドを介さず約 20 ミリ秒で。",
-        "ko": "Tuya 스마트 전구(Calex Smart 호환)를 로컬에서 제어합니다. 전원, 밝기, 색상, 백색 온도를 클라우드 없이 약 20밀리초 만에.",
-        "zh_CN": "在本地控制 Tuya 智能灯泡（兼容 Calex Smart）：开关、亮度、颜色和白光色温，无需云端，约二十毫秒。",
-        "zh_TW": "在本機控制 Tuya 智慧燈泡（相容 Calex Smart）：開關、亮度、顏色與白光色溫，無需雲端，約二十毫秒。",
+    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour, white balance and light scenarios, without the cloud, in about twenty milliseconds. Your Twitch viewers can change the mood with channel points.": {
+        "fr": "Pilotage local d'ampoules Tuya (compatibles Calex Smart) : allumage, intensité, couleur, blanc réglable et scénarios lumineux, sans cloud, en une vingtaine de millisecondes. Vos viewers Twitch peuvent changer l'ambiance avec leurs points de chaîne.",
+        "de": "Lokale Steuerung von Tuya-Lampen (Calex Smart und kompatible): Ein/Aus, Helligkeit, Farbe, Weißabgleich und Lichtszenarien, ohne Cloud, in rund zwanzig Millisekunden. Ihre Twitch-Zuschauer können die Stimmung mit Kanalpunkten ändern.",
+        "es": "Control local de bombillas Tuya (Calex Smart y compatibles): encendido, intensidad, color, blanco regulable y escenarios de luz, sin nube, en unos veinte milisegundos. Tus espectadores de Twitch pueden cambiar el ambiente con puntos del canal.",
+        "it": "Controllo locale di lampadine Tuya (Calex Smart e compatibili): accensione, intensità, colore, bianco regolabile e scenari luminosi, senza cloud, in circa venti millisecondi. I tuoi spettatori Twitch possono cambiare l'atmosfera con i punti del canale.",
+        "ja": "Tuya スマート電球（Calex Smart 互換）をローカルで制御。電源・明るさ・色・白色温度・ライトシナリオを、クラウドを介さず約 20 ミリ秒で。Twitch の視聴者がチャンネルポイントで雰囲気を変えられます。",
+        "ko": "Tuya 스마트 전구(Calex Smart 호환)를 로컬에서 제어합니다. 전원, 밝기, 색상, 백색 온도, 조명 시나리오를 클라우드 없이 약 20밀리초 만에. Twitch 시청자가 채널 포인트로 분위기를 바꿀 수 있습니다.",
+        "zh_CN": "在本地控制 Tuya 智能灯泡（兼容 Calex Smart）：开关、亮度、颜色、白光色温和灯光情景，无需云端，约二十毫秒。你的 Twitch 观众可以用频道积分改变氛围。",
+        "zh_TW": "在本機控制 Tuya 智慧燈泡（相容 Calex Smart）：開關、亮度、顏色、白光色溫與燈光情境，無需雲端，約二十毫秒。你的 Twitch 觀眾可以用頻道點數改變氛圍。",
     },
     "Power": {
         "fr": "Allumage", "de": "Ein/Aus", "es": "Encendido", "it": "Accensione",

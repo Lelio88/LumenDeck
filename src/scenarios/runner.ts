@@ -36,3 +36,5 @@ export const stop = engine.stop;
 export const stopAll = engine.stopAll;
 /** Le scenario en cours sur cette ampoule, principale ou non, ou undefined. */
 export const runningOn = engine.runningOn;
+/** Se termine quand le scenario qui occupe cette ampoule s'arrete ; tout de suite si rien ne tourne. */
+export const untilStopped = engine.untilStopped;

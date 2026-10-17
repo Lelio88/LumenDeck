@@ -171,9 +171,12 @@ service et sera retentée. Sans réglage du panneau, ce sont les choix par défa
 (cinq couleurs, surprise, saisie libre, cinq scénarios) : ils sont **créés** chez Twitch à la
 première connexion, comme le panneau les montre cochés.
 
-**Couleur contre scénario.** Une couleur achetée arrête le scénario en cours sur les mêmes lampes,
-même s'il a été acheté par un autre viewer : sa prochaine image effacerait sinon la couleur. Un
-scénario qui n'atteint **aucune** lampe à sa première image est arrêté et le viewer remboursé.
+**Couleur contre scénario.** Un scénario **acheté par un viewer** va jusqu'au bout : une couleur ou un
+autre scénario acheté pendant ce temps attend sa fin (`untilStopped` du moteur), chacun en a pour ses
+points. L'attente est bornée par la durée payée plus 2 s ; pendant ce temps la file des rachats avance
+d'autant, et au-delà de dix rachats en attente les suivants sont remboursés. Un scénario lancé par une
+**touche**, lui, s'efface devant une couleur achetée : sa prochaine image effacerait sinon la couleur.
+Un scénario qui n'atteint **aucune** lampe à sa première image est arrêté et le viewer remboursé.
 
 **Un abonnement pour toute la chaîne.** Un abonnement par récompense obligerait à suivre chaque case
 du panneau. Le plugin reçoit donc tous les rachats de la chaîne, et ignore **sans les lire** ceux des

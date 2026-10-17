@@ -55,8 +55,12 @@
  *     EventSub ne rejoue rien. A chaque abonnement, on rembourse ceux que le
  *     plugin n'a pas vus et qui ont plus d'une minute.
  *
- *   - Un scenario en cours sur une ampoule visee est ARRETE avant d'appliquer
- *     une couleur : sa prochaine image effacerait sinon le choix du viewer.
+ *   - Un scenario ACHETE PAR UN VIEWER va jusqu'au bout : une couleur ou un autre
+ *     scenario achete pendant ce temps attend sa fin (chacun en a pour ses
+ *     points). L'attente est bornee par la duree payee, plus une marge : elle ne
+ *     peut pas bloquer la file plus longtemps que le spectacle lui-meme. Un
+ *     scenario lance par une TOUCHE, lui, s'efface devant le viewer : sa prochaine
+ *     image effacerait sinon la couleur achetee.
  *
  *   - La pause est une VRAIE pause chez Twitch : les recompenses y sont mises en
  *     pause (visibles, mais impossibles a acheter), plutot que d'encaisser puis
@@ -81,7 +85,7 @@ import type { Hsv } from '../driver/types.js';
 import { readGlobal, updateGlobal } from '../globals.js';
 import { t } from '../i18n.js';
 import { SCENARIOS, byId } from '../scenarios/catalogue.js';
-import { start as startScenario, stop as stopScenario } from '../scenarios/runner.js';
+import { runningOn, start as startScenario, stop as stopScenario, untilStopped } from '../scenarios/runner.js';
 import {
   TwitchAuthError, pollDeviceFlow, refreshTokens, revokeToken, startDeviceFlow,
   type Fetcher, type Tokens,
@@ -145,6 +149,8 @@ const REFRESH_MARGIN_MS = 5 * 60_000;
 const NETWORK_RETRY_MS = 30_000;
 /** Un rachat en attente plus jeune que cela est peut-etre en cours de traitement. */
 const STALE_REDEMPTION_MS = 60_000;
+/** Marge accordee a la fin d'un scenario de viewer (restauration des lampes comprise). */
+const SHOW_END_MARGIN_MS = 2000;
 /** Attente apres un changement de panneau avant de synchroniser les recompenses. */
 const SYNC_DELAY_MS = 1500;
 /** Rachats gardes pour l'historique du panneau. */
@@ -181,6 +187,8 @@ let closing = false;
 let epoch = 0;
 /** Renouvellement en vol, partage par tous les appelants. */
 let refreshing: Promise<Tokens> | undefined;
+/** Le dernier scenario achete par un viewer : lequel, sur quelles lampes, et jusqu'a quand. */
+let viewerShow: { readonly scenarioId: string; readonly bulbIds: readonly string[]; readonly endsAt: number } | undefined;
 const listeners = new Set<(status: Status) => void>();
 
 let markReady!: () => void;
@@ -444,12 +452,30 @@ async function targets() {
   return coordinatesForMany({ deviceIds: stored.deviceIds ?? [] });
 }
 
+/**
+ * Attend la fin du scenario achete par un viewer s'il occupe encore l'une de ces lampes.
+ *
+ * Bornee par l'heure de fin prevue (plus une marge) : un scenario du meme nom
+ * lance ensuite par une touche, et qui tournerait indefiniment, ne doit pas
+ * bloquer les rachats suivants.
+ */
+async function awaitViewerShow(bulbIds: readonly string[]): Promise<void> {
+  const show = viewerShow;
+  if (!show) return;
+  const busy = bulbIds.find((id) => show.bulbIds.includes(id) && runningOn(id) === show.scenarioId);
+  const left = show.endsAt + SHOW_END_MARGIN_MS - Date.now();
+  if (!busy || left <= 0) return;
+  await Promise.race([untilStopped(busy), wait(left)]);
+}
+
 /** Applique une couleur aux ampoules choisies. Vrai si au moins une a obei. */
 async function applyColor(color: Hsv): Promise<boolean> {
   const coords = await targets();
   if (coords.length === 0) return false;
 
-  // Un scenario repeindrait la lampe a sa prochaine image : il s'efface devant le viewer.
+  // Le scenario paye par un autre viewer va jusqu'au bout ; celui d'une touche
+  // s'efface, sa prochaine image repeindrait sinon la couleur.
+  await awaitViewerShow(coords.map((c) => c.id));
   await Promise.all(coords.map((c) => stopScenario(c.id)));
 
   const { values, errors } = await fanOut(coords, (c) => withRetry(c, async (bulb) => {
@@ -469,10 +495,13 @@ async function playScenario(scenarioId: string, cost: number): Promise<boolean> 
   const coords = await targets();
   if (!scenario || coords.length === 0) return false;
   const { together, secondsPer100, maxSeconds } = config();
-  const played = await startScenario(scenario, coords, { together, maxMs: scenarioDuration(cost, secondsPer100, maxSeconds) });
+  const maxMs = scenarioDuration(cost, secondsPer100, maxSeconds);
+  await awaitViewerShow(coords.map((c) => c.id));
+  const played = await startScenario(scenario, coords, { together, maxMs });
   // Aucune lampe n'a recu la premiere image : on n'insiste pas, le viewer sera rembourse.
-  if (!played) await stopScenario(coords[0]?.id);
-  return played;
+  if (!played) { await stopScenario(coords[0]?.id); return false; }
+  viewerShow = { scenarioId, bulbIds: coords.map((c) => c.id), endsAt: Date.now() + maxMs };
+  return true;
 }
 
 // --- Rachats -----------------------------------------------------------------

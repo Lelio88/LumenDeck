@@ -1,6 +1,6 @@
 {
   "Localization": {
-    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": "Control local de bombillas Tuya (Calex Smart y compatibles): encendido, intensidad, color y blanco regulable, sin nube, en unos veinte milisegundos.",
+    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour, white balance and light scenarios, without the cloud, in about twenty milliseconds. Your Twitch viewers can change the mood with channel points.": "Control local de bombillas Tuya (Calex Smart y compatibles): encendido, intensidad, color, blanco regulable y escenarios de luz, sin nube, en unos veinte milisegundos. Tus espectadores de Twitch pueden cambiar el ambiente con puntos del canal.",
     "Power": "Encendido",
     "Brightness": "Intensidad",
     "Colour": "Color",

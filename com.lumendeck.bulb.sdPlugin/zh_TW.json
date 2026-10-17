@@ -1,6 +1,6 @@
 {
   "Localization": {
-    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour and white balance, without the cloud, in about twenty milliseconds.": "在本機控制 Tuya 智慧燈泡（相容 Calex Smart）：開關、亮度、顏色與白光色溫，無需雲端，約二十毫秒。",
+    "Local control of Tuya smart bulbs (Calex Smart and compatible): power, brightness, colour, white balance and light scenarios, without the cloud, in about twenty milliseconds. Your Twitch viewers can change the mood with channel points.": "在本機控制 Tuya 智慧燈泡（相容 Calex Smart）：開關、亮度、顏色、白光色溫與燈光情境，無需雲端，約二十毫秒。你的 Twitch 觀眾可以用頻道點數改變氛圍。",
     "Power": "電源",
     "Brightness": "亮度",
     "Colour": "顏色",
