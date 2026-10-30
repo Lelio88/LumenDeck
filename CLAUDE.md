@@ -24,6 +24,7 @@ Topologie rapide :
 - `src/plugin.ts` — composition : enregistre les actions, ouvre le dialogue Stream Deck
 - `com.lumendeck.bulb.sdPlugin/` — manifeste, images, panneaux de configuration (versionné)
 - `tools/` — génération des icônes ; `src/tools/` — sondes de diagnostic (ont besoin des deps)
+- `tools/capture-probe/` — sonde Rust jetable : la capture d'écran DXGI voit-elle un jeu donné ? (lecture seule, aucune ampoule)
 
 ## III. Pile Technologique
 
