@@ -28,6 +28,14 @@
  *     lampe : un rachat de viewer s'en sert pour rembourser un scenario qui
  *     n'a rien montre.
  *
+ *   - Une session peut etre EN DIRECT (`startLive`) : ses images ne viennent pas
+ *     d'un catalogue mais d'une source (la couleur de l'ecran). Elle emprunte le
+ *     meme chemin qu'un scenario — une execution par lampe, releve et restauration
+ *     de l'etat, tolerance aux pannes — ce qui rend le suivi d'ecran et les
+ *     scenarios mutuellement exclusifs sans code en plus. Seules differences : une
+ *     image peut durer `LIVE_HOLD_MS` au lieu de `MIN_HOLD_MS`, et rien ne l'arrete
+ *     que l'utilisateur.
+ *
  * Invariant a preserver : aucun chemin de sortie ne doit laisser une minuterie
  * armee. C'est pourquoi l'arret est idempotent et pourquoi le drapeau `stopped`
  * est teste apres CHAQUE attente — une image en vol peut se terminer apres que
@@ -38,11 +46,21 @@
  *   await engine.start(byId('gyrophare'), [coordsA, coordsB], { together: true });
  */
 import type { LightDriver, LightState } from '../driver/types.ts';
-import { MIN_HOLD_MS, frameFor, type Cue, type Scenario } from './catalogue.ts';
+import { MIN_HOLD_MS, frameFor, type Cue, type Frame, type Scenario } from './catalogue.ts';
 import { createRegistry } from './sessions.ts';
 
 /** Coordonnees d'une ampoule, telles que les rend `coordinatesForMany`. */
 export type Target = { id: string; key: string; ip?: string; version?: string };
+
+/**
+ * Duree minimale d'une image EN DIRECT, en millisecondes.
+ *
+ * Plus courte que celle d'un scenario (le suivi d'ecran doit paraitre fluide),
+ * mais jamais en dessous : chaque image est un aller-retour reseau, et l'ampoule
+ * refuse les commandes si on la sature. La minuterie est rearmee APRES chaque
+ * image : un reseau lent ralentit le flux au lieu de l'empiler.
+ */
+export const LIVE_HOLD_MS = 80;
 
 /** Comment jouer : ensemble ou chacune dans son coin, et combien de temps au plus. */
 export type StartOptions = {
@@ -69,6 +87,15 @@ export type EngineDeps = {
 export type Engine = {
   /** Lance un scenario ; rend vrai s'il joue vraiment (voir l'en-tete). */
   start(scenario: Scenario, targets: readonly Target[], options?: StartOptions): Promise<boolean>;
+  /**
+   * Lance une session EN DIRECT : `frameAt` produit chaque image (une consigne
+   * par lampe, dans l'ordre de `targets`). Rend vrai si la premiere a atteint
+   * au moins une lampe. Ne s'arrete que sur `stop`/`stopAll` ou apres des
+   * pannes repetees. `onEnded` est appele quand CETTE session s'arrete, lampes
+   * restaurees : c'est la fin de la session creee ici, pas de celle qui occupera
+   * la lampe ensuite.
+   */
+  startLive(id: string, frameAt: (step: number) => Frame, targets: readonly Target[], onEnded?: () => void): Promise<boolean>;
   /** Arrete le scenario qui occupe cette ampoule et restaure ses lampes. Idempotent. */
   stop(bulbId: string | undefined): Promise<void>;
   /** Arrete tout. Appele a l'extinction du plugin. */
@@ -83,9 +110,18 @@ export type Engine = {
   untilStopped(bulbId: string | undefined): Promise<void>;
 };
 
+/** D'ou viennent les images d'une session, et a quel rythme au plus. */
+type Source = {
+  readonly frameAt: (step: number) => Frame;
+  /** Nombre d'images au bout duquel la session s'arrete seule, ou undefined : sans fin. */
+  readonly steps: number | undefined;
+  readonly minHoldMs: number;
+};
+
 type Session = {
+  /** Identifiant du scenario, ou de la source en direct (`ecran`). */
   readonly scenarioId: string;
-  readonly together: boolean;
+  readonly source: Source;
   /** Instant (ms) ou le scenario doit s'arreter de lui-meme, ou undefined. */
   readonly deadline: number | undefined;
   timer: unknown;
@@ -116,6 +152,9 @@ export function createEngine(deps: EngineDeps): Engine {
 
   /** Applique une consigne a une ampoule. */
   async function applyCue(target: Target, cue: Cue): Promise<void> {
+    // Une consigne « au repos » (flux en direct, couleur inchangee) ne doit rien couter :
+    // meme sans ordre, `withBulb` prendrait une connexion du reservoir.
+    if (cue.idle === true) return;
     await withBulb(target, async (bulb) => {
       if (cue.on === false) {
         await bulb.setPower(false);
@@ -123,7 +162,7 @@ export function createEngine(deps: EngineDeps): Engine {
       }
       // Une couleur implique d'allumer : appliquer une teinte a une lampe eteinte
       // est silencieux, et le scenario paraitrait casse.
-      if (cue.on === true || cue.color) await bulb.setPower(true);
+      if (cue.on === true || (cue.color && cue.keepOn !== true)) await bulb.setPower(true);
       if (cue.color) await bulb.setColor(cue.color);
       if (cue.brightness !== undefined) await bulb.setBrightness(cue.brightness);
     });
@@ -142,7 +181,11 @@ export function createEngine(deps: EngineDeps): Engine {
   async function applyFrame(cues: readonly Cue[], targets: readonly Target[]): Promise<boolean> {
     const settled = await Promise.allSettled(targets.map((target, index) => {
       const cue = cues[Math.min(index, cues.length - 1)];
-      return cue ? applyCue(target, cue) : Promise.resolve();
+      if (!cue) return Promise.resolve();
+      return applyCue(target, cue).then(
+        () => { cue.onSettled?.(true); },
+        (error: unknown) => { cue.onSettled?.(false); throw error; },
+      );
     }));
     return settled.some((result) => result.status === 'fulfilled');
   }
@@ -162,14 +205,14 @@ export function createEngine(deps: EngineDeps): Engine {
   }
 
   /** Deroule une image puis programme la suivante. Rend vrai si l'image a atteint au moins une lampe. */
-  async function tick(session: Session, scenario: Scenario, step: number): Promise<boolean> {
+  async function tick(session: Session, step: number): Promise<boolean> {
     if (session.stopped) return false;
     if (session.deadline !== undefined && now() >= session.deadline) {
       await stopSession(session);
       return false;
     }
 
-    const frame = frameFor(scenario, step, session.targets.length, session.together);
+    const frame = session.source.frameAt(step);
     const reached = await applyFrame(frame.cues, session.targets);
     if (reached) {
       session.failures = 0;
@@ -186,15 +229,15 @@ export function createEngine(deps: EngineDeps): Engine {
     if (session.stopped) return reached;
 
     const next = step + 1;
-    if (!scenario.loops && scenario.steps !== undefined && next >= scenario.steps) {
+    if (session.source.steps !== undefined && next >= session.source.steps) {
       await stopSession(session);
       return reached;
     }
 
     // Une image longue (5 s au lever du soleil) ne doit pas faire depasser l'echeance.
-    const hold = Math.max(MIN_HOLD_MS, frame.holdMs);
+    const hold = Math.max(session.source.minHoldMs, frame.holdMs);
     const left = session.deadline === undefined ? hold : Math.max(0, session.deadline - now());
-    session.timer = timers.set(() => { session.timer = undefined; void tick(session, scenario, next); }, Math.min(hold, left));
+    session.timer = timers.set(() => { session.timer = undefined; void tick(session, next); }, Math.min(hold, left));
     return reached;
   }
 
@@ -235,49 +278,70 @@ export function createEngine(deps: EngineDeps): Engine {
     session.markEnded();
   }
 
+  /** Demarre une session : libere les lampes, releve leur etat, deroule la source. */
+  async function launch(
+    id: string,
+    source: Source,
+    targets: readonly Target[],
+    maxMs: number | undefined,
+    onEnded?: () => void,
+  ): Promise<boolean> {
+    if (targets.length === 0) return false;
+
+    // Liberer TOUTES les lampes avant de les reprendre. On reboucle tant qu'une
+    // lampe est occupee : un autre demarrage a pu s'inscrire pendant qu'on
+    // attendait une restauration.
+    for (let busy = occupant(targets); busy; busy = occupant(targets)) await stopSession(busy);
+
+    let markEnded!: () => void;
+    const ended = new Promise<void>((resolve) => { markEnded = resolve; });
+    const session: Session = {
+      ended,
+      markEnded,
+      scenarioId: id,
+      source,
+      deadline: maxMs === undefined ? undefined : now() + maxMs,
+      timer: undefined,
+      stopped: false,
+      snapshots: new Map(),
+      targets,
+      failures: 0,
+    };
+
+    // S'inscrire TOUT DE SUITE, avant la moindre attente reseau : la lecture
+    // d'une lampe debranchee dure ~5 s, et tant que la session n'est pas
+    // indexee un second appui lancerait une seconde session impossible a arreter.
+    sessions.add(session);
+    if (onEnded) void ended.then(onEnded);
+
+    // Relever l'etat avant la premiere image. Un echec de lecture n'empeche
+    // pas de jouer : on renonce seulement a restaurer CETTE lampe.
+    await Promise.all(targets.map(async (target) => {
+      try {
+        session.snapshots.set(target.id, await withBulb(target, (bulb) => bulb.read()));
+      } catch {
+        // Injoignable a la lecture : elle le sera sans doute a l'ecriture, et
+        // la tolerance aux echecs se chargera d'arreter proprement.
+      }
+    }));
+
+    // Un arret pendant le releve : rien n'a ete joue, rien a restaurer.
+    if (session.stopped) return false;
+    return tick(session, 0);
+  }
+
   return {
-    async start(scenario, targets, options = {}) {
-      if (targets.length === 0) return false;
+    start(scenario, targets, options = {}) {
+      const together = options.together === true;
+      return launch(scenario.id, {
+        frameAt: (step) => frameFor(scenario, step, targets.length, together),
+        steps: scenario.loops ? undefined : scenario.steps,
+        minHoldMs: MIN_HOLD_MS,
+      }, targets, options.maxMs);
+    },
 
-      // Liberer TOUTES les lampes avant de les reprendre. On reboucle tant qu'une
-      // lampe est occupee : un autre demarrage a pu s'inscrire pendant qu'on
-      // attendait une restauration.
-      for (let busy = occupant(targets); busy; busy = occupant(targets)) await stopSession(busy);
-
-      let markEnded!: () => void;
-      const ended = new Promise<void>((resolve) => { markEnded = resolve; });
-      const session: Session = {
-        ended,
-        markEnded,
-        scenarioId: scenario.id,
-        together: options.together === true,
-        deadline: options.maxMs === undefined ? undefined : now() + options.maxMs,
-        timer: undefined,
-        stopped: false,
-        snapshots: new Map(),
-        targets,
-        failures: 0,
-      };
-
-      // S'inscrire TOUT DE SUITE, avant la moindre attente reseau : la lecture
-      // d'une lampe debranchee dure ~5 s, et tant que la session n'est pas
-      // indexee un second appui lancerait une seconde session impossible a arreter.
-      sessions.add(session);
-
-      // Relever l'etat avant la premiere image. Un echec de lecture n'empeche
-      // pas de jouer : on renonce seulement a restaurer CETTE lampe.
-      await Promise.all(targets.map(async (target) => {
-        try {
-          session.snapshots.set(target.id, await withBulb(target, (bulb) => bulb.read()));
-        } catch {
-          // Injoignable a la lecture : elle le sera sans doute a l'ecriture, et
-          // la tolerance aux echecs se chargera d'arreter proprement.
-        }
-      }));
-
-      // Un arret pendant le releve : rien n'a ete joue, rien a restaurer.
-      if (session.stopped) return false;
-      return tick(session, scenario, 0);
+    startLive(id, frameAt, targets, onEnded) {
+      return launch(id, { frameAt, steps: undefined, minHoldMs: LIVE_HOLD_MS }, targets, undefined, onEnded);
     },
 
     async stop(bulbId) {

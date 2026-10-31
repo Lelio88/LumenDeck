@@ -17,6 +17,8 @@
     "Adjust the white": "调节白光",
     "Start / stop the scenario": "启动 / 停止情景",
     "Lets your viewers change the colour with channel points.": "让观众用频道积分更换颜色。",
+    "Screen": "屏幕",
+    "Makes the bulbs follow the colours of your screen, like ambient lighting.": "灯泡跟随屏幕的颜色，就像氛围灯一样。",
     "key": {
       "toSet": "待设置",
       "offline": "离线",
@@ -26,7 +28,10 @@
       "off": "关",
       "noColour": "不支持颜色",
       "noWhite": "不支持白光",
-      "paused": "已暂停"
+      "paused": "已暂停",
+      "screen": "屏幕",
+      "noCapture": "无法捕获",
+      "captureLost": "捕获中断"
     },
     "warmth": {
       "warm": "暖色",
@@ -252,7 +257,22 @@
         "scanTab": "在网络中"
       },
       "together": "灯泡协同演出",
-      "scenarioAlone": "每只灯泡同时各自播放情景。"
+      "scenarioAlone": "每只灯泡同时各自播放情景。",
+      "screenMode": "颜色分配",
+      "screenSame": "全部相同",
+      "screenZones": "左 / 右",
+      "screenSameNote": "每个灯泡都采用整个屏幕的主色调。",
+      "screenZonesNote": "前面的灯泡跟随屏幕左半部分，后面的灯泡跟随右半部分。请用上方的箭头将灯泡按从左到右的顺序排列。",
+      "screenMonitor": "要跟随的屏幕",
+      "screenMain": "主屏幕",
+      "screenNoCapture": "未安装屏幕捕获工具。请运行“npm run build:capture”，然后重启 Stream Deck。",
+      "screenHelp": {
+        "title": "如何使用？",
+        "toggle": "按一次，灯泡跟随屏幕颜色；再按一次即停止，灯泡会恢复到之前的状态。",
+        "games": "游戏需要以窗口、无边框窗口或 Windows 全屏优化（默认开启）方式运行。极少数使用真正独占全屏的老游戏，以及 Netflix、Prime 等受保护的视频，捕获结果会是黑屏。",
+        "exclusive": "一个灯泡同一时间只跟随一项内容：在其上启动情景或观众的 Twitch 奖励，会从屏幕手中接管该灯泡。",
+        "safety": "颜色已做平滑处理，但画面变化非常剧烈时灯泡仍可能闪烁。对闪光敏感的用户请勿使用此模式。"
+      }
     },
     "twitch": {
       "reward": {

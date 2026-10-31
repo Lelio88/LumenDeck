@@ -181,3 +181,56 @@ test('untilStopped se termine aussi sur un arret manuel', async () => {
   await engine.stop('a');
   await waiting;
 });
+
+// --- Sessions « en direct » : le suivi d'ecran emprunte le meme moteur ---------
+
+/** Une source qui fait glisser la teinte de 10 degres par image, 100 ms par image. */
+const drift = (step) => ({
+  cues: [{ color: { h: step * 10, s: 50, v: 50 }, keepOn: step > 0 }],
+  holdMs: 100,
+});
+
+test('une session en direct tourne plus vite qu un scenario, sans jamais s arreter seule', async () => {
+  const { engine, lamps, clock } = setup();
+  assert.equal(await engine.startLive('ecran', drift, [lamp('a')]), true);
+  assert.equal(engine.runningOn('a'), 'ecran');
+
+  lamps.calls.length = 0;
+  await clock.advance(1000);
+  const colors = lamps.calls.filter((c) => c[1] === 'color');
+  assert.ok(colors.length >= 9, 'une image toutes les ~100 ms, pas toutes les 250 ms (' + colors.length + ')');
+  assert.equal(engine.runningOn('a'), 'ecran', 'aucune duree limite');
+});
+
+test('en direct, la lampe n est allumee qu une fois : ensuite seule la couleur part', async () => {
+  const { engine, lamps, clock } = setup();
+  await engine.startLive('ecran', drift, [lamp('a')]);
+  await clock.advance(500);
+  const powers = lamps.calls.filter((c) => c[1] === 'power');
+  assert.equal(powers.length, 1, 'un seul ordre d allumage');
+});
+
+test('l arret d une session en direct rend la lampe a son etat d avant', async () => {
+  const { engine, lamps, clock } = setup();
+  await engine.startLive('ecran', drift, [lamp('a')]);
+  await clock.advance(300);
+  lamps.calls.length = 0;
+  await engine.stop('a');
+  assert.equal(engine.runningOn('a'), undefined);
+  assert.deepEqual(lamps.calls.slice(-3), [['a', 'power', true], ['a', 'temperature', 3000], ['a', 'brightness', 40]]);
+  assert.equal(clock.count(), 0, 'aucune minuterie ne survit a l arret');
+});
+
+test('un scenario lance sur une lampe suivie par l ecran prend sa place, proprement', async () => {
+  const { engine, clock } = setup();
+  await engine.startLive('ecran', drift, [lamp('a')]);
+  await engine.start(byId('arc-en-ciel'), [lamp('a')]);
+  assert.equal(engine.runningOn('a'), 'arc-en-ciel');
+  await clock.advance(1000);
+  assert.equal(engine.runningOn('a'), 'arc-en-ciel', 'l ancienne session ne reprend pas la main');
+});
+
+test('une session en direct dont aucune lampe ne repond se declare non jouee', async () => {
+  const { engine } = setup(new Set(['a']));
+  assert.equal(await engine.startLive('ecran', drift, [lamp('a')]), false);
+});

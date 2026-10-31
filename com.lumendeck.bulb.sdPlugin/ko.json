@@ -17,6 +17,8 @@
     "Adjust the white": "백색 온도 조절",
     "Start / stop the scenario": "시나리오 시작 / 정지",
     "Lets your viewers change the colour with channel points.": "시청자가 채널 포인트로 색상을 바꿀 수 있게 합니다.",
+    "Screen": "화면",
+    "Makes the bulbs follow the colours of your screen, like ambient lighting.": "전구가 화면의 색상을 따라갑니다. 앰비언트 조명처럼.",
     "key": {
       "toSet": "설정 필요",
       "offline": "오프라인",
@@ -26,7 +28,10 @@
       "off": "꺼짐",
       "noColour": "색상 미지원",
       "noWhite": "백색 미지원",
-      "paused": "일시정지"
+      "paused": "일시정지",
+      "screen": "화면",
+      "noCapture": "캡처 없음",
+      "captureLost": "캡처 끊김"
     },
     "warmth": {
       "warm": "따뜻함",
@@ -252,7 +257,22 @@
         "scanTab": "네트워크에서"
       },
       "together": "전구가 함께 연출",
-      "scenarioAlone": "각 전구가 동시에 각자 시나리오를 재생합니다."
+      "scenarioAlone": "각 전구가 동시에 각자 시나리오를 재생합니다.",
+      "screenMode": "색상 배분",
+      "screenSame": "모두 같은 색",
+      "screenZones": "왼쪽 / 오른쪽",
+      "screenSameNote": "모든 전구가 화면 전체의 주된 색상을 따릅니다.",
+      "screenZonesNote": "앞쪽 전구는 화면 왼쪽 절반, 뒤쪽 전구는 오른쪽 절반을 따릅니다. 위의 화살표로 전구를 왼쪽에서 오른쪽 순서로 정렬하세요.",
+      "screenMonitor": "따라갈 화면",
+      "screenMain": "주 화면",
+      "screenNoCapture": "화면 캡처 도구가 설치되지 않았습니다. \"npm run build:capture\"를 실행한 뒤 Stream Deck을 다시 시작하세요.",
+      "screenHelp": {
+        "title": "사용 방법",
+        "toggle": "한 번 누르면 전구가 화면 색상을 따라가고, 다시 누르면 멈춥니다. 전구는 이전 상태 그대로 돌아갑니다.",
+        "games": "게임은 창 모드, 테두리 없는 창 모드 또는 Windows 전체 화면 최적화(기본 사용)로 실행해야 합니다. 진짜 독점 전체 화면으로 실행되는 아주 오래된 게임과 Netflix, Prime 같은 보호된 동영상은 캡처가 검게 나옵니다.",
+        "exclusive": "전구는 한 번에 하나만 따릅니다. 시나리오나 시청자의 트위치 보상을 시작하면 화면 대신 그쪽이 전구를 가져갑니다.",
+        "safety": "색상은 부드럽게 처리되지만 매우 화려한 장면에서는 전구가 깜빡일 수 있습니다. 깜빡이는 빛에 민감하다면 이 모드를 피하세요."
+      }
     },
     "twitch": {
       "reward": {

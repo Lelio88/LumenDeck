@@ -9,7 +9,10 @@
       "off": "Off",
       "noColour": "No colour",
       "noWhite": "No white",
-      "paused": "Paused"
+      "paused": "Paused",
+      "screen": "Screen",
+      "noCapture": "No capture",
+      "captureLost": "Capture lost"
     },
     "warmth": {
       "warm": "Warm",
@@ -235,7 +238,22 @@
         "scanTab": "On the network"
       },
       "together": "The bulbs play together",
-      "scenarioAlone": "Every bulb plays the scenario on its own, all at the same time."
+      "scenarioAlone": "Every bulb plays the scenario on its own, all at the same time.",
+      "screenMode": "Colours",
+      "screenSame": "Same everywhere",
+      "screenZones": "Left / right",
+      "screenSameNote": "Every bulb takes the dominant colour of the whole screen.",
+      "screenZonesNote": "The first bulbs follow the left half of the screen, the last ones the right half. Put the bulbs in order, from left to right, with the arrows above.",
+      "screenMonitor": "Screen to follow",
+      "screenMain": "Main screen",
+      "screenNoCapture": "The screen capture tool is not installed. Run \"npm run build:capture\", then restart Stream Deck.",
+      "screenHelp": {
+        "title": "How does it work?",
+        "toggle": "One press makes the bulbs follow the colours of your screen, a second stops it. The bulbs then return exactly to the state they were in.",
+        "games": "Games must run in windowed or borderless mode, or with Windows' fullscreen optimisations (the default). Some very old games in true exclusive fullscreen, and protected videos such as Netflix or Prime, give a black capture.",
+        "exclusive": "A bulb follows one thing at a time: starting a scenario on it, or a viewer's Twitch reward, takes it over from the screen.",
+        "safety": "Colours are smoothed, but a very flashy scene can still make the bulbs flicker. Avoid this mode if you are sensitive to flashing light."
+      }
     },
     "twitch": {
       "reward": {

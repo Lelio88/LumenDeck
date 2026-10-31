@@ -17,6 +17,8 @@
     "Adjust the white": "白色温度を調整",
     "Start / stop the scenario": "シナリオを開始 / 停止",
     "Lets your viewers change the colour with channel points.": "視聴者がチャンネルポイントで色を変えられるようにします。",
+    "Screen": "画面",
+    "Makes the bulbs follow the colours of your screen, like ambient lighting.": "電球が画面の色に追従します。アンビエント照明のように。",
     "key": {
       "toSet": "未設定",
       "offline": "オフライン",
@@ -26,7 +28,10 @@
       "off": "オフ",
       "noColour": "色非対応",
       "noWhite": "白色非対応",
-      "paused": "一時停止"
+      "paused": "一時停止",
+      "screen": "画面",
+      "noCapture": "取得不可",
+      "captureLost": "取得失敗"
     },
     "warmth": {
       "warm": "暖色",
@@ -252,7 +257,22 @@
         "scanTab": "ネットワーク上"
       },
       "together": "電球を連動させる",
-      "scenarioAlone": "各電球がそれぞれ同時にシナリオを再生します。"
+      "scenarioAlone": "各電球がそれぞれ同時にシナリオを再生します。",
+      "screenMode": "色の割り当て",
+      "screenSame": "すべて同じ色",
+      "screenZones": "左 / 右",
+      "screenSameNote": "すべての電球が画面全体の主な色になります。",
+      "screenZonesNote": "最初の電球は画面の左半分、最後の電球は右半分に追従します。上の矢印で電球を左から右の順に並べてください。",
+      "screenMonitor": "追従する画面",
+      "screenMain": "メイン画面",
+      "screenNoCapture": "画面キャプチャツールがインストールされていません。「npm run build:capture」を実行し、Stream Deck を再起動してください。",
+      "screenHelp": {
+        "title": "使い方",
+        "toggle": "1回押すと電球が画面の色に追従し、もう1回押すと停止します。電球は元の状態にそのまま戻ります。",
+        "games": "ゲームはウィンドウモード、ボーダーレス、またはWindowsの全画面最適化（既定で有効）で動かす必要があります。真の排他的フルスクリーンで動く非常に古いゲームや、NetflixやPrimeなどの保護された動画は、キャプチャが黒くなります。",
+        "exclusive": "電球は一度に1つのことにしか従いません。シナリオや視聴者のTwitch報酬を開始すると、画面からそちらに切り替わります。",
+        "safety": "色は滑らかに変化しますが、非常に激しい場面では電球がちらつくことがあります。点滅する光に敏感な方はこのモードを避けてください。"
+      }
     },
     "twitch": {
       "reward": {

@@ -9,6 +9,7 @@ import streamDeck from '@elgato/streamdeck';
 import { Brightness } from './actions/brightness.js';
 import { Color } from './actions/color.js';
 import { ScenarioAction } from './actions/scenario.js';
+import { ScreenAction } from './actions/screen.js';
 import { Temperature } from './actions/temperature.js';
 import { ToggleBulb } from './actions/toggle.js';
 import { TwitchAction } from './actions/twitch.js';
@@ -32,6 +33,7 @@ streamDeck.actions.registerAction(new Brightness());
 streamDeck.actions.registerAction(new Color());
 streamDeck.actions.registerAction(new Temperature());
 streamDeck.actions.registerAction(new ScenarioAction());
+streamDeck.actions.registerAction(new ScreenAction());
 streamDeck.actions.registerAction(new TwitchAction());
 
 // Repond aux panneaux de configuration : liste, recherche et enregistrement

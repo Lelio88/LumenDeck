@@ -30,6 +30,8 @@ const engine = createEngine({
 
 /** Lance un scenario ; rend vrai si sa premiere image a atteint au moins une lampe. */
 export const start = engine.start;
+/** Lance une session en direct (suivi d'ecran) ; voir engine.ts. */
+export const startLive = engine.startLive;
 /** Arrete le scenario qui occupe cette ampoule et restaure ses lampes. Idempotent. */
 export const stop = engine.stop;
 /** Arrete tout. Appele a l'extinction du plugin. */

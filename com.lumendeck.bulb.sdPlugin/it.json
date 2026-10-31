@@ -17,6 +17,8 @@
     "Adjust the white": "Regola il bianco",
     "Start / stop the scenario": "Avvia / ferma lo scenario",
     "Lets your viewers change the colour with channel points.": "Permette ai tuoi spettatori di cambiare il colore con i punti del canale.",
+    "Screen": "Schermo",
+    "Makes the bulbs follow the colours of your screen, like ambient lighting.": "Le lampadine seguono i colori dello schermo, come un'illuminazione ambientale.",
     "key": {
       "toSet": "Da impostare",
       "offline": "Non in linea",
@@ -26,7 +28,10 @@
       "off": "Spenta",
       "noColour": "Senza colore",
       "noWhite": "Senza bianco",
-      "paused": "In pausa"
+      "paused": "In pausa",
+      "screen": "Schermo",
+      "noCapture": "No cattura",
+      "captureLost": "Cattura persa"
     },
     "warmth": {
       "warm": "Caldo",
@@ -252,7 +257,22 @@
         "scanTab": "Sulla rete"
       },
       "together": "Le lampadine agiscono insieme",
-      "scenarioAlone": "Ogni lampadina riproduce lo scenario per conto suo, tutte insieme."
+      "scenarioAlone": "Ogni lampadina riproduce lo scenario per conto suo, tutte insieme.",
+      "screenMode": "Colori",
+      "screenSame": "Uguale ovunque",
+      "screenZones": "Sinistra / destra",
+      "screenSameNote": "Ogni lampadina prende il colore dominante dell'intero schermo.",
+      "screenZonesNote": "Le prime lampadine seguono la metà sinistra dello schermo, le ultime la metà destra. Ordinale da sinistra a destra con le frecce qui sopra.",
+      "screenMonitor": "Schermo da seguire",
+      "screenMain": "Schermo principale",
+      "screenNoCapture": "Lo strumento di cattura dello schermo non è installato. Esegui «npm run build:capture», poi riavvia Stream Deck.",
+      "screenHelp": {
+        "title": "Come funziona?",
+        "toggle": "Una pressione fa seguire alle lampadine i colori dello schermo, una seconda lo ferma. Le lampadine tornano esattamente allo stato precedente.",
+        "games": "I giochi devono girare in finestra, in finestra senza bordi o con le ottimizzazioni a schermo intero di Windows (attive di default). Alcuni giochi molto vecchi a schermo intero esclusivo vero e i video protetti come Netflix o Prime danno una cattura nera.",
+        "exclusive": "Una lampadina segue una cosa alla volta: avviare uno scenario su di essa, o una ricompensa Twitch di uno spettatore, la sottrae allo schermo.",
+        "safety": "I colori sono attenuati, ma una scena molto intensa può comunque far sfarfallare le lampadine. Evita questa modalità se sei sensibile alle luci intermittenti."
+      }
     },
     "twitch": {
       "reward": {

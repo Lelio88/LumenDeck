@@ -17,6 +17,8 @@
     "Adjust the white": "Régler le blanc",
     "Start / stop the scenario": "Lancer / arrêter le scénario",
     "Lets your viewers change the colour with channel points.": "Laisse vos viewers changer la couleur avec les points de chaîne.",
+    "Screen": "Écran",
+    "Makes the bulbs follow the colours of your screen, like ambient lighting.": "Les ampoules suivent les couleurs de votre écran, comme un éclairage d'ambiance.",
     "key": {
       "toSet": "À régler",
       "offline": "Hors ligne",
@@ -26,7 +28,10 @@
       "off": "Éteinte",
       "noColour": "Sans couleur",
       "noWhite": "Sans blanc",
-      "paused": "En pause"
+      "paused": "En pause",
+      "screen": "Écran",
+      "noCapture": "Sans capteur",
+      "captureLost": "Capture perdue"
     },
     "warmth": {
       "warm": "Chaud",
@@ -252,7 +257,22 @@
         "scanTab": "Sur le réseau"
       },
       "together": "Les ampoules jouent ensemble",
-      "scenarioAlone": "Chaque ampoule joue le scénario de son côté, toutes en même temps."
+      "scenarioAlone": "Chaque ampoule joue le scénario de son côté, toutes en même temps.",
+      "screenMode": "Couleurs",
+      "screenSame": "Partout pareil",
+      "screenZones": "Gauche / droite",
+      "screenSameNote": "Chaque ampoule prend la couleur dominante de tout l'écran.",
+      "screenZonesNote": "Les premières ampoules suivent la moitié gauche de l'écran, les dernières la moitié droite. Rangez les ampoules de gauche à droite avec les flèches ci-dessus.",
+      "screenMonitor": "Écran à suivre",
+      "screenMain": "Écran principal",
+      "screenNoCapture": "L'outil de capture d'écran n'est pas installé. Lancez « npm run build:capture », puis redémarrez Stream Deck.",
+      "screenHelp": {
+        "title": "Comment ça marche ?",
+        "toggle": "Un appui fait suivre à vos ampoules les couleurs de l'écran, un second l'arrête. Les ampoules retrouvent alors exactement leur état d'avant.",
+        "games": "Les jeux doivent tourner en fenêtré, en fenêtré sans bordure, ou avec les optimisations plein écran de Windows (activées par défaut). Certains très vieux jeux en vrai plein écran exclusif, et les vidéos protégées comme Netflix ou Prime, donnent une capture noire.",
+        "exclusive": "Une ampoule ne suit qu'une chose à la fois : lancer un scénario dessus, ou la récompense Twitch d'un viewer, la reprend à l'écran.",
+        "safety": "Les couleurs sont lissées, mais une scène très flashy peut quand même faire scintiller les ampoules. Évitez ce mode si vous êtes sensible aux lumières clignotantes."
+      }
     },
     "twitch": {
       "reward": {

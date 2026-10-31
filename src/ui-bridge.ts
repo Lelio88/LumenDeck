@@ -32,6 +32,7 @@ import * as bulbs from './bulbs.js';
 import { discover, sweep } from './discovery.js';
 import * as pool from './driver/pool.js';
 import { TuyaLanDriver } from './driver/tuya.js';
+import { screens } from './screen/runner.js';
 import * as twitch from './twitch/service.js';
 import { fetchDevices, pollQrLogin, startQrLogin, TuyaCloudError } from './tuya-cloud.js';
 
@@ -337,6 +338,10 @@ export function installUiBridge(): void {
             event: 'getScenarios',
             items: SCENARIOS.map((sc) => ({ label: scenarioName(sc.id), value: sc.id })),
           });
+          break;
+
+        case 'getScreens':
+          await reply({ event: 'getScreens', items: await screens() });
           break;
 
         case 'getBulbs':

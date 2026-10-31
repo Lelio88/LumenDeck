@@ -133,6 +133,22 @@
       }
     },
     {
+      "Name": "Screen",
+      "UUID": "com.lumendeck.bulb.screen",
+      "Icon": "imgs/actions/screen/icon",
+      "Tooltip": "Makes the bulbs follow the colours of your screen, like ambient lighting.",
+      "PropertyInspectorPath": "ui/screen.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/screen/key",
+          "TitleAlignment": "bottom"
+        }
+      ]
+    },
+    {
       "Name": "Twitch",
       "UUID": "com.lumendeck.bulb.twitch",
       "Icon": "imgs/actions/twitch/icon",

@@ -236,6 +236,20 @@ def glyph_scenario(d: ImageDraw.ImageDraw, s: int, color, detailed: bool) -> Non
     stroke(d, points + [points[0]], w, color)
 
 
+def glyph_screen(d: ImageDraw.ImageDraw, s: int, color, detailed: bool) -> None:
+    """Moniteur sur son pied : la touche designe l'ECRAN que les lampes suivent.
+
+    Un rectangle et un trait suffisent, et tiennent a 20 px. Une dalle remplie de
+    couleurs aurait ete plus parlante en grand, mais les autres glyphes sont des
+    contours d'une seule teinte : celui-ci doit se ranger parmi eux.
+    """
+    del detailed  # le contour se suffit a toutes les tailles
+    w = s * 0.088
+    left, top, right, bottom = s * 0.20, s * 0.27, s * 0.80, s * 0.62
+    stroke(d, [(left, top), (right, top), (right, bottom), (left, bottom), (left, top)], w, color)
+    stroke(d, [(s * 0.36, s * 0.77), (s * 0.64, s * 0.77)], w, color)
+
+
 def fit(layer: Image.Image, size: int, content: float, center_y: float = 0.5) -> Image.Image:
     """Recadre sur le contenu reel, puis inscrit dans une boite de marge fixe.
 
@@ -299,6 +313,7 @@ def main() -> None:
         ("color", glyph_color),
         ("temperature", glyph_temperature),
         ("scenario", glyph_scenario),
+        ("screen", glyph_screen),
         ("twitch", glyph_twitch),
     )
     for size, suffix in ((20, ""), (40, "@2x")):

@@ -40,6 +40,7 @@ Trois conséquences agréables :
 | **Couleur** | applique la couleur choisie | rotation = la teinte défile |
 | **Blanc chaud / froid** | applique la température choisie | rotation de 2700 K à 6500 K |
 | **Scénario** | lance ou arrête une animation | appui sur la molette |
+| **Écran** | les ampoules suivent les couleurs de votre écran | — |
 | **Twitch** | met vos viewers en pause, ou les réactive | — |
 
 **Plusieurs ampoules par touche.** Cochez-en autant que vous voulez : une touche allume la pièce
@@ -50,6 +51,12 @@ lever de soleil. Un appui les lance, un second les arrête et remet chaque lampe
 elle était. Avec la case « Les ampoules jouent ensemble », le scénario est joué pour la pièce : la
 lumière passe d'une lampe à l'autre dans l'ordre que vous choisissez, l'arc-en-ciel s'étale, les
 éclairs frappent une lampe à la fois.
+
+**Suivi d'écran.** Un appui et vos ampoules prennent la couleur de ce que vous regardez, jeu ou
+film, comme un éclairage d'ambiance. Même couleur partout, ou une moitié des lampes par moitié
+d'écran (gauche / droite). Tout reste sur votre réseau local : l'image de l'écran n'est ni enregistrée
+ni envoyée, seules quelques couleurs moyennes sont lues. Les jeux en vrai plein écran exclusif très
+anciens et les vidéos protégées (Netflix, Prime) ne se laissent pas capturer.
 
 Les touches **montrent** leur état plutôt que de l'écrire : l'ampoule s'allume, la jauge se remplit,
 la goutte prend la couleur choisie, le disque se teinte à la vraie chaleur du blanc.
@@ -85,7 +92,7 @@ LumenDeck n'est pas encore publié sur le Marketplace Elgato. En attendant :
 Prenez le fichier `com.lumendeck.bulb.streamDeckPlugin` et **double-cliquez dessus** : Stream Deck
 l'installe. Rien d'autre à installer, pas de ligne de commande.
 
-Une catégorie **LumenDeck** apparaît alors dans Stream Deck avec ses six actions, à glisser sur une
+Une catégorie **LumenDeck** apparaît alors dans Stream Deck avec ses sept actions, à glisser sur une
 touche. Seul prérequis : l'application Stream Deck en **7.1 minimum**.
 
 <details>
@@ -97,6 +104,9 @@ Depuis ce dossier, avec **Node 24 ou plus** :
 npm install
 npm run pack
 ```
+
+`npm run pack` compile aussi le capteur d'écran (Rust, voir [`rustup`](https://rustup.rs)) ; sans lui,
+tout fonctionne sauf la touche « Écran ». Pour le seul capteur : `npm run build:capture`.
 
 Le fichier apparaît dans `dist/`. Node n'est nécessaire qu'à la construction — le plugin, lui,
 tourne sur le Node embarqué de Stream Deck. Le dossier du dépôt n'a ensuite plus aucune utilité,

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <title>Screen settings</title>
+    <meta charset="utf-8" />
+    <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+</head>
+
+<body>
+    <div id="bulb-picker" data-ordered="true"></div>
+
+    <div id="screen-mode"></div>
+
+    <div id="screen-monitor"></div>
+
+    <div id="bulb-manager"></div>
+
+    <details>
+        <summary data-i18n="pi.screenHelp.title">How does it work?</summary>
+        <p data-i18n="pi.screenHelp.toggle">One press makes the bulbs follow the colours of your screen, a second stops it. The bulbs then return exactly to the state they were in.</p>
+        <p data-i18n="pi.screenHelp.games">Games must run in windowed or borderless mode, or with Windows' fullscreen optimisations (the default). Some very old games in true exclusive fullscreen, and protected videos such as Netflix or Prime, give a black capture.</p>
+        <p data-i18n="pi.screenHelp.exclusive">A bulb follows one thing at a time: starting a scenario on it, or a viewer's Twitch reward, takes it over from the screen.</p>
+        <p data-i18n="pi.screenHelp.safety">Colours are smoothed, but a very flashy scene can still make the bulbs flicker. Avoid this mode if you are sensitive to flashing light.</p>
+    </details>
+
+    <script src="bulbs.js"></script>
+    <script src="screen.js"></script>
+</body>
+
+</html>

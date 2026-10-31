@@ -202,6 +202,25 @@ export function scenarioKey(name: string, running: boolean): string {
   );
 }
 
+/**
+ * Face de la touche de suivi d'ecran : un moniteur, plein de lumiere quand il est suivi.
+ *
+ * Meme grammaire que la touche de scenario : ambre quand ca tourne, gris au
+ * repos. Le moniteur se remplit d'une teinte douce plutot que de montrer la
+ * vraie couleur de l'ecran : la touche ne l'interroge pas, et un remplissage
+ * qui n'est pas la verite serait un mensonge de plus.
+ */
+export function screenKey(label: string, running: boolean): string {
+  const color = running ? AMBER : DIM;
+  // Pas de rgba() : Stream Deck le rejette ; la transparence passe par fill-opacity.
+  const fill = running ? `fill="${AMBER}" fill-opacity="0.22"` : 'fill="none"';
+  return frame(
+    `<rect x="32" y="26" width="80" height="52" rx="7" ${fill} stroke="${color}" stroke-width="8"/>`
+    + `<path d="M 58 94 H 86" stroke="${color}" stroke-width="8" stroke-linecap="round"/>`
+    + caption(xml(label), running ? TEXT : DIM),
+  );
+}
+
 /** Echappe un texte pour l'inserer dans un SVG : un mot traduit ne doit jamais casser le document. */
 const xml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 

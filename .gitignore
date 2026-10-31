@@ -15,6 +15,7 @@ com.lumendeck.bulb.sdPlugin/logs/
 # Paquet distribuable, reconstruit par "npx streamdeck pack"
 dist/
 
-# Sonde de capture (Rust) : artefacts de build et journaux de mesure
-tools/capture-probe/target/
-tools/capture-probe/*.log
+# Capteur d'ecran (Rust) : artefacts de build, executable copie, journaux de diagnostic
+tools/lumendeck-capture/target/
+com.lumendeck.bulb.sdPlugin/bin/lumendeck-capture.exe
+capture-probe.log

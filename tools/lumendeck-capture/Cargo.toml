@@ -1,8 +1,8 @@
 [package]
-name = "capture-probe"
+name = "lumendeck-capture"
 version = "0.1.0"
 edition = "2021"
-description = "Sonde jetable : la capture DXGI voit-elle ce jeu, ou renvoie-t-elle du noir ?"
+description = "Capteur d'ecran de LumenDeck : mesure la couleur de l'ecran par zones, sans rien savoir des ampoules."
 
 [dependencies.windows]
 version = "0.58"
@@ -12,6 +12,13 @@ features = [
   "Win32_Graphics_Direct3D11",
   "Win32_Graphics_Dxgi",
   "Win32_Graphics_Dxgi_Common",
-  "Win32_System_Console",
+  "Win32_Graphics_Gdi",
   "Win32_UI_WindowsAndMessaging",
 ]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

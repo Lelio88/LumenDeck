@@ -88,6 +88,11 @@ l'existence de Tuya.
 | `src/scenarios/engine.ts` | Le moteur des scénarios, **testé sans ampoule** : accès aux lampes, minuteries et horloge sont injectés. Une exécution par ampoule, relevé de l'état et restauration à l'arrêt, version de groupe, durée maximale. `start` dit si la première image a atteint une lampe. |
 | `src/scenarios/runner.ts` | Liaison du moteur au vrai pilote (`withRetry`) et aux minuteries de Node ; l'unique moteur du plugin, partagé par les touches et Twitch. Déroule les images dans le temps. Une exécution par ampoule — une session est retrouvable depuis **chacune** de ses ampoules —, relevé de l'état avant la première image et restauration à l'arrêt. Options : `together` (version de groupe) et `maxMs`, une durée après laquelle le scénario s'arrête seul et rend les lampes dans leur état d'avant (scénarios achetés par un viewer). |
 | `src/key-art.ts` | Dessine les faces de touche **à la volée**, en SVG : jauge qui se remplit, goutte à la vraie couleur, disque teinté à la vraie température. N'importe rien — donc testable sans ampoule ni Stream Deck. |
+| `src/screen/zones.ts` | Le **goût** du suivi d'écran, en fonctions pures : lecture défensive d'une ligne du capteur, saturation renforcée, plancher de luminosité (un écran noir **tamise**, n'éteint pas), lissage **adaptatif** (doux sur une scène stable, rattrape une coupe franche), seuil de variation sous lequel on n'écrit pas, répartition des lampes par zone. |
+| `src/screen/capture.ts` | Lance `lumendeck-capture.exe`, découpe sa sortie en lignes, le tue proprement ; le lanceur est **injectable**. Liste aussi les écrans pour le panneau. |
+| `src/screen/sync.ts` | La session de suivi : capteur → couleur → **session en direct** du moteur de scénarios. Détecte la fin de session (touche, scénario concurrent, pannes, capteur mort) pour tuer le capteur. |
+| `src/screen/runner.ts` | Liaison au moteur unique et au vrai exécutable, installé à côté de `bin/plugin.js`. |
+| `tools/lumendeck-capture/` | **Capteur d'écran en Rust**, processus à part. Capture DXGI (Desktop Duplication), réduction sur le GPU par mipmaps, mesure par zones, une ligne JSON par mesure. Ignore tout des ampoules. |
 | `src/color-format.ts` | Conversions hexadécimal ↔ TSV et rotation de teinte. Vit côté présentation : l'hexadécimal est une convention d'interface web, pas un langage d'ampoule. |
 | `src/bulbs.ts` | **Registre des ampoules** (identifiant, clé, adresse, nom, **version de protocole**), dans les réglages globaux du plugin. Une ampoule y est déclarée une fois ; `coordinatesForMany()` est le point d'entrée unique des actions et rend les coordonnées des ampoules d'une touche, dans l'ordre ; `adoptBulbs()` met une ancienne touche à jour à son apparition. |
 | `src/discovery.ts` | Écoute les annonces UDP que les ampoules Tuya diffusent d'elles-mêmes. Trouve identifiant et adresse — jamais la clé, qui n'est pas dans l'annonce. |
@@ -690,10 +695,66 @@ Piège à connaître : ces annonces arrivent en **UDP entrant**. Un pare-feu qui
 les jette avant qu'il ne les voie, et la recherche ne renvoie rien alors que l'ampoule répond
 parfaitement en TCP. Symptôme trompeur, cause bête.
 
+## Suivi d'écran
+
+La touche « Écran » fait prendre aux ampoules la couleur de l'image — le principe d'un éclairage
+d'ambiance, **en LAN et sans cloud**. Deux modes : la même couleur partout, ou une moitié des lampes
+par moitié d'écran (gauche / droite, dans l'ordre des ampoules cochées). Un sélecteur d'écran, l'écran
+principal par défaut.
+
+```
+ lumendeck-capture.exe (Rust)            plugin (Node)
+ ┌──────────────────────────┐   JSON    ┌───────────────────────────────────────┐
+ │ DXGI Desktop Duplication │  par ligne│ zones.ts  : saturation, lissage, zones │
+ │ copie GPU → mipmaps GPU  │ ────────► │ sync.ts   : session EN DIRECT          │
+ │ lecture du plus petit mip│           │ engine.ts : une exécution par lampe,   │
+ │ mesure par zone          │ ◄──────── │             relevé / restauration      │
+ └──────────────────────────┘  stdin    └───────────────────────────────────────┘
+                              (fermé = arrêt)
+```
+
+**Pourquoi un processus Rust.** La capture rapide passe par Direct3D, que Node ne sait pas appeler,
+et le plus coûteux est de rapatrier l'image : une image 4K pèse ~33 Mo. Le capteur la réduit **sur le
+GPU** (`GenerateMips`) et ne rapatrie que le plus petit niveau utile (~60 colonnes). Rust plutôt que
+Go : la crate `windows` expose COM et Direct3D sans liaisons écrites à la main, et l'absence de
+ramasse-miettes évite des pauses aléatoires dans un flux de 15 mesures par seconde.
+
+**Qui décide de quoi.** Le capteur *mesure* (moyenne pondérée par la saturation, luminosité mesurée à
+part, **bandes noires d'un film écartées**) ; le plugin *décide* (lissage, saturation, plancher,
+quelle lampe suit quelle zone). Le goût est du côté testable : `zones.ts` se vérifie sans écran.
+
+**Une session en direct du moteur de scénarios.** Le suivi n'a pas son propre système de sessions :
+il emprunte `startLive` du moteur. Il hérite donc d'une seule exécution par lampe — un scénario ou un
+rachat Twitch lancé sur une lampe suivie **prend sa place**, et inversement —, du relevé et de la
+restauration de l'état, et de l'abandon après trois échecs d'affilée. Le capteur est tué à la **fin de
+la session**, quelle qu'en soit la cause (`untilStopped`). Une image en direct peut durer
+`LIVE_HOLD_MS` (80 ms) au lieu de `MIN_HOLD_MS` (250 ms) ; la minuterie est réarmée **après** chaque
+image, donc un réseau lent ralentit le flux au lieu de l'empiler. La lampe n'est allumée qu'**une
+fois** (`Cue.keepOn`), et on n'écrit rien tant que la couleur n'a pas vraiment changé.
+
+**Ce qui ne marche pas, par nature.** Une capture noire n'est pas une panne du plugin : certains très
+vieux jeux en vrai plein écran exclusif et les vidéos protégées (Netflix, Prime) ne se laissent pas
+capturer par Desktop Duplication. Les jeux récents (optimisations plein écran de Windows, activées par
+défaut), le bureau et les lecteurs vidéo classiques passent. Le HDR n'est pas géré (le capteur refuse
+le format). Aucune injection dans les jeux : elle risquerait un bannissement par les anti-triche.
+
+**Vie privée.** L'écran peut montrer n'importe quoi. Le capteur ne garde, n'écrit et n'envoie **aucune
+image** : seules des couleurs moyennes (quatre nombres par zone) sortent, et uniquement vers le plugin,
+sur sa sortie standard. Le mode `--diagnose` écrit un journal de couleurs, jamais de pixels.
+
+**Sécurité.** Un flux de couleurs qui change vite peut faire papilloter les ampoules, ce que le
+plafond de 2 alternances par seconde des scénarios existe pour empêcher. Ici le lissage adaptatif et la
+cadence bornée (≈ 12 images par seconde au plus) l'atténuent sans l'exclure : le panneau le dit.
+
+**Construire et diagnostiquer.** `npm run build:capture` compile le capteur (Rust requis, seulement
+pour cette étape) et le copie dans `bin/`. Hors du plugin, `lumendeck-capture --diagnose` écrit une
+ligne par seconde (`IMAGE_OK`, `NOIR`, `AUCUNE_IMAGE`, `ACCES_PERDU`, `FORMAT`) dans
+`capture-probe.log` : c'est ainsi qu'on sait si un jeu donné est visible.
+
 ## Ce qui n'existe pas encore
 
-Six actions couvrent l'allumage, l'intensité, la couleur, le blanc réglable, les scénarios animés
-et le tableau de bord Twitch. Côté Twitch, les scénarios qui clignotent sont signalés dans le panneau
+Sept actions couvrent l'allumage, l'intensité, la couleur, le blanc réglable, les scénarios animés,
+le suivi d'écran et le tableau de bord Twitch. Côté Twitch, les scénarios qui clignotent sont signalés dans le panneau
 mais restent autorisés : c'est le choix du streamer, le plafond de deux alternances par seconde
 (`MIN_HOLD_MS`) s'appliquant de toute façon. Restent hors du périmètre : les **scènes internes de l'ampoule** (datapoint 25, non
 exploité — nos scénarios sont pilotés depuis le plugin, image par image) et tout **adaptateur autre

@@ -19,12 +19,11 @@ couplage, compatibilité, langues, tests) : voir [`docs/architecture.md`](./docs
 Topologie rapide :
 - `src/driver/` — contrat `LightDriver`, adaptateur Tuya, réservoir de connexions
 - `src/actions/` — une classe par action Stream Deck ; ne connaît que le contrat
-- `src/scenarios/` — catalogue d'animations en données pures, et moteur qui les déroule
+- `src/scenarios/` — catalogue d'animations en données pures, et moteur qui les déroule ; `src/screen/` — suivi d'écran (couleur, lissage, zones purs ; session en direct sur ce moteur)
 - `src/tuya-cloud.ts` (enrôlement par QR code) et `src/twitch/` (points de chaîne) — **seuls** modules qui parlent à un serveur
 - `src/plugin.ts` — composition : enregistre les actions, ouvre le dialogue Stream Deck
 - `com.lumendeck.bulb.sdPlugin/` — manifeste, images, panneaux de configuration (versionné)
-- `tools/` — génération des icônes ; `src/tools/` — sondes de diagnostic (ont besoin des deps)
-- `tools/capture-probe/` — sonde Rust jetable : la capture d'écran DXGI voit-elle un jeu donné ? (lecture seule, aucune ampoule)
+- `tools/` — icônes, et `lumendeck-capture/` : capteur Rust (DXGI), **processus à part** qui ignore les ampoules ; `src/tools/` — sondes
 
 ## III. Pile Technologique
 
@@ -49,7 +48,7 @@ Topologie rapide :
    transformer, et l'éviter permet de **tester le pilote sans étape de build**.
 5. **L'ampoule est seule maîtresse de son état.** Après une écriture, relire plutôt que déduire :
    elle peut avoir été changée depuis l'application Calex ou un assistant vocal.
-6. **Le réseau externe ne pilote JAMAIS une lampe.** Le cloud Tuya sert uniquement à l'enrôlement ; Twitch, uniquement à recevoir et clore les rachats de points de chaîne (aucune lecture du chat). Toute commande d'éclairage reste en LAN. Un texte de viewer ne s'applique qu'après `parseViewerColor`, et un rachat non appliqué est **toujours remboursé**. Secrets (clés Tuya, jetons Twitch) : jamais dans le dépôt, jamais journalisés, jamais renvoyés à un panneau ; les écritures globales passent par `src/globals.ts`.
+6. **Le réseau externe ne pilote JAMAIS une lampe, et l'écran ne sort jamais de la machine.** Le cloud Tuya sert uniquement à l'enrôlement ; Twitch, uniquement à recevoir et clore les rachats de points de chaîne (aucune lecture du chat). Toute commande d'éclairage reste en LAN. Le capteur d'écran ne garde ni n'envoie aucune image : seules des couleurs moyennes sortent. Un texte de viewer ne s'applique qu'après `parseViewerColor`, et un rachat non appliqué est **toujours remboursé**. Secrets (clés Tuya, jetons Twitch) : jamais dans le dépôt, jamais journalisés, jamais renvoyés à un panneau ; les écritures globales passent par `src/globals.ts`.
 7. **PNG et `<langue>.json` sont générés** — par `tools/make_icons.py` et `tools/make_locales.py`, jamais à la main.
 
 ## V. Flux de Travail (Explore → Plan → Code → Verify)
@@ -86,8 +85,8 @@ npx streamdeck restart com.lumendeck.bulb           # recharge après build
 | Modification | Fichier à mettre à jour |
 |---|---|
 | Nouveau datapoint ou modèle d'ampoule géré | Catalogue DPS de `docs/architecture.md` + `src/driver/tuya.ts` |
-| Nouvelle action Stream Deck | `manifest.json` + `src/plugin.ts` + catalogue de `docs/architecture.md` |
-| Nouveau réglage d'action | `src/settings.ts` + le panneau `ui/*.html` correspondant |
+| Nouvelle action ou nouveau réglage | `manifest.json` + `src/plugin.ts` + `src/settings.ts` + panneau `ui/*.html` + catalogue de `docs/architecture.md` |
+| Suivi d'écran (couleur, lissage, zones, capteur Rust) | `src/screen/*` + leurs tests + `tools/lumendeck-capture/` + section « Suivi d'écran » de `docs/architecture.md` |
 | Nouvel adaptateur (Zigbee, Matter) | Section « Adaptateurs » de `docs/architecture.md` |
 | Retouche d'icône, ou nouveau texte affiché | `tools/make_icons.py`, `tools/make_locales.py` — **jamais** un PNG ni un `<langue>.json` |
 | Règle de rachat Twitch (couleur lue, remboursement, récompense) | `src/twitch/*` + son test + section « Twitch » de `docs/architecture.md` |
@@ -97,5 +96,5 @@ npx streamdeck restart com.lumendeck.bulb           # recharge après build
 
 ## VIII. Contexte de Session
 
-- **Dernier focus** : 0.15 — groupes d'ampoules, Twitch (palette, scénarios, pause native), scénarios de groupe, panneaux refaits ; validé sur le PC.
-- **Focus immédiat** : publier la release GitHub v0.15 ; rendre plus visible l'orage en mode ensemble.
+- **Dernier focus** : suivi d'écran (touche « Écran », capteur Rust, zones gauche/droite) écrit et testé côté plugin ; capteur à compiler et valider sur le PC.
+- **Focus immédiat** : valider le suivi d'écran sur le PC (jeux récents et anciens, film) ; publier la release v0.16 ; rendre plus visible l'orage en mode ensemble.

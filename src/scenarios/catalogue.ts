@@ -54,6 +54,25 @@ export type Cue = {
   readonly color?: Hsv;
   /** Intensite 1-100. Sans couleur, conserve la teinte courante. */
   readonly brightness?: number;
+  /**
+   * La lampe est deja allumee par une image precedente : n'ecrire que la couleur.
+   * Sert aux flux en direct (suivi d'ecran), ou doubler chaque ordre d'un
+   * allumage superflu saturerait l'ampoule. Un scenario ne l'utilise pas.
+   */
+  readonly keepOn?: boolean;
+  /**
+   * Appele par le moteur une fois la consigne jouee : `true` si elle a atteint la
+   * lampe, `false` si l'ecriture a echoue. Permet a un flux en direct de ne pas
+   * croire qu'une lampe a recu ce qu'elle n'a pas recu. Un scenario ne l'utilise pas.
+   */
+  readonly onSettled?: (reached: boolean) => void;
+  /**
+   * Rien a ecrire a cette lampe pour cette image : le moteur n'y touche pas, pas
+   * meme pour ouvrir une connexion. Distinct d'une consigne VIDE (`{}`), qui, elle,
+   * joint la lampe : c'est ce qui permet a une session en direct de savoir des sa
+   * premiere image si au moins une lampe repond.
+   */
+  readonly idle?: boolean;
 };
 
 /** Une image du scenario : ce que fait chaque role, et combien de temps elle tient. */

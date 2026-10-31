@@ -17,6 +17,8 @@
     "Adjust the white": "Ajustar el blanco",
     "Start / stop the scenario": "Iniciar / detener el escenario",
     "Lets your viewers change the colour with channel points.": "Permite a tus espectadores cambiar el color con puntos del canal.",
+    "Screen": "Pantalla",
+    "Makes the bulbs follow the colours of your screen, like ambient lighting.": "Las bombillas siguen los colores de tu pantalla, como una iluminación ambiental.",
     "key": {
       "toSet": "Configurar",
       "offline": "Sin conexión",
@@ -26,7 +28,10 @@
       "off": "Apagada",
       "noColour": "Sin color",
       "noWhite": "Sin blanco",
-      "paused": "En pausa"
+      "paused": "En pausa",
+      "screen": "Pantalla",
+      "noCapture": "Sin captura",
+      "captureLost": "Captura perdida"
     },
     "warmth": {
       "warm": "Cálido",
@@ -252,7 +257,22 @@
         "scanTab": "En la red"
       },
       "together": "Las bombillas juegan juntas",
-      "scenarioAlone": "Cada bombilla reproduce el escenario por su cuenta, todas a la vez."
+      "scenarioAlone": "Cada bombilla reproduce el escenario por su cuenta, todas a la vez.",
+      "screenMode": "Colores",
+      "screenSame": "Igual en todas",
+      "screenZones": "Izquierda / derecha",
+      "screenSameNote": "Cada bombilla toma el color dominante de toda la pantalla.",
+      "screenZonesNote": "Las primeras bombillas siguen la mitad izquierda de la pantalla y las últimas la mitad derecha. Ordénalas de izquierda a derecha con las flechas de arriba.",
+      "screenMonitor": "Pantalla a seguir",
+      "screenMain": "Pantalla principal",
+      "screenNoCapture": "La herramienta de captura de pantalla no está instalada. Ejecuta «npm run build:capture» y reinicia Stream Deck.",
+      "screenHelp": {
+        "title": "¿Cómo funciona?",
+        "toggle": "Una pulsación hace que las bombillas sigan los colores de tu pantalla; una segunda lo detiene. Las bombillas vuelven exactamente a su estado anterior.",
+        "games": "Los juegos deben ejecutarse en ventana, en ventana sin bordes o con las optimizaciones de pantalla completa de Windows (activadas por defecto). Algunos juegos muy antiguos en pantalla completa exclusiva real y los vídeos protegidos como Netflix o Prime dan una captura negra.",
+        "exclusive": "Una bombilla sigue una sola cosa a la vez: iniciar un escenario en ella o una recompensa de Twitch de un espectador se la quita a la pantalla.",
+        "safety": "Los colores se suavizan, pero una escena muy llamativa puede hacer parpadear las bombillas. Evita este modo si eres sensible a la luz intermitente."
+      }
     },
     "twitch": {
       "reward": {

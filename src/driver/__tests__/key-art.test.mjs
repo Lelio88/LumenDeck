@@ -9,7 +9,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { arcPath, asImage, brightnessKey, colorKey, kelvinToRgb, temperatureKey, twitchKey } from '../../key-art.ts';
+import { arcPath, asImage, brightnessKey, colorKey, kelvinToRgb, screenKey, temperatureKey, twitchKey } from '../../key-art.ts';
 
 /**
  * Libelle d'extinction, passe en parametre depuis l'action.
@@ -141,4 +141,13 @@ test('un mot traduit ne peut pas casser le SVG', () => {
 
 test('la touche Twitch n emploie jamais rgba() que Stream Deck rejetterait', () => {
   for (const mode of ['live', 'paused', 'idle']) assert.ok(!twitchKey(mode, 'x').includes('rgba('), mode);
+});
+
+test('la touche Ecran change de couleur quand elle suit l ecran, sans rgba()', () => {
+  const idle = screenKey('Screen', false);
+  const running = screenKey('Screen', true);
+  assert.notEqual(idle, running);
+  assert.match(running, />Screen</);
+  assert.ok(!idle.includes('rgba(') && !running.includes('rgba('));
+  assert.ok(screenKey('<b>&', true).includes('&lt;b&gt;&amp;'), 'un mot traduit ne casse pas le SVG');
 });

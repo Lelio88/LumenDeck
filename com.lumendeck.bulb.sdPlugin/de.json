@@ -17,6 +17,8 @@
     "Adjust the white": "Weiß regeln",
     "Start / stop the scenario": "Szenario starten / stoppen",
     "Lets your viewers change the colour with channel points.": "Lässt Ihre Zuschauer die Farbe mit Kanalpunkten ändern.",
+    "Screen": "Bildschirm",
+    "Makes the bulbs follow the colours of your screen, like ambient lighting.": "Die Lampen folgen den Farben Ihres Bildschirms – wie eine Ambilight-Beleuchtung.",
     "key": {
       "toSet": "Einrichten",
       "offline": "Offline",
@@ -26,7 +28,10 @@
       "off": "Aus",
       "noColour": "Keine Farbe",
       "noWhite": "Kein Weiß",
-      "paused": "Pausiert"
+      "paused": "Pausiert",
+      "screen": "Monitor",
+      "noCapture": "Kein Capture",
+      "captureLost": "Capture weg"
     },
     "warmth": {
       "warm": "Warm",
@@ -252,7 +257,22 @@
         "scanTab": "Im Netzwerk"
       },
       "together": "Die Lampen spielen zusammen",
-      "scenarioAlone": "Jede Lampe spielt das Szenario für sich, alle gleichzeitig."
+      "scenarioAlone": "Jede Lampe spielt das Szenario für sich, alle gleichzeitig.",
+      "screenMode": "Farben",
+      "screenSame": "Überall gleich",
+      "screenZones": "Links / rechts",
+      "screenSameNote": "Jede Lampe übernimmt die vorherrschende Farbe des gesamten Bildschirms.",
+      "screenZonesNote": "Die ersten Lampen folgen der linken Bildschirmhälfte, die letzten der rechten. Ordnen Sie die Lampen mit den Pfeilen oben von links nach rechts.",
+      "screenMonitor": "Bildschirm",
+      "screenMain": "Hauptbildschirm",
+      "screenNoCapture": "Das Tool zur Bildschirmaufnahme ist nicht installiert. Führen Sie „npm run build:capture“ aus und starten Sie Stream Deck neu.",
+      "screenHelp": {
+        "title": "Wie funktioniert das?",
+        "toggle": "Ein Druck lässt die Lampen den Farben Ihres Bildschirms folgen, ein zweiter beendet das. Die Lampen kehren dann genau in ihren vorherigen Zustand zurück.",
+        "games": "Spiele müssen im Fenstermodus, im randlosen Fenster oder mit den Vollbildoptimierungen von Windows laufen (standardmäßig aktiv). Manche sehr alten Spiele im echten exklusiven Vollbild sowie geschützte Videos wie Netflix oder Prime liefern ein schwarzes Bild.",
+        "exclusive": "Eine Lampe folgt immer nur einer Sache: Startet man darauf ein Szenario oder die Twitch-Belohnung eines Zuschauers, übernimmt das die Steuerung vom Bildschirm.",
+        "safety": "Die Farben werden geglättet, aber eine sehr grelle Szene kann die Lampen trotzdem flackern lassen. Meiden Sie diesen Modus, wenn Sie auf Blitzlicht empfindlich reagieren."
+      }
     },
     "twitch": {
       "reward": {

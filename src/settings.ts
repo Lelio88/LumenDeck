@@ -79,6 +79,17 @@ export type TwitchSettings = BulbSettings & {
   together?: boolean;
 };
 
+/**
+ * Reglages de la touche de suivi d'ecran. Ces champs viennent d'une page web :
+ * `screen` est valide a l'ouverture du capteur (capture.ts), `mode` ici.
+ */
+export type ScreenSettings = BulbSettings & {
+  /** `primary` (defaut) ou l'index d'un ecran, tel que le rend le capteur. */
+  screen?: string;
+  /** `same` : meme couleur partout (defaut). `zones` : une moitie des lampes par moitie d'ecran. */
+  mode?: 'same' | 'zones';
+};
+
 /** Reglages de l'action de scenario. */
 export type ScenarioSettings = BulbSettings & {
   /** Identifiant du scenario choisi dans le catalogue. */
