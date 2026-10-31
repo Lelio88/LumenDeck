@@ -719,9 +719,19 @@ GPU** (`GenerateMips`) et ne rapatrie que le plus petit niveau utile (~60 colonn
 Go : la crate `windows` expose COM et Direct3D sans liaisons écrites à la main, et l'absence de
 ramasse-miettes évite des pauses aléatoires dans un flux de 30 mesures par seconde.
 
-**Qui décide de quoi.** Le capteur *mesure* (moyenne pondérée par la saturation, luminosité mesurée à
-part, **bandes noires d'un film écartées**) ; le plugin *décide* (lissage, saturation, plancher,
-quelle lampe suit quelle zone). Le goût est du côté testable : `zones.ts` se vérifie sans écran.
+**Qui décide de quoi.** Le capteur *mesure* (teinte dominante, luminosité mesurée à part, **bandes
+noires d'un film écartées**) ; le plugin *décide* (lissage, saturation, plancher, zone morte, quelle
+lampe suit quelle zone). Le goût est du côté testable : `zones.ts` se vérifie sans écran.
+
+**Une couleur d'ambiance, pas la moyenne de tout.** Une moyenne de l'écran mélange des teintes
+opposées (moitié rouge, moitié verte : un brun qui n'est nulle part) et bascule dès qu'un petit objet
+vif apparaît. Le capteur range donc les pixels colorés en 12 familles de teintes (30° chacune, pondérées
+par la saturation) et ne moyenne que la **fenêtre de 3 familles voisines** (90°) qui pèse le plus :
+orange et jaune se fondent, rouge et vert ne se mélangent plus. Une scène sans pixel coloré (gris, noir
+et blanc) retombe sur la moyenne de tout l'écran. Côté plugin, une **zone morte avec hystérésis**
+(`shouldMove`) laisse une lampe au repos ignorer les petites variations de la cible (écart perçu sous 8
+points) ; une fois partie, elle glisse par les pas ordinaires jusqu'à 2 points de la cible. Elle ne saute
+donc jamais d'un seuil, et une scène calme ne coûte plus d'ordres à l'ampoule.
 
 **Une session en direct du moteur de scénarios.** Le suivi n'a pas son propre système de sessions :
 il emprunte `startLive` du moteur. Il hérite donc d'une seule exécution par lampe — un scénario ou un
@@ -759,8 +769,8 @@ qu'un modèle donné réponde en LAN.
 **Du temps, pas des images.** Le lissage se règle en **constantes de temps** (≈ 0,5 s pour une scène
 stable, 0,13 s pour une coupe, 2,2 s pour la moyenne lente de luminosité) et le limiteur de pente en
 **vitesses** (160°/s de teinte, 0,5 de clarté perçue par seconde), multipliées par le temps réellement
-écoulé depuis le dernier envoi à la lampe (borné à 200 ms, pour qu'une lampe restée au repos reparte par
-un pas ordinaire et non par un saut). Changer le nombre de mesures par seconde (`CAPTURE_FPS`) ne change
+écoulé depuis le dernier envoi à la lampe (borné à 200 ms ; une lampe repartie du repos fait un pas
+d'une cadence ordinaire, 80 ms, et non le rattrapage du temps passé immobile). Changer le nombre de mesures par seconde (`CAPTURE_FPS`) ne change
 donc pas le caractère du rendu, seulement sa finesse.
 
 **Plafond d'ordres par lampe.** Une lampe ne reçoit jamais plus d'un ordre toutes les 80 ms (≈ 12 par

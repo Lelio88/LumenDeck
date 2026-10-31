@@ -133,6 +133,21 @@ test('une scene stable ne coute aucun ordre de plus', async () => {
   assert.equal(lamps.calls.length, before, 'rien n a change, rien n est envoye');
 });
 
+test('un leger tremblement de la scene ne bouge pas la lampe, un vrai changement si', async () => {
+  const { sync, capture, lamps, clock } = setup();
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  capture.state.onEvent(frame(RED));
+  await clock.advance(400);
+  const before = lamps.calls.length;
+  for (let i = 0; i < 10; i += 1) capture.state.onEvent(frame([220, 40, 20, 60]));
+  await clock.advance(1500);
+  assert.equal(lamps.calls.length, before, 'quelques degres de teinte : la lampe reste en place');
+
+  for (let i = 0; i < 10; i += 1) capture.state.onEvent(frame(BLUE));
+  await clock.advance(1500);
+  assert.ok(lamps.calls.length > before, 'un changement d ambiance la fait partir');
+});
+
 test('en mode zones, chaque moitie des lampes suit sa moitie d ecran', async () => {
   const { sync, capture, lamps, clock } = setup();
   await sync.start([lamp('gauche'), lamp('droite')], { screen: 'primary', mode: 'zones' });

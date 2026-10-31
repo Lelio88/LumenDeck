@@ -14,12 +14,14 @@ import { test } from 'node:test';
 import {
   CAPTURE_FPS,
   MIN_VALUE,
+  colorGap,
   createSmoother,
   differs,
   gradeZone,
   isBlack,
   lightness,
   parseCaptureLine,
+  shouldMove,
   stepToward,
   zoneOfBulb,
 } from '../../screen/zones.ts';
@@ -267,4 +269,26 @@ test('un ecran qui devient noir garde la teinte : seule la luminosite descend, l
 test('un ecran noir des le debut n invente pas de couleur', () => {
   const smoother = createSmoother();
   assert.deepEqual(smoother.push({ rgb: [0, 0, 0], v: 0 }).rgb, [0, 0, 0]);
+});
+
+test('l ecart de couleur est symetrique, tourne en rond, et ignore la teinte d une lampe presque grise', () => {
+  const a = { h: 100, s: 80, v: 50 };
+  const b = { h: 130, s: 80, v: 50 };
+  assert.equal(colorGap(a, b), colorGap(b, a));
+  assert.ok(colorGap({ h: 359, s: 80, v: 50 }, { h: 1, s: 80, v: 50 }) < 3, 'la teinte tourne en rond');
+  assert.ok(colorGap({ h: 0, s: 3, v: 50 }, { h: 180, s: 3, v: 50 }) < 6, 'une lampe grise n a pas de teinte a comparer');
+  assert.ok(colorGap(a, { ...a, v: 80 }) > colorGap(a, { ...a, v: 52 }), 'plus de clarte, plus d ecart');
+});
+
+test('zone morte : une petite variation ne deplace pas une lampe au repos', () => {
+  const shown = { h: 200, s: 80, v: 50 };
+  assert.equal(shouldMove(null, shown, false), true, 'rien d affiche : on envoie');
+  assert.equal(shouldMove(shown, { h: 205, s: 80, v: 50 }, false), false, 'petite variation : elle reste en place');
+  assert.equal(shouldMove(shown, { h: 230, s: 80, v: 50 }, false), true, 'vrai changement : elle part');
+});
+
+test('zone morte : une fois partie, la lampe va jusqu au bout puis s arrete', () => {
+  const shown = { h: 200, s: 80, v: 50 };
+  assert.equal(shouldMove(shown, { h: 205, s: 80, v: 50 }, true), true, 'en mouvement, elle continue meme sous le seuil d entree');
+  assert.equal(shouldMove(shown, { h: 201, s: 80, v: 50 }, true), false, 'arrivee a un degre : elle s arrete');
 });

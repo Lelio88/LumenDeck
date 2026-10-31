@@ -289,6 +289,46 @@ export function differs(previous: Hsv | null, next: Hsv): boolean {
 }
 
 /**
+ * ZONE MORTE. Une lampe au repos ne repart que si la cible s'est vraiment eloignee d'elle
+ * (`ENTER_GAP`) ; une fois partie, elle va jusqu'a la cible (`EXIT_GAP`, plus petit) avant de
+ * se reposer. Les deux seuils evitent le « tremblement » : une scene presque stable dont la
+ * couleur oscille de quelques degres ne fait plus ni bouger la lampe, ni solliciter son Wi-Fi.
+ * Contrairement a un simple seuil sur `differs`, la lampe ne SAUTE pas d'un seuil : elle part
+ * toujours par un pas de `stepToward` et glisse jusqu'a la cible.
+ */
+const ENTER_GAP = 8;
+const EXIT_GAP = 2;
+/**
+ * La clarte percue (0-1) pese comme des points de saturation : 0,005 de clarte vaut 1 point. Le
+ * seuil d'entree correspond ainsi a ~0,04 de clarte, UN pas ordinaire de `stepToward` : une rampe
+ * de luminosite (fondu, flash amorti) ne se met pas a avancer par marches plus grosses que ses pas.
+ */
+const LIGHTNESS_WEIGHT = 200;
+
+/**
+ * Distance entre deux couleurs, en points a peu pres egaux a l'oeil : ecart de teinte (degres,
+ * attenue quand la lampe est peu saturee, car sa teinte ne se voit plus), de saturation
+ * (points) et de clarte percue.
+ */
+export function colorGap(a: Hsv, b: Hsv): number {
+  const hueGap = Math.abs(a.h - b.h);
+  const circular = Math.min(hueGap, 360 - hueGap);
+  const hue = circular * (Math.min(a.s, b.s) / 100);
+  const saturation = a.s - b.s;
+  const light = (lightness(a.v) - lightness(b.v)) * LIGHTNESS_WEIGHT;
+  return Math.hypot(hue, saturation, light);
+}
+
+/**
+ * Faut-il envoyer un pas a une lampe qui montre `shown` quand l'ecran vise `target` ? `moving`
+ * dit si elle etait deja en route au dernier envoi. Rien d'affiche encore : toujours oui.
+ */
+export function shouldMove(shown: Hsv | null, target: Hsv, moving: boolean): boolean {
+  if (!shown) return true;
+  return colorGap(shown, target) >= (moving ? EXIT_GAP : ENTER_GAP);
+}
+
+/**
  * La zone d'ecran qui commande la lampe de rang `index` parmi `count`.
  *
  * L'ordre des ampoules est celui de la piece, de gauche a droite (comme pour le

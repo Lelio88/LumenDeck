@@ -24,8 +24,9 @@
  *     moteur : les deux horloges ne sont pas alignees, et lisser au tick
  *     donnerait un amortissement qui dependrait du reseau.
  *
- *   - On n'ecrit a une lampe que si sa couleur a vraiment change (`differs`) :
- *     une scene stable ne coute aucun aller-retour, ce qui menage l'ampoule. Et
+ *   - On n'ecrit a une lampe que si sa couleur a vraiment change : zone morte
+ *     (`shouldMove`, une lampe au repos ignore les petites variations) puis `differs`.
+ *     Une scene stable ne coute aucun aller-retour, ce qui menage l'ampoule. Et
  *     chaque envoi n'avance que d'un pas borne vers la couleur de l'ecran
  *     (`stepToward`) : les ampoules Tuya n'ont pas de fondu, c'est nous qui le fabriquons.
  *
@@ -42,7 +43,7 @@ import type { Hsv } from '../driver/types.ts';
 import type { Frame } from '../scenarios/catalogue.ts';
 import type { Engine, Target } from '../scenarios/engine.ts';
 import type { CaptureLauncher } from './capture.ts';
-import { createSmoother, differs, gradeZone, isBlack, stepToward, zoneOfBulb, type CaptureEvent } from './zones.ts';
+import { createSmoother, differs, gradeZone, isBlack, shouldMove, stepToward, zoneOfBulb, type CaptureEvent } from './zones.ts';
 
 /** Identifiant sous lequel le suivi d'ecran apparait dans le moteur (`runningOn`). */
 export const SCREEN_SYNC_ID = 'ecran';
@@ -139,6 +140,8 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
       const sent: (Hsv | null)[] = targets.map(() => null);
       /** Instant du dernier envoi a chaque lampe : la vitesse maximale se compte en temps reel. */
       const sentAt: number[] = targets.map(() => now() - MIN_WRITE_INTERVAL_MS);
+      /** La lampe est en route vers la cible (zone morte : elle ne s'arrete qu'une fois arrivee). */
+      const moving: boolean[] = targets.map(() => false);
       /** Echecs d'affilee par lampe, et instant avant lequel on ne la retente pas. */
       const failStreak: number[] = targets.map(() => 0);
       const retryAt: number[] = targets.map(() => 0);
@@ -228,9 +231,16 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
             if (!color) return {};
             // Un pas borne vers la couleur de l'ecran, pas le saut : la lampe n'a pas de fondu.
             const shown = sent[index] ?? null;
+            // Zone morte : une lampe au repos ne repart que pour un vrai changement.
+            const wasMoving = moving[index] ?? false;
+            const moves = shouldMove(shown, color, wasMoving);
+            moving[index] = moves;
+            if (!moves) return { idle: true };
             const elapsedMs = at - (sentAt[index] ?? at);
             if (elapsedMs < MIN_WRITE_INTERVAL_MS) return { idle: true };
-            const next = stepToward(shown, color, elapsedMs / 1000);
+            // Reparti du repos, la lampe fait un pas ORDINAIRE, pas le rattrapage du temps passe immobile.
+            const stepMs = wasMoving ? elapsedMs : MIN_WRITE_INTERVAL_MS;
+            const next = stepToward(shown, color, stepMs / 1000);
             if (!differs(shown, next)) return { idle: true };
             const firstWrite = shown === null;
             sent[index] = next;

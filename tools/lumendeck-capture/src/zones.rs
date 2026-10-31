@@ -4,8 +4,15 @@
 //! colonnes) en une couleur par zone d'ecran, de gauche a droite.
 //!
 //! Choix non evidents :
-//! - **Moyenne ponderee par la saturation** : une moyenne simple d'une scene donne
-//!   un marron terne ; les pixels vifs doivent peser plus que les gris.
+//! - **Famille de teintes dominante** : une moyenne de tout l'ecran melange des teintes
+//!   opposees (moitie rouge, moitie vert : un brun qui n'est nulle part dans l'image) et
+//!   bascule des qu'un petit objet vif apparait. Les pixels sont donc ranges en 12 familles
+//!   de teintes ; on garde la fenetre de 3 familles voisines (90 degres) qui pese le plus,
+//!   et on ne moyenne que celle-la. Des teintes proches (orange, jaune) se fondent, des
+//!   teintes opposees ne se melangent plus.
+//! - **Ponderee par la saturation** : une moyenne simple donne un marron terne ; les
+//!   pixels vifs doivent peser plus que les gris. Une scene SANS pixel colore (gris,
+//!   noir et blanc) retombe sur la moyenne de tout l'ecran.
 //! - **Luminosite mesuree a part**, comme moyenne du canal le plus fort : la
 //!   ponderation ci-dessus ignorerait justement les scenes sombres et ternes.
 //! - **Bandes noires ecartees** : un film en 2,39:1 a un quart de son image en noir
@@ -17,6 +24,12 @@
 
 /// Un canal sous ce seuil est considere eteint (bande noire, ecran noir).
 const BLACK: u8 = 8;
+
+/// Familles de teintes (30 degres chacune), et ecart max-min a partir duquel un pixel a une teinte.
+const HUE_BINS: usize = 12;
+const MIN_CHROMA: u8 = 24;
+/// Largeur de la fenetre de familles voisines retenue (3 x 30 = 90 degres).
+const WINDOW: usize = 3;
 
 /// Couleur mesuree d'une zone : RVB 0-255 et luminosite 0-100.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -70,18 +83,77 @@ fn active_area(pixels: &[u8], width: usize, height: usize, pitch: usize) -> Opti
     Some(Area { x0, x1, y0, y1 })
 }
 
+/// Somme ponderee des canaux d'un groupe de pixels.
+#[derive(Clone, Copy, Default)]
+struct Sum {
+    r: f64,
+    g: f64,
+    b: f64,
+    weight: f64,
+}
+
+impl Sum {
+    fn add(&mut self, r: u8, g: u8, b: u8, w: f64) {
+        self.r += f64::from(r) * w;
+        self.g += f64::from(g) * w;
+        self.b += f64::from(b) * w;
+        self.weight += w;
+    }
+
+    fn merge(self, other: Sum) -> Sum {
+        Sum {
+            r: self.r + other.r,
+            g: self.g + other.g,
+            b: self.b + other.b,
+            weight: self.weight + other.weight,
+        }
+    }
+
+    fn mean(self) -> (u8, u8, u8) {
+        (
+            (self.r / self.weight).round() as u8,
+            (self.g / self.weight).round() as u8,
+            (self.b / self.weight).round() as u8,
+        )
+    }
+}
+
+/// Famille de teinte (0..HUE_BINS) d'un pixel colore.
+fn hue_bin(r: u8, g: u8, b: u8, max: u8, chroma: u8) -> usize {
+    let d = f64::from(chroma);
+    let (rf, gf, bf) = (f64::from(r), f64::from(g), f64::from(b));
+    let hue = if max == r {
+        60.0 * ((gf - bf) / d).rem_euclid(6.0)
+    } else if max == g {
+        60.0 * ((bf - rf) / d + 2.0)
+    } else {
+        60.0 * ((rf - gf) / d + 4.0)
+    };
+    ((hue / 30.0) as usize) % HUE_BINS
+}
+
+/// La fenetre de `WINDOW` familles voisines (en cercle) dont le poids est le plus fort.
+fn heaviest_window(bins: &[Sum; HUE_BINS]) -> Option<Sum> {
+    (0..HUE_BINS)
+        .map(|start| (0..WINDOW).fold(Sum::default(), |acc, i| acc.merge(bins[(start + i) % HUE_BINS])))
+        .max_by(|a, b| a.weight.total_cmp(&b.weight))
+        .filter(|window| window.weight > 0.0)
+}
+
 fn measure(pixels: &[u8], pitch: usize, x0: usize, x1: usize, y0: usize, y1: usize) -> Zone {
-    let (mut sum_r, mut sum_g, mut sum_b, mut weight) = (0f64, 0f64, 0f64, 0f64);
+    let mut bins = [Sum::default(); HUE_BINS];
+    let mut all = Sum::default();
     let (mut sum_v, mut count) = (0f64, 0f64);
     for y in y0..y1 {
         for x in x0..x1 {
             let (r, g, b) = channels(pixels, pitch, x, y);
             let max = r.max(g).max(b);
-            let w = f64::from(max - r.min(g).min(b)) + 1.0;
-            sum_r += f64::from(r) * w;
-            sum_g += f64::from(g) * w;
-            sum_b += f64::from(b) * w;
-            weight += w;
+            let chroma = max - r.min(g).min(b);
+            let w = f64::from(chroma) + 1.0;
+            all.add(r, g, b, w);
+            if chroma >= MIN_CHROMA {
+                bins[hue_bin(r, g, b, max, chroma)].add(r, g, b, w);
+            }
             sum_v += f64::from(max);
             count += 1.0;
         }
@@ -89,10 +161,11 @@ fn measure(pixels: &[u8], pitch: usize, x0: usize, x1: usize, y0: usize, y1: usi
     if count == 0.0 {
         return Zone::BLACK;
     }
+    let (r, g, b) = heaviest_window(&bins).unwrap_or(all).mean();
     Zone {
-        r: (sum_r / weight).round() as u8,
-        g: (sum_g / weight).round() as u8,
-        b: (sum_b / weight).round() as u8,
+        r,
+        g,
+        b,
         v: (sum_v / count / 255.0 * 100.0).round() as u8,
     }
 }
@@ -189,5 +262,35 @@ mod tests {
     fn more_zones_than_columns_still_answers() {
         let px = image(2, 2, |_, _| (90, 90, 90));
         assert_eq!(analyze(&px, 2, 2, 8, 4).len(), 4);
+    }
+
+    #[test]
+    fn opposite_hues_do_not_blend_into_brown() {
+        // Moitie rouge, moitie verte (un peu plus de vert) : on veut du vert, pas un brun.
+        let px = image(10, 2, |x, _| if x < 4 { (220, 20, 20) } else { (20, 220, 20) });
+        let z = analyze(&px, 10, 2, 40, 1)[0];
+        assert!(z.g > 180 && z.r < 60, "la teinte la plus presente l'emporte : {:?}", z);
+    }
+
+    #[test]
+    fn a_small_vivid_object_does_not_take_over_the_zone() {
+        let px = image(20, 2, |x, _| if x == 0 { (20, 20, 230) } else { (200, 40, 30) });
+        let z = analyze(&px, 20, 2, 80, 1)[0];
+        assert!(z.r > 150 && z.b < 80, "le rouge de fond reste la couleur : {:?}", z);
+    }
+
+    #[test]
+    fn neighbouring_hues_still_blend() {
+        // Orange et jaune sont voisins : leur moyenne reste un orange-jaune vif.
+        let px = image(10, 2, |x, _| if x < 5 { (230, 120, 10) } else { (230, 200, 10) });
+        let z = analyze(&px, 10, 2, 40, 1)[0];
+        assert!(z.r > 200 && z.g > 140 && z.g < 190, "melange des deux : {:?}", z);
+    }
+
+    #[test]
+    fn a_grey_scene_falls_back_to_the_plain_average() {
+        let px = image(6, 2, |x, _| if x < 3 { (60, 60, 60) } else { (140, 140, 140) });
+        let z = analyze(&px, 6, 2, 24, 1)[0];
+        assert!((95..=105).contains(&z.r) && z.r == z.g && z.g == z.b, "gris moyen : {:?}", z);
     }
 }
