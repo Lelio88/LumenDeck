@@ -25,7 +25,9 @@
  *     donnerait un amortissement qui dependrait du reseau.
  *
  *   - On n'ecrit a une lampe que si sa couleur a vraiment change (`differs`) :
- *     une scene stable ne coute aucun aller-retour, ce qui menage l'ampoule.
+ *     une scene stable ne coute aucun aller-retour, ce qui menage l'ampoule. Et
+ *     chaque envoi n'avance que d'un pas borne vers la couleur de l'ecran
+ *     (`stepToward`) : les ampoules Tuya n'ont pas de fondu, c'est nous qui le fabriquons.
  *
  * Invariants : `frameAt` ne bloque jamais (elle lit le dernier etat connu) ; une
  * lampe n'est allumee qu'une fois (`keepOn` ensuite) ; le capteur est tue a la
@@ -40,7 +42,7 @@ import type { Hsv } from '../driver/types.ts';
 import type { Frame } from '../scenarios/catalogue.ts';
 import type { Engine, Target } from '../scenarios/engine.ts';
 import type { CaptureLauncher } from './capture.ts';
-import { createSmoother, differs, gradeZone, zoneOfBulb, type CaptureEvent } from './zones.ts';
+import { createSmoother, differs, gradeZone, stepToward, zoneOfBulb, type CaptureEvent } from './zones.ts';
 
 /** Identifiant sous lequel le suivi d'ecran apparait dans le moteur (`runningOn`). */
 export const SCREEN_SYNC_ID = 'ecran';
@@ -115,11 +117,14 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
           // Pas encore de couleur : une consigne vide, qui joint la lampe (premiere image :
           // c'est elle qui dit si une lampe repond). Couleur inchangee : au repos, sans rien toucher.
           if (!color) return {};
-          if (!differs(sent[index] ?? null, color)) return { idle: true };
-          const firstWrite = sent[index] === null;
-          sent[index] = color;
+          // Un pas borne vers la couleur de l'ecran, pas le saut : la lampe n'a pas de fondu.
+          const shown = sent[index] ?? null;
+          const next = stepToward(shown, color);
+          if (!differs(shown, next)) return { idle: true };
+          const firstWrite = shown === null;
+          sent[index] = next;
           return {
-            color,
+            color: next,
             keepOn: !firstWrite,
             // Une ecriture ratee ne vaut pas « envoyee » : on renvoie, en rallumant la lampe,
             // sans quoi une lampe revenue apres une coupure resterait eteinte tant que la scene est stable.

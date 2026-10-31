@@ -17,6 +17,7 @@ import {
   differs,
   gradeZone,
   parseCaptureLine,
+  stepToward,
   zoneOfBulb,
 } from '../../screen/zones.ts';
 
@@ -108,4 +109,44 @@ test('repartit les lampes sur les zones de gauche a droite', () => {
   assert.deepEqual(zones(4, 2), [0, 0, 1, 1]);
   assert.deepEqual(zones(3, 1), [0, 0, 0], 'une seule zone : tout le monde pareil');
   assert.deepEqual(zones(1, 2), [0], 'une seule lampe : la zone de gauche');
+});
+
+test('la premiere couleur est prise telle quelle : rien d avant dont partir', () => {
+  const target = { h: 200, s: 80, v: 70 };
+  assert.deepEqual(stepToward(null, target), target);
+});
+
+test('la lampe n avance vers sa cible que d un pas borne, par grandeur', () => {
+  const from = { h: 100, s: 50, v: 50 };
+  const next = stepToward(from, { h: 200, s: 100, v: 100 });
+  assert.ok(next.h > 100 && next.h < 130, 'teinte : un pas, pas le saut (' + next.h + ')');
+  assert.ok(next.s > 50 && next.s < 65, 'saturation : un pas (' + next.s + ')');
+  assert.ok(next.v > 50 && next.v < 60, 'luminosite : un pas, le plus petit des trois (' + next.v + ')');
+});
+
+test('la luminosite est la grandeur la plus bridee', () => {
+  const from = { h: 100, s: 50, v: 20 };
+  const next = stepToward(from, { h: 160, s: 80, v: 100 });
+  assert.ok(next.v - from.v < next.h - from.h, 'on remarque bien plus un saut de luminosite qu un decalage de teinte');
+});
+
+test('arrive exactement sur la cible quand elle est a portee, et ne la depasse jamais', () => {
+  const target = { h: 120, s: 60, v: 55 };
+  assert.deepEqual(stepToward({ h: 118, s: 58, v: 53 }, target), target);
+  let current = { h: 0, s: 0, v: 3 };
+  for (let i = 0; i < 40; i += 1) current = stepToward(current, target);
+  assert.deepEqual(current, target, 'converge en un nombre fini de pas');
+});
+
+test('la teinte prend le plus court chemin, en tournant en rond', () => {
+  const up = stepToward({ h: 350, s: 80, v: 50 }, { h: 10, s: 80, v: 50 });
+  assert.ok(up.h > 350 || up.h <= 10, 'de 350 vers 10 : on passe par 0, pas par 180 (' + up.h + ')');
+  const down = stepToward({ h: 10, s: 80, v: 50 }, { h: 350, s: 80, v: 50 });
+  assert.ok(down.h < 10 || down.h >= 350, 'de 10 vers 350 : par 0 aussi (' + down.h + ')');
+});
+
+test('une lampe presque grise saute directement a la teinte visee', () => {
+  const next = stepToward({ h: 0, s: 3, v: 50 }, { h: 240, s: 80, v: 50 });
+  assert.equal(next.h, 240, 'sans couleur visible, tourner la teinte ferait passer la lampe par des teintes parasites');
+  assert.ok(next.s < 20, 'la saturation, elle, monte progressivement');
 });

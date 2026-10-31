@@ -277,3 +277,24 @@ test('un second appui pendant le demarrage annule sans annoncer de panne', async
   assert.equal(engine.runningOn('a'), undefined);
   assert.deepEqual(ends, []);
 });
+
+test('un changement brutal a l ecran devient une rampe de petits pas, pas un saut', async () => {
+  const { sync, capture, lamps, clock } = setup();
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  capture.state.onEvent(frame(RED));
+  await clock.advance(300);
+
+  lamps.calls.length = 0;
+  for (let i = 0; i < 30; i += 1) {
+    capture.state.onEvent(frame(BLUE));
+    await clock.advance(100);
+  }
+  const hues = colorsOf(lamps, 'a').map((c) => c[2]);
+  assert.ok(hues.length >= 5, 'plusieurs envois, pas un seul saut (' + hues.length + ')');
+  for (let i = 1; i < hues.length; i += 1) {
+    const gap = Math.abs(hues[i] - hues[i - 1]);
+    assert.ok(Math.min(gap, 360 - gap) <= 15, 'pas de teinte borne : ' + hues[i - 1] + ' -> ' + hues[i]);
+  }
+  const last = hues.at(-1);
+  assert.ok(last > 200 && last < 260, 'et la lampe finit bien sur le bleu (' + last + ')');
+});

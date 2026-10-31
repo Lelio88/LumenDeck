@@ -29,6 +29,13 @@
  *     toujours des couleurs ternes, et une ampoule grisatre n'a pas l'effet
  *     recherche. Le gain est FIXE, a dessein (pas de reglage dans cette version).
  *
+ *   - Le lissage ne suffit pas : il adoucit l'ecart avec la cible, mais n'impose
+ *     aucune VITESSE MAXIMALE. Les ampoules Tuya n'ont pas de fondu materiel (a
+ *     la difference de Philips Hue, ou chaque ordre porte un temps de transition) :
+ *     une couleur envoyee s'applique d'un coup. `stepToward` borne donc ce que la
+ *     lampe parcourt a chaque envoi, et plus severement la luminosite que la
+ *     teinte, parce qu'un saut de luminosite est ce qu'on remarque le plus.
+ *
  * Invariants : ces fonctions sont PURES et ne dependent que de leurs arguments ;
  * une ligne du capteur douteuse est ecartee (`null`), jamais interpretee ; la
  * valeur rendue par `gradeZone` est toujours dans les bornes que le pilote accepte.
@@ -149,6 +156,40 @@ export function createSmoother(): Smoother {
       }
       return { rgb: [Math.round(state.rgb[0]), Math.round(state.rgb[1]), Math.round(state.rgb[2])], v: state.v };
     },
+  };
+}
+
+/**
+ * Pas maximal d'une lampe a chaque envoi (~10 par seconde) : 15 degres de teinte,
+ * 10 points de saturation, 8 points de luminosite. Un balayage complet de la
+ * luminosite prend ainsi ~1,3 s, et un tour de 120 degres de teinte ~0,8 s.
+ */
+const MAX_HUE_STEP = 15;
+const MAX_SATURATION_STEP = 10;
+const MAX_VALUE_STEP = 8;
+/** En dessous, la lampe est presque grise : sa teinte ne se voit pas et ne compte pas. */
+const GREY_SATURATION = 10;
+
+const towards = (from: number, to: number, max: number): number => from + clamp(to - from, -max, max);
+
+/**
+ * La couleur a envoyer a une lampe qui montre `current` quand l'ecran vise `target` :
+ * un pas borne vers la cible, jamais au-dela. `null` (rien d'envoye encore) : la cible.
+ *
+ * La teinte prend le plus court chemin autour du cercle. Une lampe presque grise
+ * saute directement a la teinte visee : sans couleur visible, la faire tourner
+ * l'amenerait a travers des teintes parasites en meme temps que sa saturation monte.
+ */
+export function stepToward(current: Hsv | null, target: Hsv): Hsv {
+  if (!current) return target;
+  const diff = ((target.h - current.h + 540) % 360) - 180;
+  const h = current.s < GREY_SATURATION
+    ? target.h
+    : (current.h + clamp(diff, -MAX_HUE_STEP, MAX_HUE_STEP) + 360) % 360;
+  return {
+    h: Math.round(h),
+    s: Math.round(towards(current.s, target.s, MAX_SATURATION_STEP)),
+    v: Math.round(towards(current.v, target.v, MAX_VALUE_STEP)),
   };
 }
 
