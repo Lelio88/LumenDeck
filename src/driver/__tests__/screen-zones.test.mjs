@@ -94,13 +94,21 @@ test('le lissage converge vers une scene stable', () => {
   assert.ok(Math.abs(last.rgb[0] - 200) <= 1 && Math.abs(last.v - 60) <= 1);
 });
 
-test('n envoie pas a la lampe un changement imperceptible', () => {
+test('envoie des qu un changement est a la portee de l ampoule, pas avant', () => {
   const a = { h: 200, s: 50, v: 50 };
   assert.equal(differs(null, a), true, 'rien d envoye encore : on envoie');
-  assert.equal(differs(a, { h: 201, s: 51, v: 50 }), false);
-  assert.equal(differs(a, { h: 210, s: 50, v: 50 }), true);
-  assert.equal(differs(a, { h: 200, s: 50, v: 56 }), true);
-  assert.equal(differs({ h: 359, s: 50, v: 50 }, { h: 0, s: 50, v: 50 }), false, 'la teinte tourne en rond');
+  assert.equal(differs(a, { ...a }), false, 'identique : rien a envoyer');
+  assert.equal(differs(a, { h: 200, s: 50.2, v: 50.1 }), false, 'sous la resolution de l ampoule');
+  assert.equal(differs(a, { h: 201, s: 50, v: 50 }), true, 'un degre de teinte est la plus petite marche');
+  assert.equal(differs(a, { h: 200, s: 51, v: 50 }), true);
+  assert.equal(differs(a, { h: 200, s: 50, v: 52 }), true);
+  assert.equal(differs({ h: 359, s: 50, v: 50 }, { h: 0, s: 50, v: 50 }), true, 'la teinte tourne en rond : 1 degre');
+  assert.equal(differs({ h: 359, s: 50, v: 50 }, { h: 359, s: 50, v: 50 }), false);
+});
+
+test('un ecart de luminosite invisible n est pas envoye en haut de plage, mais l est en bas', () => {
+  assert.equal(differs({ h: 0, s: 50, v: 98 }, { h: 0, s: 50, v: 99 }), false);
+  assert.equal(differs({ h: 0, s: 50, v: 3 }, { h: 0, s: 50, v: 3.6 }), true, 'en bas, un demi-point se voit');
 });
 
 test('repartit les lampes sur les zones de gauche a droite', () => {
@@ -181,10 +189,6 @@ test('la luminosite garde une decimale : les marches du bas sont plus fines que 
   assert.ok(next.v > 2 && next.v < 3.6, 'le premier pas depuis 2 % reste fin (' + next.v + ')');
 });
 
-test('un ecart de luminosite invisible n est pas envoye, meme s il vaut plusieurs points en haut', () => {
-  assert.equal(differs({ h: 0, s: 50, v: 98 }, { h: 0, s: 50, v: 99 }), false);
-  assert.equal(differs({ h: 0, s: 50, v: 3 }, { h: 0, s: 50, v: 4 }), true, 'mais en bas, 1 point se voit');
-});
 
 test('un flash bref ne fait presque pas bouger la luminosite : on suit la scene, pas chaque image', () => {
   const smoother = createSmoother();

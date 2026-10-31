@@ -92,11 +92,17 @@ const CUT_THRESHOLD = 0.5;
 const SLOW_ALPHA = 0.03;
 const FAST_SHARE = 0.35;
 
-/** Ecarts en dessous desquels on n'embete pas la lampe : teinte en degres, le reste en %. */
-const MIN_HUE_STEP = 2;
-const MIN_PERCENT_STEP = 2;
+/**
+ * Ecarts en dessous desquels on n'embete pas la lampe. Volontairement a la RESOLUTION de
+ * l'ampoule (1 degre de teinte, 0,5 % de saturation, ~0,5 % de clarte percue) : un seuil
+ * plus large retient les petites variations puis les envoie d'un coup, et c'est cette
+ * marche, non la vitesse, que l'oeil voit. Relevé en conditions reelles avant ce reglage :
+ * 15 images par seconde mais 3 a 8 ecritures seulement.
+ */
+const MIN_HUE_STEP = 1;
+const MIN_SATURATION_STEP = 0.5;
 /** Ecart de clarte percue (0-1) en dessous duquel un changement de luminosite ne se voit pas. */
-const MIN_LIGHTNESS_STEP = 0.012;
+const MIN_LIGHTNESS_STEP = 0.005;
 
 const clamp = (n: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, n));
 
@@ -223,7 +229,7 @@ export function stepToward(current: Hsv | null, target: Hsv): Hsv {
   const perceived = towards(lightness(current.v), lightness(target.v), MAX_LIGHTNESS_STEP);
   return {
     h: Math.round(h),
-    s: Math.round(towards(current.s, target.s, MAX_SATURATION_STEP)),
+    s: round1(towards(current.s, target.s, MAX_SATURATION_STEP)),
     // Une decimale : le pilote ecrit la luminosite au dixieme de pour cent, et les marches du bas sont fines.
     v: round1(fromLightness(perceived)),
   };
@@ -235,7 +241,7 @@ export function differs(previous: Hsv | null, next: Hsv): boolean {
   const hueGap = Math.abs(previous.h - next.h);
   const circular = Math.min(hueGap, 360 - hueGap);
   return circular >= MIN_HUE_STEP
-    || Math.abs(previous.s - next.s) >= MIN_PERCENT_STEP
+    || Math.abs(previous.s - next.s) >= MIN_SATURATION_STEP
     || Math.abs(lightness(previous.v) - lightness(next.v)) >= MIN_LIGHTNESS_STEP;
 }
 

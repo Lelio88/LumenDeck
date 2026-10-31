@@ -331,3 +331,22 @@ test('le debit reel est rapporte toutes les 5 secondes, sans rien dire de l ecra
   assert.match(reports[0], /\d+(\.\d+)? ecritures\/s/);
   assert.ok(!/#|rgb|\[/.test(reports[0]), 'aucune couleur ni contenu d ecran dans le journal');
 });
+
+test('une derive lente de la scene est envoyee par petites ecritures frequentes, pas par marches rares', async () => {
+  const { sync, capture, lamps, clock } = setup();
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  capture.state.onEvent(frame([200, 50, 50, 60]));
+  await clock.advance(300);
+
+  lamps.calls.length = 0;
+  for (let i = 0; i < 30; i += 1) {
+    capture.state.onEvent(frame([200 - i * 5, 50 + i * 5, 50, 60]));
+    await clock.advance(100);
+  }
+  const writes = colorsOf(lamps, 'a');
+  assert.ok(writes.length >= 15, 'au moins une ecriture sur deux images du moteur (' + writes.length + ' en 3 s)');
+  for (let i = 1; i < writes.length; i += 1) {
+    const gap = Math.abs(writes[i][2] - writes[i - 1][2]);
+    assert.ok(Math.min(gap, 360 - gap) <= 12, 'marche de teinte trop grosse : ' + writes[i - 1][2] + ' -> ' + writes[i][2]);
+  }
+});
