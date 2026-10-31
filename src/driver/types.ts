@@ -74,6 +74,13 @@ export interface LightDriver {
   setTemperature(kelvin: number): Promise<void>;
   /** Passe en couleur et applique la teinte demandee. */
   setColor(color: Hsv): Promise<void>;
+  /**
+   * Comme `setColor`, mais SANS attendre que la lampe accuse reception : pour un flux continu
+   * (suivi d'ecran), ou attendre chaque accuse est inutile — le suivant remplace l'ordre — et
+   * nuisible, car un accuse perdu fait attendre le flux entier plusieurs secondes. Ne dit donc
+   * PAS si la lampe a obei ; l'appelant confirme de temps en temps par un `setColor`.
+   */
+  streamColor(color: Hsv): Promise<void>;
   /** Libere la connexion. Idempotent. */
   close(): Promise<void>;
 }

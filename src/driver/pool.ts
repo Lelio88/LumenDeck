@@ -103,6 +103,7 @@ export async function withRetry<T>(
   config: TuyaLanConfig,
   operation: (bulb: LightDriver) => Promise<T>,
 ): Promise<T> {
+  const startedAt = Date.now();
   try {
     return await operation(await acquire(config));
   } catch (first) {
@@ -112,6 +113,9 @@ export async function withRetry<T>(
     await release(config.id);
 
     const cause = asLightError(first);
+    // Sans cette ligne, la reprise masque l'incident : l'ordre finit par reussir, et seul un creux
+    // de debit inexplique reste visible.
+    driverNote?.('ampoule ...' + config.id.slice(-6) + ' premiere tentative ratee (' + cause.failure + ') apres ' + (Date.now() - startedAt) + ' ms');
     if (SANS_REPRISE.includes(cause.failure)) throw cause;
 
     try {

@@ -105,6 +105,13 @@ const RETRY_BASE_MS = 500;
 const RETRY_MAX_MS = 5000;
 
 /**
+ * Intervalle entre deux ordres CONFIRMES a une meme lampe. Entre les deux, les couleurs partent
+ * sans attendre l'accuse (voir `LightDriver.streamColor`) ; un ordre confirme sert de sonde :
+ * s'il echoue, la lampe est reellement en panne, ce qu'un flux sans accuse ne peut pas dire.
+ */
+const CONFIRM_EVERY_MS = 4000;
+
+/**
  * Duree de noir continu a partir de laquelle les lampes de la zone s'eteignent. Assez longue
  * pour qu'un fondu au noir ou une scene de nuit n'eteigne rien, assez courte pour qu'un ecran
  * de veille ne laisse pas la piece eclairee en blanc.
@@ -134,6 +141,8 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
       /** Echecs d'affilee par lampe, et instant avant lequel on ne la retente pas. */
       const failStreak: number[] = targets.map(() => 0);
       const retryAt: number[] = targets.map(() => 0);
+      /** Instant du dernier ordre confirme a chaque lampe. */
+      const confirmedAt: number[] = targets.map(() => Number.NEGATIVE_INFINITY);
       /** Depuis quand chaque zone est noire (ms), ou null. */
       const blackSince: (number | null)[] = Array.from({ length: zoneCount }, () => null);
       /** Lampes eteintes pour cause d'ecran noir (pour ne pas renvoyer l'ordre a chaque image). */
@@ -226,8 +235,12 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
             sent[index] = next;
             sentAt[index] = at;
             writes += 1;
+            // Le premier ordre, la reprise apres un echec, et un ordre sur quatre secondes sont confirmes.
+            const confirm = firstWrite || at - (confirmedAt[index] ?? Number.NEGATIVE_INFINITY) >= CONFIRM_EVERY_MS;
+            if (confirm) confirmedAt[index] = at;
             return {
               color: next,
+              stream: !confirm,
               keepOn: !firstWrite,
               // Une ecriture ratee ne vaut pas « envoyee » : on renvoie, en rallumant la lampe,
               // sans quoi une lampe revenue apres une coupure resterait eteinte tant que la scene est stable.

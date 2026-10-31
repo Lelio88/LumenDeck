@@ -130,6 +130,9 @@ function pickCause(rejection: unknown, sink: TransportSink): LightError {
   return asLightError(sink.last);
 }
 
+/** Connexions que le plugin a lui-meme fermees : pour ne signaler que celles qu'il n'a PAS demandees. */
+const closedByUs = new WeakSet<object>();
+
 /** Ce dont `shutDown` a besoin d'une connexion tuyapi : le peu qui est utilise, pour pouvoir le tester. */
 type Closable = {
   disconnect(): void;
@@ -253,6 +256,11 @@ export class TuyaLanDriver implements LightDriver {
 
     const sink: TransportSink = { last: null };
     device.on('error', (cause: Error) => { sink.last = cause; });
+    // Une connexion fermee SANS nous (l'ampoule, ou le delai du battement de coeur de tuyapi) :
+    // c'est ce que le journal doit montrer pour comprendre les reconnexions.
+    device.on('disconnected', () => {
+      if (!closedByUs.has(device)) config.note?.('connexion fermee sans demande du plugin');
+    });
 
     try {
       if (!config.ip) await device.find();
@@ -365,11 +373,27 @@ export class TuyaLanDriver implements LightDriver {
     });
   }
 
+  /**
+   * Envoie la couleur sans attendre l'accuse de la lampe.
+   *
+   * tuyapi attend sinon la reponse de CHAQUE ordre, jusqu'a 5 secondes, et met les ordres d'une
+   * meme lampe en file : un seul accuse perdu fige tout le flux, puis la reprise rouvre la
+   * connexion. Releve en conditions reelles : un creux de 5 a 10 s environ toutes les minutes.
+   */
+  async streamColor(color: Hsv): Promise<void> {
+    await this.write({
+      multiple: true,
+      data: { [DP.mode]: 'colour', [DP.color]: encodeColor(color) },
+      shouldWaitForResponse: false,
+    });
+  }
+
   async close(): Promise<void> {
     // L'ecouteur 'error' n'est deliberement PAS retire : detruire le socket
     // peut encore emettre un ECONNRESET au tick suivant, et il n'y aurait
     // alors plus personne pour l'absorber — soit exactement la panne que cet
     // ecouteur existe pour empecher. Il part avec le device, a la collecte.
+    closedByUs.add(this.device);
     shutDown(this.device as unknown as Closable);
   }
 }

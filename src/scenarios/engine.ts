@@ -172,7 +172,7 @@ export function createEngine(deps: EngineDeps): Engine {
       // Une couleur implique d'allumer : appliquer une teinte a une lampe eteinte
       // est silencieux, et le scenario paraitrait casse.
       if (cue.on === true || (cue.color && cue.keepOn !== true)) await bulb.setPower(true);
-      if (cue.color) await bulb.setColor(cue.color);
+      if (cue.color) await (cue.stream === true ? bulb.streamColor(cue.color) : bulb.setColor(cue.color));
       if (cue.brightness !== undefined) await bulb.setBrightness(cue.brightness);
     });
   }

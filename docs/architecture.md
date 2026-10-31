@@ -774,6 +774,19 @@ descend, jusqu'au plancher (`MIN_VALUE`). Après **3 secondes de noir continu**,
 zone concernée s'éteignent (une seule fois), et se rallument dès que l'image revient. Un fondu au
 noir bref n'éteint rien, et en mode gauche / droite seule la moitié noire s'éteint.
 
+**Ne pas attendre les accusés.** Par défaut, tuyapi attend la réponse de chaque ordre (jusqu'à 5 s) et met
+les ordres d'une même lampe en file : un seul accusé perdu fige tout le flux, puis la reprise rouvre la
+connexion. Relevé en conditions réelles : un creux de 5 à 10 s à peu près chaque minute, sur les deux
+ampoules. Les couleurs du suivi partent donc **sans attendre l'accusé** (`LightDriver.streamColor`,
+`Cue.stream`) ; un ordre sur quatre secondes, le premier, et la reprise après un échec sont
+**confirmés** et servent de sonde de panne. Le flux ne dit pas si la lampe a obéi : c'est ce
+qu'on accepte pour un éclairage d'ambiance, où l'ordre suivant remplace le précédent.
+
+**Connexions fermées pour de bon.** tuyapi rouvre tout seul une connexion fermée (jusqu'à 5 fois à chaque
+ordre) et `disconnect()` est sans effet tant qu'elle n'est pas établie : un ordre en vol rouvrait des
+connexions hors de toute vue, jusqu'à saturer l'ampoule (`shutDown` l'interdit). Le journal signale
+une première tentative ratée (cause et durée) et une connexion fermée sans demande du plugin.
+
 **Mesurer la cadence.** Toutes les 5 secondes, le plugin écrit une ligne dans son journal :
 `suivi d'écran : N images/s, M écritures/s` (nombres seulement, rien de l'écran). Le débit réel est
 inférieur à ce que promet la minuterie : chaque image attend la réponse de la lampe avant d'armer la

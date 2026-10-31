@@ -45,14 +45,15 @@ const INITIAL = { on: false, color: null, temperatureK: 3000, brightness: 40 };
 
 function fakeLamps(unreachable = new Set()) {
   const calls = [];
-  const lamps = { calls, opened: 0 };
+  const lamps = { calls, opened: 0, streamed: 0, acknowledged: 0 };
   const withBulb = async (target, op) => {
     lamps.opened += 1;
     if (unreachable.has(target.id)) throw new Error('hors ligne');
     return op({
       read: async () => ({ ...INITIAL }),
       setPower: async (on) => { calls.push([target.id, 'power', on]); },
-      setColor: async (color) => { calls.push([target.id, 'color', color.h, color.v, color.s]); },
+      setColor: async (color) => { lamps.acknowledged += 1; calls.push([target.id, 'color', color.h, color.v, color.s]); },
+      streamColor: async (color) => { lamps.streamed += 1; calls.push([target.id, 'color', color.h, color.v, color.s]); },
       setBrightness: async (level) => { calls.push([target.id, 'brightness', level]); },
       setTemperature: async (kelvin) => { calls.push([target.id, 'temperature', kelvin]); },
     });
@@ -489,4 +490,31 @@ test('la reconnexion espacee ne retarde pas une lampe revenue de plus de quelque
   capture.state.onEvent(frame(BLUE));
   await clock.advance(6000);
   assert.ok(colorsOf(lamps, 'a').length >= 1, 'la lampe est de nouveau servie');
+});
+
+test('le flux d ecran n attend pas l accuse de reception de la lampe, sauf de temps en temps', async () => {
+  const { sync, capture, lamps, clock } = setup();
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  for (let i = 0; i < 200; i += 1) { // 20 s de couleurs qui changent
+    capture.state.onEvent(frame([200 - (i % 50) * 3, 40 + (i % 50) * 3, 60, 60]));
+    await clock.advance(100);
+  }
+  assert.ok(lamps.streamed > 0, 'des ordres partent sans attendre l accuse');
+  assert.ok(lamps.streamed > 5 * lamps.acknowledged, 'la grande majorite (' + lamps.streamed + ' contre ' + lamps.acknowledged + ' confirmes)');
+  assert.ok(lamps.acknowledged >= 4, 'mais un ordre confirme revient regulierement, pour detecter une vraie panne (' + lamps.acknowledged + ' en 20 s)');
+});
+
+test('le premier ordre apres un echec est confirme : on ne reprend pas en aveugle', async () => {
+  const down = new Set();
+  const { sync, capture, lamps, clock } = setup({ unreachable: down });
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  capture.state.onEvent(frame(RED));
+  await clock.advance(500);
+  down.add('a');
+  capture.state.onEvent(frame(BLUE));
+  await clock.advance(200);
+  down.delete('a');
+  const before = lamps.acknowledged;
+  await clock.advance(2000);
+  assert.ok(lamps.acknowledged > before, 'la reprise passe par un ordre confirme');
 });

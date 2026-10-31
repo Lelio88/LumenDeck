@@ -51,6 +51,7 @@ function fakeLamps(unreachable = new Set()) {
       read: async () => ({ ...INITIAL }),
       setPower: async (on) => { calls.push([target.id, 'power', on]); },
       setColor: async (color) => { calls.push([target.id, 'color', color.h]); },
+      streamColor: async (color) => { calls.push([target.id, 'stream', color.h]); },
       setBrightness: async (level) => { calls.push([target.id, 'brightness', level]); },
       setTemperature: async (kelvin) => { calls.push([target.id, 'temperature', kelvin]); },
     };
@@ -275,4 +276,12 @@ test('une image entierement au repos ne touche pas la lampe', async () => {
   await clock.advance(500);
   assert.equal(lamps.calls.length, 0);
   assert.equal(engine.runningOn('a'), 'ecran', 'et la session vit : le repos n est pas une panne');
+});
+
+test('une consigne marquee flux part sans attendre l accuse, les autres non', async () => {
+  const { engine, lamps, clock } = setup();
+  await engine.startLive('ecran', (step) => ({ cues: [{ color: { h: 10 + step, s: 50, v: 50 }, stream: step > 0, keepOn: step > 0 }], holdMs: 0 }), [lamp('a')]);
+  await clock.advance(300);
+  assert.ok(lamps.calls.some((c) => c[1] === 'color'), 'la premiere est confirmee');
+  assert.ok(lamps.calls.some((c) => c[1] === 'stream'), 'les suivantes partent en flux');
 });

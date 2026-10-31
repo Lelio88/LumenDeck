@@ -74,6 +74,11 @@ export type Cue = {
    * premiere image si au moins une lampe repond.
    */
   readonly idle?: boolean;
+  /**
+   * La couleur part SANS attendre l'accuse de la lampe (flux en direct). Sans effet sur les autres
+   * champs : l'allumage, l'extinction et la luminosite restent confirmes.
+   */
+  readonly stream?: boolean;
 };
 
 /** Une image du scenario : ce que fait chaque role, et combien de temps elle tient. */
