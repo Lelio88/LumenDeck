@@ -13,7 +13,7 @@
 //!   rangee aussi dans `capture-probe.log`, pour savoir si un jeu est visible.
 //!
 //! Usage :
-//!   lumendeck-capture --screen primary --zones 2 --fps 15     (mode plugin)
+//!   lumendeck-capture --screen primary --zones 2 --fps 30     (mode plugin)
 //!   lumendeck-capture --list                                  (JSON des ecrans)
 //!   lumendeck-capture --diagnose [--screen N]                 (sonde, Ctrl+C pour finir)
 

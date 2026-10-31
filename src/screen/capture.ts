@@ -31,7 +31,7 @@
 import { execFile, spawn } from 'node:child_process';
 import fs from 'node:fs';
 
-import { parseCaptureLine, type CaptureEvent } from './zones.ts';
+import { CAPTURE_FPS, parseCaptureLine, type CaptureEvent } from './zones.ts';
 
 /** Ce qu'on demande au capteur. */
 export type CaptureOptions = {
@@ -53,8 +53,6 @@ export type CaptureLauncher = {
 /** Un ecran proposable dans le panneau. */
 export type ScreenInfo = { readonly index: number; readonly label: string; readonly primary: boolean };
 
-/** Images par seconde demandees au capteur : assez pour l'ambiance, sans saturer l'ampoule. */
-const CAPTURE_FPS = 15;
 /** Delai accorde au capteur pour dresser la liste des ecrans. */
 const LIST_TIMEOUT_MS = 4000;
 /** Longueur maximale d'une ligne en attente : une mesure tient en quelques dizaines d'octets. */

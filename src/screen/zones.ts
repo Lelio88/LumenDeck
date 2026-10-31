@@ -18,7 +18,7 @@
  *     traine apres une coupe de montage. L'ecart mesure decide : petit, on
  *     glisse ; grand, on rattrape — mais jamais d'un coup : meme une coupe
  *     franche se fond en quelques dixiemes de seconde, car une lampe qui saute
- *     d'une couleur a l'autre est ce qu'on remarque le plus. A ~15 mesures par
+ *     d'une couleur a l'autre est ce qu'on remarque le plus. A 30 mesures par
  *     seconde, une scene stable se fond en ~0,6 s, une coupe en ~0,2 s.
  *
  *   - La luminosite est amortie sur DEUX echelles de temps (moyenne lente + part du
@@ -76,9 +76,19 @@ const SATURATION_GAIN = 1.35;
 /** Renfort de luminosite : une scene moyenne ne doit pas laisser la piece sombre. */
 const VALUE_GAIN = 1.15;
 
-/** Lissage : part de l'ecart rattrapee a chaque image, entre une scene stable et une coupe franche. */
-const ALPHA_STEADY = 0.12;
-const ALPHA_CUT = 0.4;
+/**
+ * Mesures demandees au capteur, par seconde. Le lissage est regle en SECONDES (constantes
+ * de temps), pas en coefficient par image : changer ce nombre ne doit pas changer le
+ * caractere du rendu, seulement sa finesse.
+ */
+export const CAPTURE_FPS = 30;
+
+/** Coefficient par image qui donne une constante de temps de `tauSeconds` a `fps` images par seconde. */
+const alphaFor = (tauSeconds: number, fps: number): number => 1 - Math.exp(-1 / (fps * tauSeconds));
+
+/** Lissage, en secondes : une scene stable se fond en ~0,5 s, une coupe franche en ~0,13 s. */
+const TAU_STEADY_S = 0.52;
+const TAU_CUT_S = 0.13;
 /** Ecart (0-1) a partir duquel on considere qu'il s'agit d'une coupe. */
 const CUT_THRESHOLD = 0.5;
 
@@ -89,7 +99,7 @@ const CUT_THRESHOLD = 0.5;
  * qu'une scene durablement plus claire finit par etre suivie en quelques secondes.
  * Seule la luminosite est ainsi amortie : la couleur reste vive.
  */
-const SLOW_ALPHA = 0.03;
+const TAU_SLOW_S = 2.2;
 const FAST_SHARE = 0.35;
 
 /**
@@ -168,7 +178,10 @@ export function gradeZone(sample: ZoneSample): Hsv {
 /** Lisseur d'une zone : garde l'etat precedent, rend la mesure adoucie. */
 export type Smoother = { push(sample: ZoneSample): ZoneSample };
 
-export function createSmoother(): Smoother {
+export function createSmoother(fps: number = CAPTURE_FPS): Smoother {
+  const alphaSteady = alphaFor(TAU_STEADY_S, fps);
+  const alphaCut = alphaFor(TAU_CUT_S, fps);
+  const alphaSlow = alphaFor(TAU_SLOW_S, fps);
   let state: { rgb: [number, number, number]; v: number; slowV: number } | null = null;
 
   return {
@@ -180,7 +193,7 @@ export function createSmoother(): Smoother {
           (Math.abs(sample.rgb[0] - state.rgb[0]) + Math.abs(sample.rgb[1] - state.rgb[1]) + Math.abs(sample.rgb[2] - state.rgb[2])) / 765,
           Math.abs(sample.v - state.v) / 100,
         );
-        const alpha = gap >= CUT_THRESHOLD ? ALPHA_CUT : ALPHA_STEADY + (ALPHA_CUT - ALPHA_STEADY) * (gap / CUT_THRESHOLD);
+        const alpha = gap >= CUT_THRESHOLD ? alphaCut : alphaSteady + (alphaCut - alphaSteady) * (gap / CUT_THRESHOLD);
         state = {
           rgb: [
             state.rgb[0] + (sample.rgb[0] - state.rgb[0]) * alpha,
@@ -188,8 +201,8 @@ export function createSmoother(): Smoother {
             state.rgb[2] + (sample.rgb[2] - state.rgb[2]) * alpha,
           ],
           // La luminosite n'a PAS de rattrapage de coupe : un flash doit etre amorti, pas suivi.
-          v: state.v + (sample.v - state.v) * ALPHA_STEADY,
-          slowV: state.slowV + (sample.v - state.slowV) * SLOW_ALPHA,
+          v: state.v + (sample.v - state.v) * alphaSteady,
+          slowV: state.slowV + (sample.v - state.slowV) * alphaSlow,
         };
       }
       const v = state.slowV + (state.v - state.slowV) * FAST_SHARE;
@@ -199,39 +212,49 @@ export function createSmoother(): Smoother {
 }
 
 /**
- * Pas maximal d'une lampe a chaque envoi. Calibres pour ~16 envois par seconde (attente
- * de 20 ms + aller-retour reseau) : 10 degres de teinte, 6 points de saturation, et 0,032
- * de CLARTE PERCUE (~1/30 de l'echelle de perception, quel que soit le niveau de depart).
- * Un balayage complet de la luminosite prend ainsi ~2 s, et un tour de 120 degres de
- * teinte ~0,8 s. Si la cadence change, ces trois plafonds changent EN PROPORTION : ils
- * fixent une VITESSE (par seconde), et un pas par envoi n'en est que la traduction.
+ * VITESSES maximales d'une lampe : 160 degres de teinte par seconde, 96 points de saturation
+ * par seconde, et 0,5 de CLARTE PERCUE par seconde (la moitie de l'echelle de perception,
+ * quel que soit le niveau de depart). Un balayage complet de la luminosite prend ~2 s, un tour
+ * de 120 degres de teinte ~0,8 s. Le pas d'un envoi est cette vitesse multipliee par le temps
+ * REELLEMENT ecoule depuis le precedent : le rendu ne depend pas du rythme du reseau, qui varie.
  */
-const MAX_HUE_STEP = 10;
-const MAX_SATURATION_STEP = 6;
-const MAX_LIGHTNESS_STEP = 0.032;
+const MAX_HUE_RATE = 160;
+const MAX_SATURATION_RATE = 96;
+const MAX_LIGHTNESS_RATE = 0.5;
+/**
+ * Temps ecoule pris en compte, borne. Le maximum est ~UN envoi normal : une lampe restee
+ * au repos (scene fixe) puis remise en mouvement doit repartir par un pas ordinaire, pas
+ * par le « rattrapage » de tout le temps passe a ne rien faire, qui serait un saut.
+ */
+const MIN_ELAPSED_S = 0.005;
+const MAX_ELAPSED_S = 0.08;
 /** En dessous, la lampe est presque grise : sa teinte ne se voit pas et ne compte pas. */
 const GREY_SATURATION = 10;
 
 const towards = (from: number, to: number, max: number): number => from + clamp(to - from, -max, max);
 
 /**
- * La couleur a envoyer a une lampe qui montre `current` quand l'ecran vise `target` :
- * un pas borne vers la cible, jamais au-dela. `null` (rien d'envoye encore) : la cible.
+ * La couleur a envoyer a une lampe qui montre `current` quand l'ecran vise `target`, `elapsedSeconds`
+ * apres le precedent envoi : un pas borne (vitesse maximale x temps) vers la cible, jamais au-dela. `null` (rien d'envoye encore) : la cible.
  *
  * La teinte prend le plus court chemin autour du cercle. Une lampe presque grise
  * saute directement a la teinte visee : sans couleur visible, la faire tourner
  * l'amenerait a travers des teintes parasites en meme temps que sa saturation monte.
  */
-export function stepToward(current: Hsv | null, target: Hsv): Hsv {
+export function stepToward(current: Hsv | null, target: Hsv, elapsedSeconds: number): Hsv {
   if (!current) return target;
+  const dt = clamp(elapsedSeconds, MIN_ELAPSED_S, MAX_ELAPSED_S);
+  const maxHue = MAX_HUE_RATE * dt;
+  const maxSaturation = MAX_SATURATION_RATE * dt;
+  const maxLightness = MAX_LIGHTNESS_RATE * dt;
   const diff = ((target.h - current.h + 540) % 360) - 180;
   const h = current.s < GREY_SATURATION
     ? target.h
-    : (current.h + clamp(diff, -MAX_HUE_STEP, MAX_HUE_STEP) + 360) % 360;
-  const perceived = towards(lightness(current.v), lightness(target.v), MAX_LIGHTNESS_STEP);
+    : (current.h + clamp(diff, -maxHue, maxHue) + 360) % 360;
+  const perceived = towards(lightness(current.v), lightness(target.v), maxLightness);
   return {
     h: Math.round(h),
-    s: round1(towards(current.s, target.s, MAX_SATURATION_STEP)),
+    s: round1(towards(current.s, target.s, maxSaturation)),
     // Une decimale : le pilote ecrit la luminosite au dixieme de pour cent, et les marches du bas sont fines.
     v: round1(fromLightness(perceived)),
   };

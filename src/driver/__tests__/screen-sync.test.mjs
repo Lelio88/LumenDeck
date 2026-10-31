@@ -308,7 +308,7 @@ test('un passage du sombre au clair monte sans marche visible de luminosite', as
   await clock.advance(300);
 
   lamps.calls.length = 0;
-  for (let i = 0; i < 160; i += 1) {
+  for (let i = 0; i < 260; i += 1) {
     capture.state.onEvent(frame([240, 120, 120, 95]));
     await clock.advance(100);
   }
@@ -316,7 +316,7 @@ test('un passage du sombre au clair monte sans marche visible de luminosite', as
   assert.ok(levels.length >= 8, 'une rampe de plusieurs envois (' + levels.length + ')');
   for (let i = 1; i < levels.length; i += 1) {
     const step = Math.abs(lightness(levels[i]) - lightness(levels[i - 1]));
-    assert.ok(step <= 0.033, 'marche percue trop grande : ' + levels[i - 1] + ' -> ' + levels[i]);
+    assert.ok(step <= 0.041, 'marche percue trop grande : ' + levels[i - 1] + ' -> ' + levels[i]);
   }
   assert.ok(levels.at(-1) > 90, 'et la lampe finit clair (' + levels.at(-1) + ')');
 });

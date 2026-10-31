@@ -717,7 +717,7 @@ principal par défaut.
 et le plus coûteux est de rapatrier l'image : une image 4K pèse ~33 Mo. Le capteur la réduit **sur le
 GPU** (`GenerateMips`) et ne rapatrie que le plus petit niveau utile (~60 colonnes). Rust plutôt que
 Go : la crate `windows` expose COM et Direct3D sans liaisons écrites à la main, et l'absence de
-ramasse-miettes évite des pauses aléatoires dans un flux de 15 mesures par seconde.
+ramasse-miettes évite des pauses aléatoires dans un flux de 30 mesures par seconde.
 
 **Qui décide de quoi.** Le capteur *mesure* (moyenne pondérée par la saturation, luminosité mesurée à
 part, **bandes noires d'un film écartées**) ; le plugin *décide* (lissage, saturation, plancher,
@@ -744,7 +744,7 @@ sur sa sortie standard. Le mode `--diagnose` écrit un journal de couleurs, jama
 
 **Sécurité.** Un flux de couleurs qui change vite peut faire papilloter les ampoules, ce que le
 plafond de 2 alternances par seconde des scénarios existe pour empêcher. Ici le lissage adaptatif et la
-cadence bornée (≈ 12 images par seconde au plus) l'atténuent sans l'exclure : le panneau le dit.
+cadence des envois (≈ 15 à 25 par seconde et par lampe) l'atténuent sans l'exclure : le panneau le dit.
 
 **Le fondu, que l'ampoule ne fait pas.** Les Tuya appliquent une couleur d'un coup, là où Philips Hue
 joint un temps de transition à chaque ordre. Le plugin fabrique donc le fondu : lissage adaptatif de
@@ -755,6 +755,13 @@ la pièce), et limiteur de pente à l'envoi. Une piste matérielle reste à vér
 (mode « musique », saut ou dégradé) et demande de regarder si la lampe fond ou saute. C'est une
 **expérience** : les documentations Tuya se contredisent sur le sens du mode, et rien ne garantit
 qu'un modèle donné réponde en LAN.
+
+**Du temps, pas des images.** Le lissage se règle en **constantes de temps** (≈ 0,5 s pour une scène
+stable, 0,13 s pour une coupe, 2,2 s pour la moyenne lente de luminosité) et le limiteur de pente en
+**vitesses** (160°/s de teinte, 0,5 de clarté perçue par seconde), multipliées par le temps réellement
+écoulé depuis le dernier envoi à la lampe (borné à 80 ms, pour qu'une lampe restée au repos reparte par
+un pas ordinaire et non par un saut). Changer le nombre de mesures par seconde (`CAPTURE_FPS`) ne change
+donc pas le caractère du rendu, seulement sa finesse.
 
 **Mesurer la cadence.** Toutes les 5 secondes, le plugin écrit une ligne dans son journal :
 `suivi d'écran : N images/s, M écritures/s` (nombres seulement, rien de l'écran). Le débit réel est

@@ -103,6 +103,8 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
       const smoothers = Array.from({ length: zoneCount }, () => createSmoother());
       const graded: (Hsv | null)[] = Array.from({ length: zoneCount }, () => null);
       const sent: (Hsv | null)[] = targets.map(() => null);
+      /** Instant du dernier envoi a chaque lampe : la vitesse maximale se compte en temps reel. */
+      const sentAt: number[] = targets.map(() => now());
       let captureFailed = false;
       /** La session creee ici est terminee (touche, scenario concurrent, pannes, capteur mort). */
       let ended = false;
@@ -144,10 +146,12 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
             if (!color) return {};
             // Un pas borne vers la couleur de l'ecran, pas le saut : la lampe n'a pas de fondu.
             const shown = sent[index] ?? null;
-            const next = stepToward(shown, color);
+            const at = now();
+            const next = stepToward(shown, color, (at - (sentAt[index] ?? at)) / 1000);
             if (!differs(shown, next)) return { idle: true };
             const firstWrite = shown === null;
             sent[index] = next;
+            sentAt[index] = at;
             writes += 1;
             return {
               color: next,
