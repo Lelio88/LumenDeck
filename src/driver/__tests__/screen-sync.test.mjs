@@ -95,8 +95,9 @@ function setup({ unreachable, available, dieOnLaunch } = {}) {
   const lamps = fakeLamps(unreachable);
   const engine = createEngine({ withBulb: lamps.withBulb, timers: clock.timers, now: clock.now });
   const capture = fakeLauncher(available, dieOnLaunch);
-  const sync = createScreenSync({ engine, launcher: capture.launcher });
-  return { clock, lamps, engine, capture, sync };
+  const reports = [];
+  const sync = createScreenSync({ engine, launcher: capture.launcher, report: (line) => reports.push(line), now: clock.now });
+  return { clock, lamps, engine, capture, sync, reports };
 }
 
 const colorsOf = (lamps, id) => lamps.calls.filter((c) => c[0] === id && c[1] === 'color');
@@ -318,4 +319,15 @@ test('un passage du sombre au clair monte sans marche visible de luminosite', as
     assert.ok(step <= 0.051, 'marche percue trop grande : ' + levels[i - 1] + ' -> ' + levels[i]);
   }
   assert.ok(levels.at(-1) > 90, 'et la lampe finit clair (' + levels.at(-1) + ')');
+});
+
+test('le debit reel est rapporte toutes les 5 secondes, sans rien dire de l ecran', async () => {
+  const { sync, capture, clock, reports } = setup();
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  capture.state.onEvent(frame(RED));
+  await clock.advance(11_000);
+  assert.ok(reports.length >= 2, 'un rapport toutes les ~5 s (' + reports.length + ')');
+  assert.match(reports[0], /\d+(\.\d+)? images\/s/);
+  assert.match(reports[0], /\d+(\.\d+)? ecritures\/s/);
+  assert.ok(!/#|rgb|\[/.test(reports[0]), 'aucune couleur ni contenu d ecran dans le journal');
 });

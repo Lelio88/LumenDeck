@@ -76,10 +76,18 @@ export type ScreenSync = {
 export type SyncDeps = {
   readonly engine: Pick<Engine, 'startLive' | 'stop' | 'runningOn'>;
   readonly launcher: CaptureLauncher;
+  /** Recoit une ligne de debit toutes les `REPORT_EVERY_MS` : images et ecritures par seconde, rien d'autre. */
+  readonly report?: (line: string) => void;
+  /** Horloge, injectable pour les tests. */
+  readonly now?: () => number;
 };
 
+/** Intervalle des rapports de debit. */
+const REPORT_EVERY_MS = 5000;
+
 export function createScreenSync(deps: SyncDeps): ScreenSync {
-  const { engine, launcher } = deps;
+  const { engine, launcher, report } = deps;
+  const now = deps.now ?? Date.now;
 
   return {
     isActive: (bulbId) => engine.runningOn(bulbId) === SCREEN_SYNC_ID,
@@ -110,28 +118,47 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
         }
       };
 
-      const frameAt = (): Frame => ({
-        holdMs: 0,
-        cues: targets.map((_, index) => {
-          const color = graded[zoneOfBulb(index, targets.length, zoneCount)];
-          // Pas encore de couleur : une consigne vide, qui joint la lampe (premiere image :
-          // c'est elle qui dit si une lampe repond). Couleur inchangee : au repos, sans rien toucher.
-          if (!color) return {};
-          // Un pas borne vers la couleur de l'ecran, pas le saut : la lampe n'a pas de fondu.
-          const shown = sent[index] ?? null;
-          const next = stepToward(shown, color);
-          if (!differs(shown, next)) return { idle: true };
-          const firstWrite = shown === null;
-          sent[index] = next;
-          return {
-            color: next,
-            keepOn: !firstWrite,
-            // Une ecriture ratee ne vaut pas « envoyee » : on renvoie, en rallumant la lampe,
-            // sans quoi une lampe revenue apres une coupure resterait eteinte tant que la scene est stable.
-            onSettled: (reached: boolean) => { if (!reached) sent[index] = null; },
-          };
-        }),
-      });
+      // Debit reel : ce que la lampe recoit n'est pas ce que la minuterie promet (aller-retour reseau).
+      let windowStart = now();
+      let images = 0;
+      let writes = 0;
+      const countImage = (): void => {
+        images += 1;
+        const elapsed = now() - windowStart;
+        if (elapsed < REPORT_EVERY_MS) return;
+        const seconds = elapsed / 1000;
+        report?.(`suivi d'ecran : ${(images / seconds).toFixed(1)} images/s, ${(writes / seconds).toFixed(1)} ecritures/s`);
+        windowStart = now();
+        images = 0;
+        writes = 0;
+      };
+
+      const frameAt = (): Frame => {
+        countImage();
+        return {
+          holdMs: 0,
+          cues: targets.map((_, index) => {
+            const color = graded[zoneOfBulb(index, targets.length, zoneCount)];
+            // Pas encore de couleur : une consigne vide, qui joint la lampe (premiere image :
+            // c'est elle qui dit si une lampe repond). Couleur inchangee : au repos, sans rien toucher.
+            if (!color) return {};
+            // Un pas borne vers la couleur de l'ecran, pas le saut : la lampe n'a pas de fondu.
+            const shown = sent[index] ?? null;
+            const next = stepToward(shown, color);
+            if (!differs(shown, next)) return { idle: true };
+            const firstWrite = shown === null;
+            sent[index] = next;
+            writes += 1;
+            return {
+              color: next,
+              keepOn: !firstWrite,
+              // Une ecriture ratee ne vaut pas « envoyee » : on renvoie, en rallumant la lampe,
+              // sans quoi une lampe revenue apres une coupure resterait eteinte tant que la scene est stable.
+              onSettled: (reached: boolean) => { if (!reached) sent[index] = null; },
+            };
+          }),
+        };
+      };
 
       /** Arrete la session SI elle est la notre : pendant le demarrage, la lampe peut encore appartenir a un scenario. */
       const stopOurs = async (): Promise<void> => {

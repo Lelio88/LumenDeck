@@ -17,13 +17,17 @@
  * mode, et rien ne garantit qu'un modele donne reponde. Ne rien deduire d'un essai
  * sans l'avoir vu a l'ecran. L'ampoule est remise dans son etat d'avant a la fin.
  *
- * Meme principe que probe.mjs : l'adresse est decouverte, le coffre se lit hors
- * depot (`LUMENDECK_VAULT` pour le deplacer), rien de personnel n'est ecrit ici.
+ * Meme principe que probe.mjs : le coffre se lit hors depot (`LUMENDECK_VAULT` pour
+ * le deplacer), rien de personnel n'est ecrit ici.
+ *
+ * QUELLE AMPOULE : a une adresse donnee, on ne sait pas laquelle du coffre y repond
+ * (deux ampoules peuvent porter le meme nom). L'outil essaie donc chaque ampoule du
+ * coffre, avec chaque version du protocole, jusqu'a celle qui repond : la bonne cle
+ * est la seule a obtenir une reponse.
  *
  * Usage :
- *   npm run probe:fade                  # decouvre l'adresse
- *   npm run probe:fade -- 192.168.1.42  # impose une adresse
- *   LUMENDECK_PROTOCOL=3.4 npm run probe:fade   # si l'ampoule parle 3.4
+ *   npm run probe:fade -- 192.168.1.42        # l'adresse de l'ampoule a essayer
+ *   LUMENDECK_PROTOCOL=3.4 npm run probe:fade -- 192.168.1.42   # impose la version
  */
 import { readFileSync } from 'node:fs';
 
@@ -33,7 +37,8 @@ import { discover } from '../discovery.ts';
 import { encodeColor } from '../driver/tuya.ts';
 
 const VAULT = process.env.LUMENDECK_VAULT ?? '../.lumendeck-secrets/tuya-devices.csv';
-const PROTOCOL = process.env.LUMENDECK_PROTOCOL ?? '3.3';
+/** Versions du protocole essayees tour a tour, sauf si `LUMENDECK_PROTOCOL` en impose une. */
+const PROTOCOLS = process.env.LUMENDECK_PROTOCOL ? [process.env.LUMENDECK_PROTOCOL] : ['3.3', '3.4', '3.5'];
 const DP = { power: '20', mode: '21', color: '24', music: '27' };
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -66,12 +71,12 @@ function musicData(mode, { h, s, v }) {
   return String(mode) + hex(h) + hex(s * 10) + hex(v * 10) + hex(1000) + hex(0);
 }
 
-const [device] = parseCsv(readFileSync(VAULT, 'utf8'));
-if (!device) {
+const devices = parseCsv(readFileSync(VAULT, 'utf8'));
+if (devices.length === 0) {
   console.error('Coffre vide ou illisible : ' + VAULT);
   process.exit(1);
 }
-const ip = process.argv[2] ?? process.env.LUMENDECK_IP ?? (await discover(7000)).find((b) => b.id === device.id)?.ip;
+const ip = process.argv[2] ?? process.env.LUMENDECK_IP ?? (await discover(7000)).find((b) => devices.some((d) => d.id === b.id))?.ip;
 if (!ip) {
   console.error('Ampoule introuvable sur le reseau : alimentee ? sinon, passez son adresse en argument.');
   process.exit(1);
@@ -80,13 +85,35 @@ if (!ip) {
 const RED = { h: 0, s: 100, v: 100 };
 const BLUE = { h: 240, s: 100, v: 100 };
 
-const bulb = new TuyAPI({ id: device.id, key: device.local_key, ip, version: PROTOCOL });
-bulb.on('error', () => undefined);
-await bulb.connect();
+/** Trouve l'ampoule du coffre qui repond a cette adresse, et la version de protocole qu'elle parle. */
+async function connectToAnswering() {
+  for (const device of devices) {
+    for (const version of PROTOCOLS) {
+      const candidate = new TuyAPI({ id: device.id, key: device.local_key, ip, version });
+      candidate.on('error', () => undefined);
+      try {
+        await candidate.connect();
+        const status = await candidate.get({ schema: true });
+        return { device, version, bulb: candidate, before: status.dps ?? {} };
+      } catch {
+        try { candidate.disconnect(); } catch { /* deja ferme */ }
+      }
+    }
+  }
+  return null;
+}
 
-const before = (await bulb.get({ schema: true })).dps ?? {};
-console.log('Ampoule : ' + device.name + ' (' + device.product_name + ')  ' + ip + '  protocole ' + PROTOCOL);
-console.log('Datapoint 27 (musique) annonce par l\'ampoule : ' + (DP.music in before ? 'OUI' : 'non (l\'essai peut etre sans effet)'));
+const found = await connectToAnswering();
+if (!found) {
+  console.error('Aucune ampoule du coffre ne repond a ' + ip + ' (' + devices.length + ' essayee(s), protocoles ' + PROTOCOLS.join(', ') + ').');
+  console.error("Verifiez l'adresse, et qu'aucun autre programme (le suivi d'ecran, l'appli Calex) n'occupe l'ampoule.");
+  process.exit(1);
+}
+const { device, version, bulb, before } = found;
+
+console.log('Ampoule : ' + device.name + ' (' + device.product_name + ', categorie ' + device.category + ')  ' + ip + '  protocole ' + version);
+console.log('Identifiant : ...' + device.id.slice(-8));
+console.log("Datapoint 27 (musique) annonce par l'ampoule : " + (DP.music in before ? "OUI" : "non (l'essai peut etre sans effet)"));
 console.log('Datapoints lus : ' + Object.keys(before).join(', '));
 console.log('');
 

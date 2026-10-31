@@ -14,6 +14,8 @@
  */
 import { fileURLToPath } from 'node:url';
 
+import streamDeck from '@elgato/streamdeck';
+
 import { runningOn, startLive, stop } from '../scenarios/runner.js';
 import { createCaptureLauncher, listScreens, type ScreenInfo } from './capture.js';
 import { createScreenSync } from './sync.js';
@@ -24,6 +26,8 @@ const CAPTURE_EXE = fileURLToPath(new URL('./lumendeck-capture.exe', import.meta
 export const screenSync = createScreenSync({
   engine: { startLive, stop, runningOn },
   launcher: createCaptureLauncher(CAPTURE_EXE),
+  // Une ligne de debit toutes les 5 s (nombres seulement) : de quoi regler la cadence sur du reel.
+  report: (line) => streamDeck.logger.createScope('ecran').info(line),
 });
 
 /** Les ecrans que le panneau peut proposer. Liste vide si le capteur est absent. */

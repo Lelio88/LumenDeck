@@ -60,7 +60,7 @@ export type Target = { id: string; key: string; ip?: string; version?: string };
  * refuse les commandes si on la sature. La minuterie est rearmee APRES chaque
  * image : un reseau lent ralentit le flux au lieu de l'empiler.
  */
-export const LIVE_HOLD_MS = 80;
+export const LIVE_HOLD_MS = 50;
 
 /** Comment jouer : ensemble ou chacune dans son coin, et combien de temps au plus. */
 export type StartOptions = {

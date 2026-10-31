@@ -728,7 +728,7 @@ il emprunte `startLive` du moteur. Il hérite donc d'une seule exécution par la
 rachat Twitch lancé sur une lampe suivie **prend sa place**, et inversement —, du relevé et de la
 restauration de l'état, et de l'abandon après trois échecs d'affilée. Le capteur est tué à la **fin de
 la session**, quelle qu'en soit la cause (`untilStopped`). Une image en direct peut durer
-`LIVE_HOLD_MS` (80 ms) au lieu de `MIN_HOLD_MS` (250 ms) ; la minuterie est réarmée **après** chaque
+`LIVE_HOLD_MS` (50 ms) au lieu de `MIN_HOLD_MS` (250 ms) ; la minuterie est réarmée **après** chaque
 image, donc un réseau lent ralentit le flux au lieu de l'empiler. La lampe n'est allumée qu'**une
 fois** (`Cue.keepOn`), et on n'écrit rien tant que la couleur n'a pas vraiment changé.
 
@@ -755,6 +755,11 @@ la pièce), et limiteur de pente à l'envoi. Une piste matérielle reste à vér
 (mode « musique », saut ou dégradé) et demande de regarder si la lampe fond ou saute. C'est une
 **expérience** : les documentations Tuya se contredisent sur le sens du mode, et rien ne garantit
 qu'un modèle donné réponde en LAN.
+
+**Mesurer la cadence.** Toutes les 5 secondes, le plugin écrit une ligne dans son journal :
+`suivi d'écran : N images/s, M écritures/s` (nombres seulement, rien de l'écran). Le débit réel est
+inférieur à ce que promet la minuterie : chaque image attend la réponse de la lampe avant d'armer la
+suivante. C'est ce chiffre, pas `LIVE_HOLD_MS`, qui dit ce que la lampe reçoit vraiment.
 
 **Construire et diagnostiquer.** `npm run build:capture` compile le capteur (Rust requis, seulement
 pour cette étape) et le copie dans `bin/`. Hors du plugin, `lumendeck-capture --diagnose` écrit une
