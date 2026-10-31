@@ -43,6 +43,16 @@ const DP = { power: '20', mode: '21', color: '24', music: '27' };
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/** Delai maximal d'une tentative : tuyapi peut ne jamais repondre, et Node quitterait alors sans rien dire. */
+const ATTEMPT_MS = 6000;
+
+/** Attend `promise` au plus `ms` ; le minuteur garde aussi le processus vivant pendant l'attente. */
+function within(promise, ms) {
+  let timer;
+  const expired = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('delai depasse')), ms); });
+  return Promise.race([promise, expired]).finally(() => clearTimeout(timer));
+}
+
 /** Analyse CSV minimale (champs quotes compris), suffisante pour l'inventaire. */
 function parseCsv(text) {
   const rows = text.trim().split(/\r?\n/).map((line) => {
@@ -92,8 +102,8 @@ async function connectToAnswering() {
       const candidate = new TuyAPI({ id: device.id, key: device.local_key, ip, version });
       candidate.on('error', () => undefined);
       try {
-        await candidate.connect();
-        const status = await candidate.get({ schema: true });
+        await within(candidate.connect(), ATTEMPT_MS);
+        const status = await within(candidate.get({ schema: true }), ATTEMPT_MS);
         const dps = status?.dps ?? {};
         // Une mauvaise cle ne fait PAS echouer la connexion : l'ampoule repond, mais
         // la reponse est illisible. Seuls des datapoints lus prouvent que c'est la bonne.
