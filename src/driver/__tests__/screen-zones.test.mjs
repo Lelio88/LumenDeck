@@ -16,6 +16,7 @@ import {
   createSmoother,
   differs,
   gradeZone,
+  lightness,
   parseCaptureLine,
   stepToward,
   zoneOfBulb,
@@ -149,4 +150,38 @@ test('une lampe presque grise saute directement a la teinte visee', () => {
   const next = stepToward({ h: 0, s: 3, v: 50 }, { h: 240, s: 80, v: 50 });
   assert.equal(next.h, 240, 'sans couleur visible, tourner la teinte ferait passer la lampe par des teintes parasites');
   assert.ok(next.s < 20, 'la saturation, elle, monte progressivement');
+});
+
+test('la luminosite avance par pas EGAUX A L OEIL, pas par pas egaux en pourcentage', () => {
+  // 3 % -> 11 % est un bond enorme (la lampe est presque 4 fois plus claire),
+  // 80 % -> 88 % ne se voit presque pas : un pas en pourcentage est trop gros en bas et inutile en haut.
+  const low = stepToward({ h: 100, s: 80, v: 3 }, { h: 100, s: 80, v: 100 });
+  const high = stepToward({ h: 100, s: 80, v: 80 }, { h: 100, s: 80, v: 100 });
+  assert.ok(low.v - 3 < 4, 'en bas, le pas est petit en pourcentage (' + (low.v - 3).toFixed(1) + ')');
+  assert.ok(high.v - 80 > low.v - 3, 'en haut, le meme pas percu est plus grand en pourcentage');
+  const seen = (a, b) => Math.abs(lightness(b) - lightness(a));
+  assert.ok(Math.abs(seen(3, low.v) - seen(80, high.v)) < 0.005, 'mais identique a l oeil');
+});
+
+test('un balayage de luminosite ne comporte aucune marche visible', () => {
+  let current = { h: 100, s: 80, v: 3 };
+  let worst = 0;
+  for (let i = 0; i < 40; i += 1) {
+    const next = stepToward(current, { h: 100, s: 80, v: 100 });
+    worst = Math.max(worst, Math.abs(lightness(next.v) - lightness(current.v)));
+    current = next;
+  }
+  assert.ok(worst <= 0.051, 'plus grande marche percue : ' + worst.toFixed(3));
+  assert.equal(current.v, 100);
+});
+
+test('la luminosite garde une decimale : les marches du bas sont plus fines que 1 point', () => {
+  const next = stepToward({ h: 0, s: 50, v: 2 }, { h: 0, s: 50, v: 100 });
+  assert.ok(!Number.isInteger(next.v) || next.v === 2, 'valeur non entiere possible : ' + next.v);
+  assert.ok(next.v > 2 && next.v < 3.6, 'le premier pas depuis 2 % reste fin (' + next.v + ')');
+});
+
+test('un ecart de luminosite invisible n est pas envoye, meme s il vaut plusieurs points en haut', () => {
+  assert.equal(differs({ h: 0, s: 50, v: 98 }, { h: 0, s: 50, v: 99 }), false);
+  assert.equal(differs({ h: 0, s: 50, v: 3 }, { h: 0, s: 50, v: 4 }), true, 'mais en bas, 1 point se voit');
 });

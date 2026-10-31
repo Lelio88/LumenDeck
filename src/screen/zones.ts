@@ -33,8 +33,12 @@
  *     aucune VITESSE MAXIMALE. Les ampoules Tuya n'ont pas de fondu materiel (a
  *     la difference de Philips Hue, ou chaque ordre porte un temps de transition) :
  *     une couleur envoyee s'applique d'un coup. `stepToward` borne donc ce que la
- *     lampe parcourt a chaque envoi, et plus severement la luminosite que la
- *     teinte, parce qu'un saut de luminosite est ce qu'on remarque le plus.
+ *     lampe parcourt a chaque envoi. La luminosite avance par pas EGAUX A L'OEIL
+ *     (`lightness`), pas par pas egaux en pourcentage : l'oeil juge un rapport, et
+ *     passer de 3 % a 11 % est un bond (la lampe est presque quatre fois plus
+ *     claire) la ou 80 % a 88 % ne se voit pas. Un pas lineaire est donc trop gros
+ *     dans le noir — c'est la que la « marche » se voyait — et inutilement fin
+ *     dans le clair.
  *
  * Invariants : ces fonctions sont PURES et ne dependent que de leurs arguments ;
  * une ligne du capteur douteuse est ecartee (`null`), jamais interpretee ; la
@@ -76,8 +80,19 @@ const CUT_THRESHOLD = 0.5;
 /** Ecarts en dessous desquels on n'embete pas la lampe : teinte en degres, le reste en %. */
 const MIN_HUE_STEP = 2;
 const MIN_PERCENT_STEP = 2;
+/** Ecart de clarte percue (0-1) en dessous duquel un changement de luminosite ne se voit pas. */
+const MIN_LIGHTNESS_STEP = 0.012;
 
 const clamp = (n: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, n));
+
+/** Exposant de la courbe de perception de la luminosite (~gamma 2,2 des ecrans). */
+const PERCEPTION_GAMMA = 2.2;
+const round1 = (n: number): number => Math.round(n * 10) / 10;
+
+/** Clarte percue (0-1) d'une luminosite en % : ce que l'oeil compare, plutot que le pourcentage brut. */
+export const lightness = (percent: number): number => Math.pow(clamp(percent, 0, 100) / 100, 1 / PERCEPTION_GAMMA);
+/** Luminosite en % d'une clarte percue (0-1). */
+const fromLightness = (perceived: number): number => Math.pow(clamp(perceived, 0, 1), PERCEPTION_GAMMA) * 100;
 
 const isChannel = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= 255;
 const isPercent = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 100;
@@ -125,7 +140,7 @@ export function gradeZone(sample: ZoneSample): Hsv {
   return {
     h: base.h,
     s: Math.round(clamp(base.s * SATURATION_GAIN, 0, 100)),
-    v: Math.round(clamp(sample.v * VALUE_GAIN, MIN_VALUE, 100)),
+    v: round1(clamp(sample.v * VALUE_GAIN, MIN_VALUE, 100)),
   };
 }
 
@@ -161,12 +176,13 @@ export function createSmoother(): Smoother {
 
 /**
  * Pas maximal d'une lampe a chaque envoi (~10 par seconde) : 15 degres de teinte,
- * 10 points de saturation, 8 points de luminosite. Un balayage complet de la
- * luminosite prend ainsi ~1,3 s, et un tour de 120 degres de teinte ~0,8 s.
+ * 10 points de saturation, et 0,05 de CLARTE PERCUE (1/20 de l'echelle de
+ * perception, quel que soit le niveau de depart). Un balayage complet de la
+ * luminosite prend ainsi ~2 s, et un tour de 120 degres de teinte ~0,8 s.
  */
 const MAX_HUE_STEP = 15;
 const MAX_SATURATION_STEP = 10;
-const MAX_VALUE_STEP = 8;
+const MAX_LIGHTNESS_STEP = 0.05;
 /** En dessous, la lampe est presque grise : sa teinte ne se voit pas et ne compte pas. */
 const GREY_SATURATION = 10;
 
@@ -186,10 +202,12 @@ export function stepToward(current: Hsv | null, target: Hsv): Hsv {
   const h = current.s < GREY_SATURATION
     ? target.h
     : (current.h + clamp(diff, -MAX_HUE_STEP, MAX_HUE_STEP) + 360) % 360;
+  const perceived = towards(lightness(current.v), lightness(target.v), MAX_LIGHTNESS_STEP);
   return {
     h: Math.round(h),
     s: Math.round(towards(current.s, target.s, MAX_SATURATION_STEP)),
-    v: Math.round(towards(current.v, target.v, MAX_VALUE_STEP)),
+    // Une decimale : le pilote ecrit la luminosite au dixieme de pour cent, et les marches du bas sont fines.
+    v: round1(fromLightness(perceived)),
   };
 }
 
@@ -200,7 +218,7 @@ export function differs(previous: Hsv | null, next: Hsv): boolean {
   const circular = Math.min(hueGap, 360 - hueGap);
   return circular >= MIN_HUE_STEP
     || Math.abs(previous.s - next.s) >= MIN_PERCENT_STEP
-    || Math.abs(previous.v - next.v) >= MIN_PERCENT_STEP;
+    || Math.abs(lightness(previous.v) - lightness(next.v)) >= MIN_LIGHTNESS_STEP;
 }
 
 /**

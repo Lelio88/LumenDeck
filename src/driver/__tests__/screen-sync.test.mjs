@@ -14,6 +14,7 @@ import { test } from 'node:test';
 import { byId } from '../../scenarios/catalogue.ts';
 import { createEngine } from '../../scenarios/engine.ts';
 import { SCREEN_SYNC_ID, createScreenSync } from '../../screen/sync.ts';
+import { lightness } from '../../screen/zones.ts';
 
 function fakeClock() {
   let now = 0;
@@ -51,7 +52,7 @@ function fakeLamps(unreachable = new Set()) {
     return op({
       read: async () => ({ ...INITIAL }),
       setPower: async (on) => { calls.push([target.id, 'power', on]); },
-      setColor: async (color) => { calls.push([target.id, 'color', color.h]); },
+      setColor: async (color) => { calls.push([target.id, 'color', color.h, color.v]); },
       setBrightness: async (level) => { calls.push([target.id, 'brightness', level]); },
       setTemperature: async (kelvin) => { calls.push([target.id, 'temperature', kelvin]); },
     });
@@ -297,4 +298,24 @@ test('un changement brutal a l ecran devient une rampe de petits pas, pas un sau
   }
   const last = hues.at(-1);
   assert.ok(last > 200 && last < 260, 'et la lampe finit bien sur le bleu (' + last + ')');
+});
+
+test('un passage du sombre au clair monte sans marche visible de luminosite', async () => {
+  const { sync, capture, lamps, clock } = setup();
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  capture.state.onEvent(frame([120, 60, 60, 4]));
+  await clock.advance(300);
+
+  lamps.calls.length = 0;
+  for (let i = 0; i < 40; i += 1) {
+    capture.state.onEvent(frame([240, 120, 120, 95]));
+    await clock.advance(100);
+  }
+  const levels = colorsOf(lamps, 'a').map((c) => c[3]);
+  assert.ok(levels.length >= 8, 'une rampe de plusieurs envois (' + levels.length + ')');
+  for (let i = 1; i < levels.length; i += 1) {
+    const step = Math.abs(lightness(levels[i]) - lightness(levels[i - 1]));
+    assert.ok(step <= 0.051, 'marche percue trop grande : ' + levels[i - 1] + ' -> ' + levels[i]);
+  }
+  assert.ok(levels.at(-1) > 90, 'et la lampe finit clair (' + levels.at(-1) + ')');
 });
