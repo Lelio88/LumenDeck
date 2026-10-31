@@ -199,14 +199,16 @@ export function createSmoother(): Smoother {
 }
 
 /**
- * Pas maximal d'une lampe a chaque envoi (~10 par seconde) : 15 degres de teinte,
- * 10 points de saturation, et 0,05 de CLARTE PERCUE (1/20 de l'echelle de
- * perception, quel que soit le niveau de depart). Un balayage complet de la
- * luminosite prend ainsi ~2 s, et un tour de 120 degres de teinte ~0,8 s.
+ * Pas maximal d'une lampe a chaque envoi. Calibres pour ~16 envois par seconde (attente
+ * de 20 ms + aller-retour reseau) : 10 degres de teinte, 6 points de saturation, et 0,032
+ * de CLARTE PERCUE (~1/30 de l'echelle de perception, quel que soit le niveau de depart).
+ * Un balayage complet de la luminosite prend ainsi ~2 s, et un tour de 120 degres de
+ * teinte ~0,8 s. Si la cadence change, ces trois plafonds changent EN PROPORTION : ils
+ * fixent une VITESSE (par seconde), et un pas par envoi n'en est que la traduction.
  */
-const MAX_HUE_STEP = 15;
-const MAX_SATURATION_STEP = 10;
-const MAX_LIGHTNESS_STEP = 0.05;
+const MAX_HUE_STEP = 10;
+const MAX_SATURATION_STEP = 6;
+const MAX_LIGHTNESS_STEP = 0.032;
 /** En dessous, la lampe est presque grise : sa teinte ne se voit pas et ne compte pas. */
 const GREY_SATURATION = 10;
 

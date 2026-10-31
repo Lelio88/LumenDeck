@@ -179,7 +179,7 @@ test('un balayage de luminosite ne comporte aucune marche visible', () => {
     worst = Math.max(worst, Math.abs(lightness(next.v) - lightness(current.v)));
     current = next;
   }
-  assert.ok(worst <= 0.051, 'plus grande marche percue : ' + worst.toFixed(3));
+  assert.ok(worst <= 0.033, 'plus grande marche percue : ' + worst.toFixed(3));
   assert.equal(current.v, 100);
 });
 

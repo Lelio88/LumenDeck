@@ -726,9 +726,9 @@ quelle lampe suit quelle zone). Le goût est du côté testable : `zones.ts` se 
 **Une session en direct du moteur de scénarios.** Le suivi n'a pas son propre système de sessions :
 il emprunte `startLive` du moteur. Il hérite donc d'une seule exécution par lampe — un scénario ou un
 rachat Twitch lancé sur une lampe suivie **prend sa place**, et inversement —, du relevé et de la
-restauration de l'état, et de l'abandon après trois échecs d'affilée. Le capteur est tué à la **fin de
+restauration de l'état, et de l'abandon après des échecs répétés (3 images pour un scénario ; 30 pour le suivi d'écran, car à 20 ms par image 3 échecs ne représentent que 60 ms). Le capteur est tué à la **fin de
 la session**, quelle qu'en soit la cause (`untilStopped`). Une image en direct peut durer
-`LIVE_HOLD_MS` (50 ms) au lieu de `MIN_HOLD_MS` (250 ms) ; la minuterie est réarmée **après** chaque
+`LIVE_HOLD_MS` (20 ms) au lieu de `MIN_HOLD_MS` (250 ms) ; la minuterie est réarmée **après** chaque
 image, donc un réseau lent ralentit le flux au lieu de l'empiler. La lampe n'est allumée qu'**une
 fois** (`Cue.keepOn`), et on n'écrit rien tant que la couleur n'a pas vraiment changé.
 

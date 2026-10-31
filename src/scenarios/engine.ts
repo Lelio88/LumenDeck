@@ -60,7 +60,7 @@ export type Target = { id: string; key: string; ip?: string; version?: string };
  * refuse les commandes si on la sature. La minuterie est rearmee APRES chaque
  * image : un reseau lent ralentit le flux au lieu de l'empiler.
  */
-export const LIVE_HOLD_MS = 50;
+export const LIVE_HOLD_MS = 20;
 
 /** Comment jouer : ensemble ou chacune dans son coin, et combien de temps au plus. */
 export type StartOptions = {
@@ -116,6 +116,8 @@ type Source = {
   /** Nombre d'images au bout duquel la session s'arrete seule, ou undefined : sans fin. */
   readonly steps: number | undefined;
   readonly minHoldMs: number;
+  /** Nombre d'images ratees d'affilee au-dela duquel la session renonce. */
+  readonly tolerance: number;
 };
 
 type Session = {
@@ -129,7 +131,7 @@ type Session = {
   /** Etat releve au demarrage, par ampoule. Absent si la lecture a echoue. */
   readonly snapshots: Map<string, LightState>;
   readonly targets: readonly Target[];
-  /** Echecs reseau consecutifs. Au-dela de TOLERANCE, on renonce. */
+  /** Echecs reseau consecutifs. Au-dela de `source.tolerance`, on renonce. */
   failures: number;
   /** Se termine a l'arret, une fois les lampes restaurees. */
   readonly ended: Promise<void>;
@@ -144,6 +146,13 @@ type Session = {
  * minuterie indefiniment, a raison d'un aller-retour rate toutes les 300 ms.
  */
 const TOLERANCE = 3;
+
+/**
+ * Meme idee pour une session EN DIRECT, comptee en images mais pensee en TEMPS : a 20 ms
+ * par image, 3 echecs ne representent que 60 ms, ce que n'importe quel hoquet reseau
+ * depasse. 30 images laissent ~1 s a la lampe pour revenir, avant de renoncer.
+ */
+const LIVE_TOLERANCE = 30;
 
 export function createEngine(deps: EngineDeps): Engine {
   const { withBulb, timers, now } = deps;
@@ -218,7 +227,7 @@ export function createEngine(deps: EngineDeps): Engine {
       session.failures = 0;
     } else {
       session.failures += 1;
-      if (session.failures >= TOLERANCE) {
+      if (session.failures >= session.source.tolerance) {
         await stopSession(session);
         return false;
       }
@@ -337,11 +346,12 @@ export function createEngine(deps: EngineDeps): Engine {
         frameAt: (step) => frameFor(scenario, step, targets.length, together),
         steps: scenario.loops ? undefined : scenario.steps,
         minHoldMs: MIN_HOLD_MS,
+        tolerance: TOLERANCE,
       }, targets, options.maxMs);
     },
 
     startLive(id, frameAt, targets, onEnded) {
-      return launch(id, { frameAt, steps: undefined, minHoldMs: LIVE_HOLD_MS }, targets, undefined, onEnded);
+      return launch(id, { frameAt, steps: undefined, minHoldMs: LIVE_HOLD_MS, tolerance: LIVE_TOLERANCE }, targets, undefined, onEnded);
     },
 
     async stop(bulbId) {

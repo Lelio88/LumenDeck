@@ -234,3 +234,25 @@ test('une session en direct dont aucune lampe ne repond se declare non jouee', a
   const { engine } = setup(new Set(['a']));
   assert.equal(await engine.startLive('ecran', drift, [lamp('a')]), false);
 });
+
+test('une session en direct a 20 ms par image ne renonce pas apres 60 ms de panne', async () => {
+  const down = new Set();
+  const { engine, clock } = setup(down);
+  await engine.startLive('ecran', () => ({ cues: [{ color: { h: 10, s: 50, v: 50 } }], holdMs: 0 }), [lamp('a')]);
+  down.add('a');
+  await clock.advance(400); // ~20 images ratees d'affilee
+  assert.equal(engine.runningOn('a'), 'ecran', 'une panne breve ne coupe pas le suivi');
+  down.delete('a');
+  await clock.advance(100);
+  assert.equal(engine.runningOn('a'), 'ecran', 'et la lampe revenue est de nouveau servie');
+});
+
+test('une panne qui dure finit quand meme par arreter la session en direct', async () => {
+  const down = new Set();
+  const { engine, clock } = setup(down);
+  await engine.startLive('ecran', () => ({ cues: [{ color: { h: 10, s: 50, v: 50 } }], holdMs: 0 }), [lamp('a')]);
+  down.add('a');
+  await clock.advance(2000);
+  assert.equal(engine.runningOn('a'), undefined, 'aucune minuterie ne tourne indefiniment sur une lampe debranchee');
+  assert.equal(clock.count(), 0);
+});
