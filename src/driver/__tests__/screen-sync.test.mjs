@@ -302,7 +302,7 @@ test('un changement brutal a l ecran devient une rampe de petits pas, pas un sau
   assert.ok(hues.length >= 5, 'plusieurs envois, pas un seul saut (' + hues.length + ')');
   for (let i = 1; i < hues.length; i += 1) {
     const gap = Math.abs(hues[i] - hues[i - 1]);
-    assert.ok(Math.min(gap, 360 - gap) <= 15, 'pas de teinte borne : ' + hues[i - 1] + ' -> ' + hues[i]);
+    assert.ok(Math.min(gap, 360 - gap) <= 30, 'pas de teinte borne : ' + hues[i - 1] + ' -> ' + hues[i]);
   }
   const last = hues.at(-1);
   assert.ok(last > 200 && last < 260, 'et la lampe finit bien sur le bleu (' + last + ')');
@@ -323,7 +323,7 @@ test('un passage du sombre au clair monte sans marche visible de luminosite', as
   assert.ok(levels.length >= 8, 'une rampe de plusieurs envois (' + levels.length + ')');
   for (let i = 1; i < levels.length; i += 1) {
     const step = Math.abs(lightness(levels[i]) - lightness(levels[i - 1]));
-    assert.ok(step <= 0.041, 'marche percue trop grande : ' + levels[i - 1] + ' -> ' + levels[i]);
+    assert.ok(step <= 0.085, 'marche percue trop grande : ' + levels[i - 1] + ' -> ' + levels[i]);
   }
   assert.ok(levels.at(-1) > 90, 'et la lampe finit clair (' + levels.at(-1) + ')');
 });
@@ -351,10 +351,10 @@ test('une derive lente de la scene est envoyee par petites ecritures frequentes,
     await clock.advance(100);
   }
   const writes = colorsOf(lamps, 'a');
-  assert.ok(writes.length >= 15, 'au moins une ecriture sur deux images du moteur (' + writes.length + ' en 3 s)');
+  assert.ok(writes.length >= 8, 'au moins une ecriture toutes les 300 ms (' + writes.length + ' en 3 s)');
   for (let i = 1; i < writes.length; i += 1) {
     const gap = Math.abs(writes[i][2] - writes[i - 1][2]);
-    assert.ok(Math.min(gap, 360 - gap) <= 12, 'marche de teinte trop grosse : ' + writes[i - 1][2] + ' -> ' + writes[i][2]);
+    assert.ok(Math.min(gap, 360 - gap) <= 26, 'marche de teinte trop grosse : ' + writes[i - 1][2] + ' -> ' + writes[i][2]);
   }
 });
 

@@ -240,10 +240,10 @@ test('le caractere du lissage ne depend pas du nombre de mesures par seconde', (
 test('la vitesse maximale est une vitesse : plus de temps ecoule, plus grand le pas permis', () => {
   const from = { h: 100, s: 80, v: 50 };
   const target = { h: 220, s: 80, v: 50 };
-  const slow = stepToward(from, target, 0.08);
-  const fast = stepToward(from, target, 0.02);
+  const slow = stepToward(from, target, 0.16);
+  const fast = stepToward(from, target, 0.04);
   assert.ok(slow.h - 100 > 4 * (fast.h - 100) - 1, 'quatre fois plus de temps, environ quatre fois plus de chemin');
-  assert.ok(stepToward(from, target, 5).h - 100 <= 13, 'mais un long silence ne deviendra pas un saut : le temps est borne');
+  assert.ok(stepToward(from, target, 5).h - 100 <= 33,'mais un long silence ne deviendra pas un saut : le temps est borne');
 });
 
 test('reconnait un ecran noir, et pas une scene seulement sombre', () => {

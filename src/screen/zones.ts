@@ -245,7 +245,7 @@ const MAX_LIGHTNESS_RATE = 0.5;
  * par le « rattrapage » de tout le temps passe a ne rien faire, qui serait un saut.
  */
 const MIN_ELAPSED_S = 0.005;
-const MAX_ELAPSED_S = 0.08;
+const MAX_ELAPSED_S = 0.2;
 /** En dessous, la lampe est presque grise : sa teinte ne se voit pas et ne compte pas. */
 const GREY_SATURATION = 10;
 

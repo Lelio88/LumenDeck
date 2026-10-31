@@ -759,13 +759,13 @@ qu'un modèle donné réponde en LAN.
 **Du temps, pas des images.** Le lissage se règle en **constantes de temps** (≈ 0,5 s pour une scène
 stable, 0,13 s pour une coupe, 2,2 s pour la moyenne lente de luminosité) et le limiteur de pente en
 **vitesses** (160°/s de teinte, 0,5 de clarté perçue par seconde), multipliées par le temps réellement
-écoulé depuis le dernier envoi à la lampe (borné à 80 ms, pour qu'une lampe restée au repos reparte par
+écoulé depuis le dernier envoi à la lampe (borné à 200 ms, pour qu'une lampe restée au repos reparte par
 un pas ordinaire et non par un saut). Changer le nombre de mesures par seconde (`CAPTURE_FPS`) ne change
 donc pas le caractère du rendu, seulement sa finesse.
 
-**Plafond d'ordres par lampe.** Une lampe ne reçoit jamais plus d'un ordre toutes les 80 ms (≈ 12 par
-seconde) : relevé en conditions réelles, à ~23 ordres par seconde pour deux lampes, les ampoules
-Tuya décrochaient (reconnexions, trous de plusieurs secondes). Les pas du limiteur de pente se
+**Plafond d'ordres par lampe.** Une lampe ne reçoit jamais plus d'un ordre toutes les 160 ms (≈ 6 par
+seconde) : relevé en conditions réelles, à ~23 ordres par seconde pour deux lampes, puis à ~12 par
+lampe, les ampoules Tuya décrochaient du Wi-Fi (reconnexions, coupures de plusieurs secondes). Les pas du limiteur de pente se
 calculent sur le temps réellement écoulé, donc ce plafond règle la finesse sans changer la vitesse.
 
 **Écran noir.** Un écran noir n'a pas de couleur : le lissage vers (0, 0, 0) ferait virer la lampe
