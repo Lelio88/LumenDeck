@@ -94,7 +94,11 @@ async function connectToAnswering() {
       try {
         await candidate.connect();
         const status = await candidate.get({ schema: true });
-        return { device, version, bulb: candidate, before: status.dps ?? {} };
+        const dps = status?.dps ?? {};
+        // Une mauvaise cle ne fait PAS echouer la connexion : l'ampoule repond, mais
+        // la reponse est illisible. Seuls des datapoints lus prouvent que c'est la bonne.
+        if (Object.keys(dps).length === 0) throw new Error('reponse vide');
+        return { device, version, bulb: candidate, before: dps };
       } catch {
         try { candidate.disconnect(); } catch { /* deja ferme */ }
       }
