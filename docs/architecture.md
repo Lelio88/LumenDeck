@@ -763,9 +763,11 @@ stable, 0,13 s pour une coupe, 2,2 s pour la moyenne lente de luminosité) et le
 un pas ordinaire et non par un saut). Changer le nombre de mesures par seconde (`CAPTURE_FPS`) ne change
 donc pas le caractère du rendu, seulement sa finesse.
 
-**Plafond d'ordres par lampe.** Une lampe ne reçoit jamais plus d'un ordre toutes les 120 ms (≈ 8 par
-seconde) : relevé en conditions réelles, à ~23 ordres par seconde pour deux lampes, puis à ~12 par
-lampe, les ampoules Tuya décrochaient du Wi-Fi (reconnexions, coupures de plusieurs secondes). Les pas du limiteur de pente se
+**Plafond d'ordres par lampe.** Une lampe ne reçoit jamais plus d'un ordre toutes les 80 ms (≈ 12 par
+seconde) : relevé en conditions réelles, à ~23 ordres par seconde pour deux lampes, les ampoules Tuya
+décrochaient du Wi-Fi (reconnexions, coupures de plusieurs secondes). Un ordre du flux ne porte que la
+couleur (pas le mode), pour alléger le travail de la puce ; la cadence doit rester assez haute pour que
+les pas de couleur ne se voient pas (6 par seconde a été jugé très saccadé). Les pas du limiteur de pente se
 calculent sur le temps réellement écoulé, donc ce plafond règle la finesse sans changer la vitesse.
 
 **Écran noir.** Un écran noir n'a pas de couleur : le lissage vers (0, 0, 0) ferait virer la lampe

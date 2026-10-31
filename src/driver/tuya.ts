@@ -379,11 +379,15 @@ export class TuyaLanDriver implements LightDriver {
    * tuyapi attend sinon la reponse de CHAQUE ordre, jusqu'a 5 secondes, et met les ordres d'une
    * meme lampe en file : un seul accuse perdu fige tout le flux, puis la reprise rouvre la
    * connexion. Releve en conditions reelles : un creux de 5 a 10 s environ toutes les minutes.
+   *
+   * Ne porte QUE la couleur, pas le mode : chaque datapoint de plus alourdit le travail de la
+   * puce de l'ampoule, deja au bord de la saturation. Le mode couleur est reaffirme par les
+   * ecritures confirmees (`setColor`) que le suivi fait regulierement.
    */
   async streamColor(color: Hsv): Promise<void> {
     await this.write({
       multiple: true,
-      data: { [DP.mode]: 'colour', [DP.color]: encodeColor(color) },
+      data: { [DP.color]: encodeColor(color) },
       shouldWaitForResponse: false,
     });
   }

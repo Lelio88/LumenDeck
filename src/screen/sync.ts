@@ -88,13 +88,13 @@ export type SyncDeps = {
 const REPORT_EVERY_MS = 5000;
 
 /**
- * Temps minimal entre deux ordres a une MEME lampe (~8 par seconde). Au-dela, les ampoules
+ * Temps minimal entre deux ordres a une MEME lampe (~12 par seconde). Au-dela, les ampoules
  * Tuya decrochent du Wi-Fi : releve en conditions reelles a 23 ordres par seconde pour deux
  * lampes (reconnexions, trous de plusieurs secondes), puis encore des coupures d'une dizaine
  * de secondes a ~12 par lampe. Les pas de `stepToward` sont calcules sur le temps reellement
  * ecoule, donc ce plafond ne change que la finesse, pas la vitesse.
  */
-const MIN_WRITE_INTERVAL_MS = 120;
+const MIN_WRITE_INTERVAL_MS = 80;
 
 /**
  * Attente avant de retenter une lampe qui vient de rater un ordre : 0,5 s, doublee a chaque echec
