@@ -96,7 +96,13 @@ function setup({ unreachable, available, dieOnLaunch } = {}) {
   const engine = createEngine({ withBulb: lamps.withBulb, timers: clock.timers, now: clock.now });
   const capture = fakeLauncher(available, dieOnLaunch);
   const reports = [];
-  const sync = createScreenSync({ engine, launcher: capture.launcher, report: (line) => reports.push(line), now: clock.now });
+  const sync = createScreenSync({
+    engine,
+    launcher: capture.launcher,
+    report: (line) => reports.push(line),
+    now: clock.now,
+    classify: () => 'cause-test',
+  });
   return { clock, lamps, engine, capture, sync, reports };
 }
 
@@ -238,7 +244,7 @@ test('une ecriture ratee puis une lampe revenue : la couleur repart, lampe rallu
   assert.equal(colorsOf(lamps, 'a').length, 0, 'rien n a atteint la lampe');
 
   down.delete('a');
-  await clock.advance(200);
+  await clock.advance(1500); // le temps de la courte attente avant une nouvelle tentative
   assert.ok(colorsOf(lamps, 'a').length >= 1, 'la couleur est renvoyee');
   assert.ok(lamps.calls.some((c) => c[1] === 'power' && c[2] === true), 'et la lampe est rallumee');
 });
@@ -435,4 +441,52 @@ test('une lampe ne recoit jamais plus d une douzaine d ordres par seconde', asyn
     await clock.advance(20);
   }
   assert.ok(colorsOf(lamps, 'a').length <= 26, 'au plus ~13 ordres par seconde (' + colorsOf(lamps, 'a').length + ' en 2 s)');
+});
+
+test('les ordres qui echouent sont comptes et leur cause nommee dans le rapport de debit', async () => {
+  const down = new Set();
+  const { sync, capture, clock, reports } = setup({ unreachable: down });
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  capture.state.onEvent(frame(RED));
+  await clock.advance(300);
+
+  down.add('a');
+  for (let i = 0; i < 10; i += 1) { // ~1 s de panne : moins que la tolerance
+    capture.state.onEvent(frame(i % 2 === 0 ? BLUE : RED));
+    await clock.advance(100);
+  }
+  down.delete('a');
+  await clock.advance(11_000); // deux fenetres de rapport : la panne, puis le retour au calme
+
+  const failing = reports.find((line) => /echecs/.test(line));
+  assert.ok(failing, 'une ligne mentionne les echecs : ' + JSON.stringify(reports));
+  assert.match(failing, /cause-test/, 'avec la cause de la derniere panne');
+  assert.ok(reports.some((line) => !/echecs/.test(line)), 'et les periodes sans panne ne parlent pas d echecs');
+});
+
+test('une lampe en panne n est pas martelee : les nouvelles tentatives s espacent', async () => {
+  const down = new Set();
+  const { sync, capture, lamps, clock } = setup({ unreachable: down });
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  down.add('a');
+  const afterStart = lamps.opened;
+  for (let i = 0; i < 30; i += 1) { // 3 s de scene qui change, lampe injoignable
+    capture.state.onEvent(frame(i % 2 === 0 ? RED : BLUE));
+    await clock.advance(100);
+  }
+  const attempts = lamps.opened - afterStart;
+  assert.ok(attempts <= 6, 'quelques tentatives espacees, pas une par image (' + attempts + ' en 3 s)');
+});
+
+test('la reconnexion espacee ne retarde pas une lampe revenue de plus de quelques secondes', async () => {
+  const down = new Set();
+  const { sync, capture, lamps, clock } = setup({ unreachable: down });
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  down.add('a');
+  capture.state.onEvent(frame(RED));
+  await clock.advance(1500);
+  down.delete('a');
+  capture.state.onEvent(frame(BLUE));
+  await clock.advance(6000);
+  assert.ok(colorsOf(lamps, 'a').length >= 1, 'la lampe est de nouveau servie');
 });

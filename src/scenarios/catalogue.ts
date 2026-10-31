@@ -63,9 +63,10 @@ export type Cue = {
   /**
    * Appele par le moteur une fois la consigne jouee : `true` si elle a atteint la
    * lampe, `false` si l'ecriture a echoue. Permet a un flux en direct de ne pas
-   * croire qu'une lampe a recu ce qu'elle n'a pas recu. Un scenario ne l'utilise pas.
+   * croire qu'une lampe a recu ce qu'elle n'a pas recu, et de dire POURQUOI elle ne l'a
+   * pas recu (`error`). Un scenario ne l'utilise pas.
    */
-  readonly onSettled?: (reached: boolean) => void;
+  readonly onSettled?: (reached: boolean, error?: unknown) => void;
   /**
    * Rien a ecrire a cette lampe pour cette image : le moteur n'y touche pas, pas
    * meme pour ouvrir une connexion. Distinct d'une consigne VIDE (`{}`), qui, elle,

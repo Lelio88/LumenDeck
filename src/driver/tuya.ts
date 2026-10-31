@@ -130,6 +130,36 @@ function pickCause(rejection: unknown, sink: TransportSink): LightError {
   return asLightError(sink.last);
 }
 
+/** Ce dont `shutDown` a besoin d'une connexion tuyapi : le peu qui est utilise, pour pouvoir le tester. */
+type Closable = {
+  disconnect(): void;
+  connect(): Promise<unknown>;
+  client?: { destroy(): void };
+};
+
+/**
+ * Ferme une connexion tuyapi POUR DE BON.
+ *
+ * `disconnect()` ne suffit pas, pour deux raisons propres a tuyapi : il ne fait rien tant que
+ * la connexion n'est pas etablie (un socket en cours d'ouverture survit), et l'envoi d'un
+ * ordre (`_send`) rouvre seul une connexion fermee, jusqu'a cinq fois. Un ordre en vol sur
+ * une connexion fermee par le plugin la rouvrait donc en arriere-plan, hors de toute vue :
+ * ces connexions s'empilaient jusqu'a ce que l'ampoule refuse toute connexion, y compris celles
+ * des autres touches.
+ *
+ * On interdit donc d'abord toute reouverture, puis on ferme, puis on detruit le socket
+ * explicitement. L'ecouteur 'error' reste en place (voir `close`).
+ */
+export function shutDown(device: Closable): void {
+  device.connect = () => Promise.reject(new Error('session fermee'));
+  device.disconnect();
+  try {
+    device.client?.destroy();
+  } catch {
+    // Deja detruit : c'est l'etat voulu.
+  }
+}
+
 export class TuyaLanDriver implements LightDriver {
   // Optimiste par defaut : si la table de datapoints est illisible, mieux vaut
   // laisser l'utilisateur essayer que lui interdire une action qui marcherait.
@@ -228,7 +258,7 @@ export class TuyaLanDriver implements LightDriver {
       if (!config.ip) await device.find();
       await device.connect();
     } catch (error) {
-      device.disconnect();
+      shutDown(device as unknown as Closable);
       throw pickCause(error, sink);
     }
 
@@ -340,6 +370,6 @@ export class TuyaLanDriver implements LightDriver {
     // peut encore emettre un ECONNRESET au tick suivant, et il n'y aurait
     // alors plus personne pour l'absorber — soit exactement la panne que cet
     // ecouteur existe pour empecher. Il part avec le device, a la collecte.
-    this.device.disconnect();
+    shutDown(this.device as unknown as Closable);
   }
 }

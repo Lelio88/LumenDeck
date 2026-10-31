@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 import streamDeck from '@elgato/streamdeck';
 
+import { asLightError } from '../driver/errors.js';
 import { runningOn, startLive, stop } from '../scenarios/runner.js';
 import { createCaptureLauncher, listScreens, type ScreenInfo } from './capture.js';
 import { createScreenSync } from './sync.js';
@@ -28,6 +29,8 @@ export const screenSync = createScreenSync({
   launcher: createCaptureLauncher(CAPTURE_EXE),
   // Une ligne de debit toutes les 5 s (nombres seulement) : de quoi regler la cadence sur du reel.
   report: (line) => streamDeck.logger.createScope('ecran').info(line),
+  // Le MOT de la cause (`unreachable`, `unresponsive`...), jamais le message brut de tuyapi.
+  classify: (error) => asLightError(error).failure,
 });
 
 /** Les ecrans que le panneau peut proposer. Liste vide si le capteur est absent. */

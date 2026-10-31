@@ -194,7 +194,7 @@ export function createEngine(deps: EngineDeps): Engine {
       if (!cue || cue.idle === true) return [];
       return [applyCue(target, cue).then(
         () => { cue.onSettled?.(true); },
-        (error: unknown) => { cue.onSettled?.(false); throw error; },
+        (error: unknown) => { cue.onSettled?.(false, error); throw error; },
       )];
     });
     // Rien a jouer cette fois (flux en direct dont rien n'a change) : ni reussite ni echec.

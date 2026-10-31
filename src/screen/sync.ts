@@ -80,6 +80,8 @@ export type SyncDeps = {
   readonly report?: (line: string) => void;
   /** Horloge, injectable pour les tests. */
   readonly now?: () => number;
+  /** Nomme la cause d'un ordre rate, en un mot sur (ex. `unreachable`) : sans elle, un echec ne se compte que. */
+  readonly classify?: (error: unknown) => string;
 };
 
 /** Intervalle des rapports de debit. */
@@ -94,6 +96,15 @@ const REPORT_EVERY_MS = 5000;
 const MIN_WRITE_INTERVAL_MS = 80;
 
 /**
+ * Attente avant de retenter une lampe qui vient de rater un ordre : 0,5 s, doublee a chaque echec
+ * d'affilee, plafonnee a 5 s. Chaque tentative apres un echec rouvre une connexion TCP, et une
+ * ampoule Tuya n'en accepte qu'une poignee : retenter a chaque image (25 fois par seconde) l'a
+ * saturee au point de refuser toute connexion, y compris celles des autres touches.
+ */
+const RETRY_BASE_MS = 500;
+const RETRY_MAX_MS = 5000;
+
+/**
  * Duree de noir continu a partir de laquelle les lampes de la zone s'eteignent. Assez longue
  * pour qu'un fondu au noir ou une scene de nuit n'eteigne rien, assez courte pour qu'un ecran
  * de veille ne laisse pas la piece eclairee en blanc.
@@ -101,7 +112,7 @@ const MIN_WRITE_INTERVAL_MS = 80;
 const BLACK_OFF_MS = 3000;
 
 export function createScreenSync(deps: SyncDeps): ScreenSync {
-  const { engine, launcher, report } = deps;
+  const { engine, launcher, report, classify } = deps;
   const now = deps.now ?? Date.now;
 
   return {
@@ -120,6 +131,9 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
       const sent: (Hsv | null)[] = targets.map(() => null);
       /** Instant du dernier envoi a chaque lampe : la vitesse maximale se compte en temps reel. */
       const sentAt: number[] = targets.map(() => now() - MIN_WRITE_INTERVAL_MS);
+      /** Echecs d'affilee par lampe, et instant avant lequel on ne la retente pas. */
+      const failStreak: number[] = targets.map(() => 0);
+      const retryAt: number[] = targets.map(() => 0);
       /** Depuis quand chaque zone est noire (ms), ou null. */
       const blackSince: (number | null)[] = Array.from({ length: zoneCount }, () => null);
       /** Lampes eteintes pour cause d'ecran noir (pour ne pas renvoyer l'ordre a chaque image). */
@@ -145,15 +159,28 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
       let windowStart = now();
       let images = 0;
       let writes = 0;
+      let failures = 0;
+      let lastCause = '';
+      /** Une lampe vient de rater un ordre : on la laisse respirer, de plus en plus longtemps. */
+      const backOff = (index: number): void => {
+        failStreak[index] = (failStreak[index] ?? 0) + 1;
+        retryAt[index] = now() + Math.min(RETRY_MAX_MS, RETRY_BASE_MS * 2 ** ((failStreak[index] ?? 1) - 1));
+      };
+      const noteFailure = (error: unknown): void => {
+        failures += 1;
+        if (classify) lastCause = classify(error);
+      };
       const countImage = (): void => {
         images += 1;
         const elapsed = now() - windowStart;
         if (elapsed < REPORT_EVERY_MS) return;
         const seconds = elapsed / 1000;
-        report?.(`suivi d'ecran : ${(images / seconds).toFixed(1)} images/s, ${(writes / seconds).toFixed(1)} ecritures/s`);
+        const failed = failures > 0 ? `, ${(failures / seconds).toFixed(1)} echecs/s${lastCause ? ' (derniere cause : ' + lastCause + ')' : ''}` : '';
+        report?.(`suivi d'ecran : ${(images / seconds).toFixed(1)} images/s, ${(writes / seconds).toFixed(1)} ecritures/s${failed}`);
         windowStart = now();
         images = 0;
         writes = 0;
+        failures = 0;
       };
 
       const frameAt = (): Frame => {
@@ -163,6 +190,7 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
           cues: targets.map((_, index) => {
             const zone = zoneOfBulb(index, targets.length, zoneCount);
             const at = now();
+            if (at < (retryAt[index] ?? 0)) return { idle: true };
 
             // Ecran noir depuis assez longtemps : on eteint, une seule fois. `sent` est oublie pour que
             // le prochain ordre de couleur rallume la lampe (le premier envoi allume toujours).
@@ -172,7 +200,15 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
               switchedOff[index] = true;
               sent[index] = null;
               sentAt[index] = at;
-              return { on: false, onSettled: (reached: boolean) => { if (!reached) switchedOff[index] = false; } };
+              return {
+                on: false,
+                onSettled: (reached: boolean, error?: unknown) => {
+                  if (reached) { failStreak[index] = 0; return; }
+                  switchedOff[index] = false;
+                  noteFailure(error);
+                  backOff(index);
+                },
+              };
             }
             switchedOff[index] = false;
 
@@ -195,7 +231,12 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
               keepOn: !firstWrite,
               // Une ecriture ratee ne vaut pas « envoyee » : on renvoie, en rallumant la lampe,
               // sans quoi une lampe revenue apres une coupure resterait eteinte tant que la scene est stable.
-              onSettled: (reached: boolean) => { if (!reached) sent[index] = null; },
+              onSettled: (reached: boolean, error?: unknown) => {
+                if (reached) { failStreak[index] = 0; return; }
+                sent[index] = null;
+                noteFailure(error);
+                backOff(index);
+              },
             };
           }),
         };
