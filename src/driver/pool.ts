@@ -31,6 +31,14 @@ import { TuyaLanDriver, type TuyaLanConfig } from './tuya.ts';
  */
 const SANS_REPRISE: readonly LightFailure[] = ['badKey', 'unreachable'];
 
+/** Ou vont les remarques de diagnostic des pilotes, fixe une fois par le plugin. */
+let driverNote: ((line: string) => void) | undefined;
+
+/** Branche les remarques de diagnostic des pilotes (voir `TuyaLanConfig.note`). */
+export function setDriverNote(note: (line: string) => void): void {
+  driverNote = note;
+}
+
 /** Connexions vivantes, indexees par identifiant d'ampoule. */
 const pool = new Map<string, Promise<LightDriver>>();
 
@@ -45,7 +53,10 @@ export async function acquire(config: TuyaLanConfig): Promise<LightDriver> {
   const existing = pool.get(config.id);
   if (existing) return existing;
 
-  const opening = TuyaLanDriver.connect(config).catch((err: unknown) => {
+  // L'ampoule est designee par la fin de son identifiant, comme dans les autres journaux.
+  const note = driverNote;
+  const withNote = note ? { ...config, note: (line: string) => note('ampoule ...' + config.id.slice(-6) + ' ' + line) } : config;
+  const opening = TuyaLanDriver.connect(withNote).catch((err: unknown) => {
     pool.delete(config.id);
     throw err;
   });

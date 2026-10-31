@@ -13,7 +13,7 @@ import { ScreenAction } from './actions/screen.js';
 import { Temperature } from './actions/temperature.js';
 import { ToggleBulb } from './actions/toggle.js';
 import { TwitchAction } from './actions/twitch.js';
-import { releaseAll } from './driver/pool.js';
+import { releaseAll, setDriverNote } from './driver/pool.js';
 import { stopAll } from './scenarios/runner.js';
 import * as twitch from './twitch/service.js';
 import { installUiBridge } from './ui-bridge.js';
@@ -24,6 +24,9 @@ import { installUiBridge } from './ui-bridge.js';
 // LogLevel est une union de chaines dans le SDK v2, pas une enumeration :
 // aucun import n'est necessaire.
 streamDeck.logger.setLevel('info');
+// Les remarques des pilotes (liste des datapoints d'une ampoule) vont au journal : des
+// numeros seulement, utiles pour savoir ce qu'un nouveau modele sait faire.
+setDriverNote((line) => streamDeck.logger.createScope('pilote').info(line));
 
 /** Temps laisse a Twitch pour mettre les recompenses en pause a l'extinction. */
 const SHUTDOWN_TWITCH_MS = 3000;

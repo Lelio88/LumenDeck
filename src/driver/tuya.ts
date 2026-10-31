@@ -67,6 +67,12 @@ export type TuyaLanConfig = {
    * reseau lisait deja cette valeur sans que personne ne la conserve.
    */
   readonly version?: string;
+  /**
+   * Recoit les remarques de diagnostic du pilote (la liste des datapoints lus a la
+   * connexion). Le pilote ignore tout de Stream Deck : c'est a l'appelant de dire
+   * ou elles vont. Jamais de secret ni de valeur : des numeros de datapoint seulement.
+   */
+  readonly note?: (line: string) => void;
 };
 
 /** Version retenue quand l'ampoule n'a pas eu l'occasion de l'annoncer. */
@@ -148,6 +154,7 @@ export class TuyaLanDriver implements LightDriver {
   private async detectCapabilities(): Promise<void> {
     try {
       const dps = await this.readDps();
+      this.note?.('datapoints : ' + Object.keys(dps).sort((a, b) => Number(a) - Number(b)).join(', '));
       this.caps = {
         supportsColor: DP.color in dps,
         supportsTemperature: DP.temperature in dps,
@@ -160,14 +167,16 @@ export class TuyaLanDriver implements LightDriver {
 
   private readonly device: TuyAPI;
   private readonly sink: TransportSink;
+  private readonly note: ((line: string) => void) | undefined;
 
   // Champ assigne explicitement plutot qu'en propriete de parametre : cette
   // syntaxe TypeScript exige une transformation, la ou le reste du fichier se
   // contente d'un effacement de types. Node peut ainsi executer ce module tel
   // quel, sans etape de build — ce dont les tests profitent directement.
-  private constructor(device: TuyAPI, sink: TransportSink) {
+  private constructor(device: TuyAPI, sink: TransportSink, note: ((line: string) => void) | undefined) {
     this.device = device;
     this.sink = sink;
+    this.note = note;
   }
 
   /**
@@ -223,7 +232,7 @@ export class TuyaLanDriver implements LightDriver {
       throw pickCause(error, sink);
     }
 
-    const driver = new TuyaLanDriver(device, sink);
+    const driver = new TuyaLanDriver(device, sink, config.note);
     await driver.detectCapabilities();
     return driver;
   }
