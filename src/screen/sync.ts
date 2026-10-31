@@ -42,7 +42,7 @@ import type { Hsv } from '../driver/types.ts';
 import type { Frame } from '../scenarios/catalogue.ts';
 import type { Engine, Target } from '../scenarios/engine.ts';
 import type { CaptureLauncher } from './capture.ts';
-import { createSmoother, differs, gradeZone, stepToward, zoneOfBulb, type CaptureEvent } from './zones.ts';
+import { createSmoother, differs, gradeZone, isBlack, stepToward, zoneOfBulb, type CaptureEvent } from './zones.ts';
 
 /** Identifiant sous lequel le suivi d'ecran apparait dans le moteur (`runningOn`). */
 export const SCREEN_SYNC_ID = 'ecran';
@@ -85,6 +85,21 @@ export type SyncDeps = {
 /** Intervalle des rapports de debit. */
 const REPORT_EVERY_MS = 5000;
 
+/**
+ * Temps minimal entre deux ordres a une MEME lampe (~12 par seconde). Au-dela, les ampoules
+ * Tuya decrochent : releve en conditions reelles a 23 ordres par seconde pour deux lampes,
+ * avec reconnexions et trous de plusieurs secondes. Les pas de `stepToward` sont calcules
+ * sur le temps reellement ecoule, donc ce plafond ne change que la finesse, pas la vitesse.
+ */
+const MIN_WRITE_INTERVAL_MS = 80;
+
+/**
+ * Duree de noir continu a partir de laquelle les lampes de la zone s'eteignent. Assez longue
+ * pour qu'un fondu au noir ou une scene de nuit n'eteigne rien, assez courte pour qu'un ecran
+ * de veille ne laisse pas la piece eclairee en blanc.
+ */
+const BLACK_OFF_MS = 3000;
+
 export function createScreenSync(deps: SyncDeps): ScreenSync {
   const { engine, launcher, report } = deps;
   const now = deps.now ?? Date.now;
@@ -104,7 +119,11 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
       const graded: (Hsv | null)[] = Array.from({ length: zoneCount }, () => null);
       const sent: (Hsv | null)[] = targets.map(() => null);
       /** Instant du dernier envoi a chaque lampe : la vitesse maximale se compte en temps reel. */
-      const sentAt: number[] = targets.map(() => now());
+      const sentAt: number[] = targets.map(() => now() - MIN_WRITE_INTERVAL_MS);
+      /** Depuis quand chaque zone est noire (ms), ou null. */
+      const blackSince: (number | null)[] = Array.from({ length: zoneCount }, () => null);
+      /** Lampes eteintes pour cause d'ecran noir (pour ne pas renvoyer l'ordre a chaque image). */
+      const switchedOff: boolean[] = targets.map(() => false);
       let captureFailed = false;
       /** La session creee ici est terminee (touche, scenario concurrent, pannes, capteur mort). */
       let ended = false;
@@ -116,7 +135,9 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
         for (let zone = 0; zone < zoneCount; zone += 1) {
           const sample = event.zones[zone];
           const smoother = smoothers[zone];
-          if (sample && smoother) graded[zone] = gradeZone(smoother.push(sample));
+          if (!sample || !smoother) continue;
+          graded[zone] = gradeZone(smoother.push(sample));
+          blackSince[zone] = isBlack(sample) ? (blackSince[zone] ?? now()) : null;
         }
       };
 
@@ -140,14 +161,30 @@ export function createScreenSync(deps: SyncDeps): ScreenSync {
         return {
           holdMs: 0,
           cues: targets.map((_, index) => {
-            const color = graded[zoneOfBulb(index, targets.length, zoneCount)];
+            const zone = zoneOfBulb(index, targets.length, zoneCount);
+            const at = now();
+
+            // Ecran noir depuis assez longtemps : on eteint, une seule fois. `sent` est oublie pour que
+            // le prochain ordre de couleur rallume la lampe (le premier envoi allume toujours).
+            const dark = blackSince[zone];
+            if (dark !== null && dark !== undefined && at - dark >= BLACK_OFF_MS) {
+              if (switchedOff[index]) return { idle: true };
+              switchedOff[index] = true;
+              sent[index] = null;
+              sentAt[index] = at;
+              return { on: false, onSettled: (reached: boolean) => { if (!reached) switchedOff[index] = false; } };
+            }
+            switchedOff[index] = false;
+
+            const color = graded[zone];
             // Pas encore de couleur : une consigne vide, qui joint la lampe (premiere image :
             // c'est elle qui dit si une lampe repond). Couleur inchangee : au repos, sans rien toucher.
             if (!color) return {};
             // Un pas borne vers la couleur de l'ecran, pas le saut : la lampe n'a pas de fondu.
             const shown = sent[index] ?? null;
-            const at = now();
-            const next = stepToward(shown, color, (at - (sentAt[index] ?? at)) / 1000);
+            const elapsedMs = at - (sentAt[index] ?? at);
+            if (elapsedMs < MIN_WRITE_INTERVAL_MS) return { idle: true };
+            const next = stepToward(shown, color, elapsedMs / 1000);
             if (!differs(shown, next)) return { idle: true };
             const firstWrite = shown === null;
             sent[index] = next;

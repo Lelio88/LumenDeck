@@ -17,6 +17,7 @@ import {
   createSmoother,
   differs,
   gradeZone,
+  isBlack,
   lightness,
   parseCaptureLine,
   stepToward,
@@ -243,4 +244,27 @@ test('la vitesse maximale est une vitesse : plus de temps ecoule, plus grand le 
   const fast = stepToward(from, target, 0.02);
   assert.ok(slow.h - 100 > 4 * (fast.h - 100) - 1, 'quatre fois plus de temps, environ quatre fois plus de chemin');
   assert.ok(stepToward(from, target, 5).h - 100 <= 13, 'mais un long silence ne deviendra pas un saut : le temps est borne');
+});
+
+test('reconnait un ecran noir, et pas une scene seulement sombre', () => {
+  assert.equal(isBlack({ rgb: [0, 0, 0], v: 0 }), true);
+  assert.equal(isBlack({ rgb: [0, 0, 0], v: 1 }), true, 'a un point de luminosite pres');
+  assert.equal(isBlack({ rgb: [12, 8, 6], v: 4 }), false, 'une scene sombre n est pas un ecran noir');
+  assert.equal(isBlack({ rgb: [0, 0, 0], v: 8 }), false);
+});
+
+test('un ecran qui devient noir garde la teinte : seule la luminosite descend, la lampe ne vire pas au blanc', () => {
+  const smoother = createSmoother();
+  for (let i = 0; i < CAPTURE_FPS * 3; i += 1) smoother.push({ rgb: [220, 30, 30], v: 60 });
+  let last = smoother.push({ rgb: [0, 0, 0], v: 0 });
+  for (let i = 0; i < CAPTURE_FPS * 6; i += 1) last = smoother.push({ rgb: [0, 0, 0], v: 0 });
+  assert.deepEqual(last.rgb, [220, 30, 30], 'la couleur d avant le noir est conservee');
+  assert.ok(last.v < 12, 'et la luminosite est tombee (' + last.v.toFixed(1) + ')');
+  const color = gradeZone(last);
+  assert.ok(color.s > 60 && (color.h < 15 || color.h > 345), 'la lampe reste rouge, pas blanche : ' + JSON.stringify(color));
+});
+
+test('un ecran noir des le debut n invente pas de couleur', () => {
+  const smoother = createSmoother();
+  assert.deepEqual(smoother.push({ rgb: [0, 0, 0], v: 0 }).rgb, [0, 0, 0]);
 });

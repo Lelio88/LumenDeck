@@ -175,6 +175,15 @@ export function gradeZone(sample: ZoneSample): Hsv {
   };
 }
 
+/**
+ * Vrai pour un ECRAN noir (bande noire, fondu, ecran de veille), pas pour une scene seulement
+ * sombre : le capteur rend exactement 0 quand aucun pixel n'est allume, et la luminosite
+ * moyenne d'une scene sombre meme tres peu eclairee reste au-dessus de 1.
+ */
+export function isBlack(sample: ZoneSample): boolean {
+  return sample.v <= 1 && Math.max(...sample.rgb) <= 8;
+}
+
 /** Lisseur d'une zone : garde l'etat precedent, rend la mesure adoucie. */
 export type Smoother = { push(sample: ZoneSample): ZoneSample };
 
@@ -188,6 +197,15 @@ export function createSmoother(fps: number = CAPTURE_FPS): Smoother {
     push(sample) {
       if (!state) {
         state = { rgb: [...sample.rgb], v: sample.v, slowV: sample.v };
+      } else if (isBlack(sample)) {
+        // Un ecran noir n'a pas de couleur : le RVB vaut 0, et lisser vers 0 ferait perdre la
+        // teinte, donc virer la lampe au BLANC (saturation 0) en fin de fondu. On garde la
+        // couleur d'avant le noir et on ne fait descendre que la luminosite.
+        state = {
+          rgb: state.rgb,
+          v: state.v + (sample.v - state.v) * alphaSteady,
+          slowV: state.slowV + (sample.v - state.slowV) * alphaSlow,
+        };
       } else {
         const gap = Math.max(
           (Math.abs(sample.rgb[0] - state.rgb[0]) + Math.abs(sample.rgb[1] - state.rgb[1]) + Math.abs(sample.rgb[2] - state.rgb[2])) / 765,

@@ -52,7 +52,7 @@ function fakeLamps(unreachable = new Set()) {
     return op({
       read: async () => ({ ...INITIAL }),
       setPower: async (on) => { calls.push([target.id, 'power', on]); },
-      setColor: async (color) => { calls.push([target.id, 'color', color.h, color.v]); },
+      setColor: async (color) => { calls.push([target.id, 'color', color.h, color.v, color.s]); },
       setBrightness: async (level) => { calls.push([target.id, 'brightness', level]); },
       setTemperature: async (kelvin) => { calls.push([target.id, 'temperature', kelvin]); },
     });
@@ -349,4 +349,90 @@ test('une derive lente de la scene est envoyee par petites ecritures frequentes,
     const gap = Math.abs(writes[i][2] - writes[i - 1][2]);
     assert.ok(Math.min(gap, 360 - gap) <= 12, 'marche de teinte trop grosse : ' + writes[i - 1][2] + ' -> ' + writes[i][2]);
   }
+});
+
+const BLACK = [0, 0, 0, 0];
+
+test('un ecran qui devient noir garde la teinte de la scene au lieu de virer au blanc', async () => {
+  const { sync, capture, lamps, clock } = setup();
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  capture.state.onEvent(frame(RED));
+  await clock.advance(500);
+
+  lamps.calls.length = 0;
+  for (let i = 0; i < 20; i += 1) {
+    capture.state.onEvent(frame(BLACK));
+    await clock.advance(100); // 2 s de noir : avant l'extinction
+  }
+  const writes = colorsOf(lamps, 'a');
+  assert.ok(writes.length >= 3, 'la luminosite descend par plusieurs envois (' + writes.length + ')');
+  for (const [, , hue, , saturation] of writes) {
+    assert.ok(saturation > 50 && (hue < 20 || hue > 340), 'reste rouge : h=' + hue + ' s=' + saturation);
+  }
+});
+
+test('apres 3 secondes de noir continu, la lampe s eteint ; elle se rallume avec l image', async () => {
+  const { sync, capture, lamps, clock } = setup();
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  capture.state.onEvent(frame(RED));
+  await clock.advance(500);
+
+  lamps.calls.length = 0;
+  for (let i = 0; i < 24; i += 1) { // 2,4 s de noir
+    capture.state.onEvent(frame(BLACK));
+    await clock.advance(100);
+  }
+  assert.ok(!lamps.calls.some((c) => c[1] === 'power' && c[2] === false), 'pas encore eteinte avant 3 s');
+
+  for (let i = 0; i < 10; i += 1) {
+    capture.state.onEvent(frame(BLACK));
+    await clock.advance(100);
+  }
+  assert.equal(lamps.calls.filter((c) => c[1] === 'power' && c[2] === false).length, 1, 'eteinte, une seule fois');
+
+  lamps.calls.length = 0;
+  capture.state.onEvent(frame(BLUE));
+  await clock.advance(300);
+  assert.ok(lamps.calls.some((c) => c[1] === 'power' && c[2] === true), 'rallumee des que l image revient');
+  assert.ok(colorsOf(lamps, 'a').length >= 1, 'avec une couleur');
+});
+
+test('un fondu au noir bref n eteint pas la lampe', async () => {
+  const { sync, capture, lamps, clock } = setup();
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  capture.state.onEvent(frame(RED));
+  await clock.advance(500);
+  for (let i = 0; i < 15; i += 1) { // 1,5 s de noir
+    capture.state.onEvent(frame(BLACK));
+    await clock.advance(100);
+  }
+  capture.state.onEvent(frame(RED));
+  await clock.advance(500);
+  assert.ok(!lamps.calls.some((c) => c[1] === 'power' && c[2] === false));
+});
+
+test('en mode zones, seule la moitie noire de l ecran eteint ses lampes', async () => {
+  const { sync, capture, lamps, clock } = setup();
+  await sync.start([lamp('gauche'), lamp('droite')], { screen: 'primary', mode: 'zones' });
+  capture.state.onEvent(frame(RED, RED));
+  await clock.advance(500);
+  for (let i = 0; i < 40; i += 1) { // 4 s : gauche rouge, droite noire
+    capture.state.onEvent(frame(RED, BLACK));
+    await clock.advance(100);
+  }
+  assert.ok(lamps.calls.some((c) => c[0] === 'droite' && c[1] === 'power' && c[2] === false), 'la droite s eteint');
+  assert.ok(!lamps.calls.some((c) => c[0] === 'gauche' && c[1] === 'power' && c[2] === false), 'la gauche reste allumee');
+});
+
+test('une lampe ne recoit jamais plus d une douzaine d ordres par seconde', async () => {
+  const { sync, capture, lamps, clock } = setup();
+  await sync.start([lamp('a')], { screen: 'primary', mode: 'same' });
+  capture.state.onEvent(frame(RED));
+  await clock.advance(300);
+  lamps.calls.length = 0;
+  for (let i = 0; i < 100; i += 1) { // 2 s de couleurs qui changent a chaque mesure (50 par seconde)
+    capture.state.onEvent(frame(i % 2 === 0 ? RED : BLUE));
+    await clock.advance(20);
+  }
+  assert.ok(colorsOf(lamps, 'a').length <= 26, 'au plus ~13 ordres par seconde (' + colorsOf(lamps, 'a').length + ' en 2 s)');
 });

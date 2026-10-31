@@ -726,9 +726,9 @@ quelle lampe suit quelle zone). Le goût est du côté testable : `zones.ts` se 
 **Une session en direct du moteur de scénarios.** Le suivi n'a pas son propre système de sessions :
 il emprunte `startLive` du moteur. Il hérite donc d'une seule exécution par lampe — un scénario ou un
 rachat Twitch lancé sur une lampe suivie **prend sa place**, et inversement —, du relevé et de la
-restauration de l'état, et de l'abandon après des échecs répétés (3 images pour un scénario ; 30 pour le suivi d'écran, car à 20 ms par image 3 échecs ne représentent que 60 ms). Le capteur est tué à la **fin de
+restauration de l'état, et de l'abandon après des échecs répétés (3 images pour un scénario ; 30 pour le suivi d'écran, car à 40 ms par image 3 échecs ne représentent que 120 ms ; une image **au repos** — rien à écrire — ne compte ni comme réussite ni comme échec, sinon une lampe morte ne ferait jamais renoncer la session). Le capteur est tué à la **fin de
 la session**, quelle qu'en soit la cause (`untilStopped`). Une image en direct peut durer
-`LIVE_HOLD_MS` (20 ms) au lieu de `MIN_HOLD_MS` (250 ms) ; la minuterie est réarmée **après** chaque
+`LIVE_HOLD_MS` (40 ms) au lieu de `MIN_HOLD_MS` (250 ms) ; la minuterie est réarmée **après** chaque
 image, donc un réseau lent ralentit le flux au lieu de l'empiler. La lampe n'est allumée qu'**une
 fois** (`Cue.keepOn`), et on n'écrit rien tant que la couleur n'a pas vraiment changé.
 
@@ -762,6 +762,17 @@ stable, 0,13 s pour une coupe, 2,2 s pour la moyenne lente de luminosité) et le
 écoulé depuis le dernier envoi à la lampe (borné à 80 ms, pour qu'une lampe restée au repos reparte par
 un pas ordinaire et non par un saut). Changer le nombre de mesures par seconde (`CAPTURE_FPS`) ne change
 donc pas le caractère du rendu, seulement sa finesse.
+
+**Plafond d'ordres par lampe.** Une lampe ne reçoit jamais plus d'un ordre toutes les 80 ms (≈ 12 par
+seconde) : relevé en conditions réelles, à ~23 ordres par seconde pour deux lampes, les ampoules
+Tuya décrochaient (reconnexions, trous de plusieurs secondes). Les pas du limiteur de pente se
+calculent sur le temps réellement écoulé, donc ce plafond règle la finesse sans changer la vitesse.
+
+**Écran noir.** Un écran noir n'a pas de couleur : le lissage vers (0, 0, 0) ferait virer la lampe
+au **blanc** (saturation 0). La teinte d'avant le noir est donc conservée et seule la luminosité
+descend, jusqu'au plancher (`MIN_VALUE`). Après **3 secondes de noir continu**, les lampes de la
+zone concernée s'éteignent (une seule fois), et se rallument dès que l'image revient. Un fondu au
+noir bref n'éteint rien, et en mode gauche / droite seule la moitié noire s'éteint.
 
 **Mesurer la cadence.** Toutes les 5 secondes, le plugin écrit une ligne dans son journal :
 `suivi d'écran : N images/s, M écritures/s` (nombres seulement, rien de l'écran). Le débit réel est

@@ -256,3 +256,23 @@ test('une panne qui dure finit quand meme par arreter la session en direct', asy
   assert.equal(engine.runningOn('a'), undefined, 'aucune minuterie ne tourne indefiniment sur une lampe debranchee');
   assert.equal(clock.count(), 0);
 });
+
+test('des images au repos entre deux echecs ne remettent pas le compteur de pannes a zero', async () => {
+  const down = new Set(['a']);
+  const { engine, clock } = setup(down);
+  // Une image sur deux est au repos (rien a ecrire) : elles ne doivent compter ni comme reussite ni comme echec.
+  await engine.startLive('ecran', (step) => ({
+    cues: [step % 2 === 0 ? { color: { h: 10, s: 50, v: 50 } } : { idle: true }],
+    holdMs: 0,
+  }), [lamp('a')]);
+  await clock.advance(10_000);
+  assert.equal(engine.runningOn('a'), undefined, 'une lampe morte finit par faire renoncer la session');
+});
+
+test('une image entierement au repos ne touche pas la lampe', async () => {
+  const { engine, lamps, clock } = setup();
+  await engine.startLive('ecran', () => ({ cues: [{ idle: true }], holdMs: 0 }), [lamp('a')]);
+  await clock.advance(500);
+  assert.equal(lamps.calls.length, 0);
+  assert.equal(engine.runningOn('a'), 'ecran', 'et la session vit : le repos n est pas une panne');
+});

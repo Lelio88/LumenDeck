@@ -60,7 +60,7 @@ export type Target = { id: string; key: string; ip?: string; version?: string };
  * refuse les commandes si on la sature. La minuterie est rearmee APRES chaque
  * image : un reseau lent ralentit le flux au lieu de l'empiler.
  */
-export const LIVE_HOLD_MS = 20;
+export const LIVE_HOLD_MS = 40;
 
 /** Comment jouer : ensemble ou chacune dans son coin, et combien de temps au plus. */
 export type StartOptions = {
@@ -148,9 +148,9 @@ type Session = {
 const TOLERANCE = 3;
 
 /**
- * Meme idee pour une session EN DIRECT, comptee en images mais pensee en TEMPS : a 20 ms
- * par image, 3 echecs ne representent que 60 ms, ce que n'importe quel hoquet reseau
- * depasse. 30 images laissent ~1 s a la lampe pour revenir, avant de renoncer.
+ * Meme idee pour une session EN DIRECT, comptee en images mais pensee en TEMPS : a 40 ms
+ * par image, 3 echecs ne representent que 120 ms, ce que n'importe quel hoquet reseau
+ * depasse. 30 images laissent ~1,2 s a la lampe pour revenir, avant de renoncer.
  */
 const LIVE_TOLERANCE = 30;
 
@@ -185,17 +185,23 @@ export function createEngine(deps: EngineDeps): Engine {
    * de consignes, les lampes en trop recoivent la derniere.
    *
    * Les lampes obeissent INDEPENDAMMENT : une lampe debranchee ne doit pas
-   * arreter l'animation des autres. Rend vrai si au moins une a repondu.
+   * arreter l'animation des autres. Rend vrai si au moins une a repondu, faux si aucune,
+   * et `null` s'il n'y avait rien a jouer (toutes les consignes au repos).
    */
-  async function applyFrame(cues: readonly Cue[], targets: readonly Target[]): Promise<boolean> {
-    const settled = await Promise.allSettled(targets.map((target, index) => {
+  async function applyFrame(cues: readonly Cue[], targets: readonly Target[]): Promise<boolean | null> {
+    const active = targets.flatMap((target, index) => {
       const cue = cues[Math.min(index, cues.length - 1)];
-      if (!cue) return Promise.resolve();
-      return applyCue(target, cue).then(
+      if (!cue || cue.idle === true) return [];
+      return [applyCue(target, cue).then(
         () => { cue.onSettled?.(true); },
         (error: unknown) => { cue.onSettled?.(false); throw error; },
-      );
-    }));
+      )];
+    });
+    // Rien a jouer cette fois (flux en direct dont rien n'a change) : ni reussite ni echec.
+    // Compter un repos comme une reussite remettrait a zero le compteur de pannes, et une
+    // lampe morte ne ferait alors jamais renoncer la session.
+    if (active.length === 0) return null;
+    const settled = await Promise.allSettled(active);
     return settled.some((result) => result.status === 'fulfilled');
   }
 
@@ -222,10 +228,11 @@ export function createEngine(deps: EngineDeps): Engine {
     }
 
     const frame = session.source.frameAt(step);
-    const reached = await applyFrame(frame.cues, session.targets);
-    if (reached) {
+    const outcome = await applyFrame(frame.cues, session.targets);
+    const reached = outcome !== false;
+    if (outcome === true) {
       session.failures = 0;
-    } else {
+    } else if (outcome === false) {
       session.failures += 1;
       if (session.failures >= session.source.tolerance) {
         await stopSession(session);
