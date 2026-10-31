@@ -746,6 +746,16 @@ sur sa sortie standard. Le mode `--diagnose` écrit un journal de couleurs, jama
 plafond de 2 alternances par seconde des scénarios existe pour empêcher. Ici le lissage adaptatif et la
 cadence bornée (≈ 12 images par seconde au plus) l'atténuent sans l'exclure : le panneau le dit.
 
+**Le fondu, que l'ampoule ne fait pas.** Les Tuya appliquent une couleur d'un coup, là où Philips Hue
+joint un temps de transition à chaque ordre. Le plugin fabrique donc le fondu : lissage adaptatif de
+la couleur, **luminosité amortie sur deux échelles de temps** (une moyenne lente de ~2 s porte
+l'ambiance, le mouvement rapide n'est repris que pour un tiers — un flash ne fait presque pas bouger
+la pièce), et limiteur de pente à l'envoi. Une piste matérielle reste à vérifier :
+`npm run probe:fade` envoie le même changement rouge → bleu en trois variantes du datapoint 27
+(mode « musique », saut ou dégradé) et demande de regarder si la lampe fond ou saute. C'est une
+**expérience** : les documentations Tuya se contredisent sur le sens du mode, et rien ne garantit
+qu'un modèle donné réponde en LAN.
+
 **Construire et diagnostiquer.** `npm run build:capture` compile le capteur (Rust requis, seulement
 pour cette étape) et le copie dans `bin/`. Hors du plugin, `lumendeck-capture --diagnose` écrit une
 ligne par seconde (`IMAGE_OK`, `NOIR`, `AUCUNE_IMAGE`, `ACCES_PERDU`, `FORMAT`) dans

@@ -307,7 +307,7 @@ test('un passage du sombre au clair monte sans marche visible de luminosite', as
   await clock.advance(300);
 
   lamps.calls.length = 0;
-  for (let i = 0; i < 40; i += 1) {
+  for (let i = 0; i < 160; i += 1) {
     capture.state.onEvent(frame([240, 120, 120, 95]));
     await clock.advance(100);
   }

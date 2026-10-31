@@ -21,6 +21,11 @@
  *     d'une couleur a l'autre est ce qu'on remarque le plus. A ~15 mesures par
  *     seconde, une scene stable se fond en ~0,6 s, une coupe en ~0,2 s.
  *
+ *   - La luminosite est amortie sur DEUX echelles de temps (moyenne lente + part du
+ *     mouvement rapide), pas la couleur : ce sont les variations de luminosite que
+ *     l'oeil trouve brusques dans une piece, alors qu'une couleur qui change vite
+ *     est justement l'effet recherche.
+ *
  *   - Un ecran noir TAMISE les lampes (`MIN_VALUE`) au lieu de les eteindre : un
  *     fondu au noir ou un ecran de chargement ne doit pas plonger la piece dans
  *     le noir complet, puis l'allumer en sursaut a la scene suivante.
@@ -76,6 +81,16 @@ const ALPHA_STEADY = 0.12;
 const ALPHA_CUT = 0.4;
 /** Ecart (0-1) a partir duquel on considere qu'il s'agit d'une coupe. */
 const CUT_THRESHOLD = 0.5;
+
+/**
+ * Luminosite : deux echelles de temps. Une moyenne LENTE (~2 s) porte l'ambiance de la
+ * scene ; le mouvement rapide autour d'elle n'est repris que pour `FAST_SHARE`. Une
+ * explosion, un menu clair ou un sous-titre font ainsi a peine bouger la piece, alors
+ * qu'une scene durablement plus claire finit par etre suivie en quelques secondes.
+ * Seule la luminosite est ainsi amortie : la couleur reste vive.
+ */
+const SLOW_ALPHA = 0.03;
+const FAST_SHARE = 0.35;
 
 /** Ecarts en dessous desquels on n'embete pas la lampe : teinte en degres, le reste en %. */
 const MIN_HUE_STEP = 2;
@@ -148,12 +163,12 @@ export function gradeZone(sample: ZoneSample): Hsv {
 export type Smoother = { push(sample: ZoneSample): ZoneSample };
 
 export function createSmoother(): Smoother {
-  let state: { rgb: [number, number, number]; v: number } | null = null;
+  let state: { rgb: [number, number, number]; v: number; slowV: number } | null = null;
 
   return {
     push(sample) {
       if (!state) {
-        state = { rgb: [...sample.rgb], v: sample.v };
+        state = { rgb: [...sample.rgb], v: sample.v, slowV: sample.v };
       } else {
         const gap = Math.max(
           (Math.abs(sample.rgb[0] - state.rgb[0]) + Math.abs(sample.rgb[1] - state.rgb[1]) + Math.abs(sample.rgb[2] - state.rgb[2])) / 765,
@@ -166,10 +181,13 @@ export function createSmoother(): Smoother {
             state.rgb[1] + (sample.rgb[1] - state.rgb[1]) * alpha,
             state.rgb[2] + (sample.rgb[2] - state.rgb[2]) * alpha,
           ],
-          v: state.v + (sample.v - state.v) * alpha,
+          // La luminosite n'a PAS de rattrapage de coupe : un flash doit etre amorti, pas suivi.
+          v: state.v + (sample.v - state.v) * ALPHA_STEADY,
+          slowV: state.slowV + (sample.v - state.slowV) * SLOW_ALPHA,
         };
       }
-      return { rgb: [Math.round(state.rgb[0]), Math.round(state.rgb[1]), Math.round(state.rgb[2])], v: state.v };
+      const v = state.slowV + (state.v - state.slowV) * FAST_SHARE;
+      return { rgb: [Math.round(state.rgb[0]), Math.round(state.rgb[1]), Math.round(state.rgb[2])], v };
     },
   };
 }

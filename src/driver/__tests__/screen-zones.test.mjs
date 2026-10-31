@@ -90,7 +90,7 @@ test('le lissage converge vers une scene stable', () => {
   const smoother = createSmoother();
   smoother.push({ rgb: [0, 0, 0], v: 0 });
   let last = { rgb: [0, 0, 0], v: 0 };
-  for (let i = 0; i < 60; i += 1) last = smoother.push({ rgb: [200, 100, 50], v: 60 });
+  for (let i = 0; i < 300; i += 1) last = smoother.push({ rgb: [200, 100, 50], v: 60 });
   assert.ok(Math.abs(last.rgb[0] - 200) <= 1 && Math.abs(last.v - 60) <= 1);
 });
 
@@ -184,4 +184,33 @@ test('la luminosite garde une decimale : les marches du bas sont plus fines que 
 test('un ecart de luminosite invisible n est pas envoye, meme s il vaut plusieurs points en haut', () => {
   assert.equal(differs({ h: 0, s: 50, v: 98 }, { h: 0, s: 50, v: 99 }), false);
   assert.equal(differs({ h: 0, s: 50, v: 3 }, { h: 0, s: 50, v: 4 }), true, 'mais en bas, 1 point se voit');
+});
+
+test('un flash bref ne fait presque pas bouger la luminosite : on suit la scene, pas chaque image', () => {
+  const smoother = createSmoother();
+  for (let i = 0; i < 100; i += 1) smoother.push({ rgb: [60, 60, 90], v: 20 });
+  let peak = 0;
+  for (let i = 0; i < 3; i += 1) peak = Math.max(peak, smoother.push({ rgb: [255, 255, 255], v: 100 }).v);
+  assert.ok(peak < 20 + 0.25 * (100 - 20), 'trois images claires ne depassent pas un quart de l ecart (' + peak.toFixed(1) + ')');
+});
+
+test('une scene durablement plus claire finit par etre suivie, en quelques secondes', () => {
+  const smoother = createSmoother();
+  for (let i = 0; i < 100; i += 1) smoother.push({ rgb: [60, 60, 90], v: 20 });
+  let level = 20;
+  for (let i = 0; i < 15 * 8; i += 1) level = smoother.push({ rgb: [200, 200, 220], v: 80 }).v; // ~8 s a 15 mesures/s
+  assert.ok(level > 70, 'apres ~8 s la lampe a rattrape la scene (' + level.toFixed(1) + ')');
+  const early = createSmoother();
+  for (let i = 0; i < 100; i += 1) early.push({ rgb: [60, 60, 90], v: 20 });
+  let after1s = 20;
+  for (let i = 0; i < 15; i += 1) after1s = early.push({ rgb: [200, 200, 220], v: 80 }).v;
+  assert.ok(after1s < 60, 'mais pas en une seconde : la piece ne pompe pas (' + after1s.toFixed(1) + ')');
+});
+
+test('la couleur, elle, n est pas ralentie par la moyenne lente de luminosite', () => {
+  const smoother = createSmoother();
+  for (let i = 0; i < 100; i += 1) smoother.push({ rgb: [200, 20, 20], v: 50 });
+  let last = smoother.push({ rgb: [20, 20, 200], v: 50 });
+  for (let i = 0; i < 6; i += 1) last = smoother.push({ rgb: [20, 20, 200], v: 50 });
+  assert.ok(last.rgb[2] > 150 && last.rgb[0] < 80, 'le rouge devient bleu en quelques images');
 });
