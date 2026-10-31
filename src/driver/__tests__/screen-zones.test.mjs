@@ -70,7 +70,18 @@ test('le lissage amortit un petit ecart et suit une coupe franche', () => {
   const cut = createSmoother();
   cut.push({ rgb: [0, 0, 0], v: 0 });
   const jump = cut.push({ rgb: [255, 255, 255], v: 100 });
-  assert.ok(jump.rgb[0] > 128, 'coupe franche : on rattrape plus de la moitie d un coup');
+  assert.ok(jump.rgb[0] > 80, 'coupe franche : on rattrape nettement plus qu une scene stable');
+  assert.ok(jump.rgb[0] < 200, 'mais jamais d un coup : la lampe ne saute pas');
+  let last = jump;
+  for (let i = 0; i < 5; i += 1) last = cut.push({ rgb: [255, 255, 255], v: 100 });
+  assert.ok(last.rgb[0] > 220, 'la coupe est rattrapee en quelques images');
+});
+
+test('une scene stable change plus doucement qu une coupe', () => {
+  const steady = createSmoother();
+  steady.push({ rgb: [100, 100, 100], v: 40 });
+  const step = steady.push({ rgb: [130, 100, 100], v: 40 }).rgb[0] - 100;
+  assert.ok(step > 0 && step < 10, 'un petit ecart ne bouge la lampe que de quelques points (' + step + ')');
 });
 
 test('le lissage converge vers une scene stable', () => {
@@ -87,7 +98,7 @@ test('n envoie pas a la lampe un changement imperceptible', () => {
   assert.equal(differs(a, { h: 201, s: 51, v: 50 }), false);
   assert.equal(differs(a, { h: 210, s: 50, v: 50 }), true);
   assert.equal(differs(a, { h: 200, s: 50, v: 56 }), true);
-  assert.equal(differs({ h: 359, s: 50, v: 50 }, { h: 1, s: 50, v: 50 }), false, 'la teinte tourne en rond');
+  assert.equal(differs({ h: 359, s: 50, v: 50 }, { h: 0, s: 50, v: 50 }), false, 'la teinte tourne en rond');
 });
 
 test('repartit les lampes sur les zones de gauche a droite', () => {

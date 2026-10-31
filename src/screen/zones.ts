@@ -15,8 +15,11 @@
  *
  *   - Le lissage est ADAPTATIF. Un coefficient fixe est toujours un mauvais
  *     compromis : assez doux pour ne pas scintiller sur une scene stable, il
- *     traine d'une seconde apres une coupe de montage. L'ecart mesure decide :
- *     petit, on glisse ; grand, on rattrape.
+ *     traine apres une coupe de montage. L'ecart mesure decide : petit, on
+ *     glisse ; grand, on rattrape — mais jamais d'un coup : meme une coupe
+ *     franche se fond en quelques dixiemes de seconde, car une lampe qui saute
+ *     d'une couleur a l'autre est ce qu'on remarque le plus. A ~15 mesures par
+ *     seconde, une scene stable se fond en ~0,6 s, une coupe en ~0,2 s.
  *
  *   - Un ecran noir TAMISE les lampes (`MIN_VALUE`) au lieu de les eteindre : un
  *     fondu au noir ou un ecran de chargement ne doit pas plonger la piece dans
@@ -58,14 +61,14 @@ const SATURATION_GAIN = 1.35;
 const VALUE_GAIN = 1.15;
 
 /** Lissage : part de l'ecart rattrapee a chaque image, entre une scene stable et une coupe franche. */
-const ALPHA_STEADY = 0.3;
-const ALPHA_CUT = 0.85;
+const ALPHA_STEADY = 0.12;
+const ALPHA_CUT = 0.4;
 /** Ecart (0-1) a partir duquel on considere qu'il s'agit d'une coupe. */
-const CUT_THRESHOLD = 0.35;
+const CUT_THRESHOLD = 0.5;
 
 /** Ecarts en dessous desquels on n'embete pas la lampe : teinte en degres, le reste en %. */
-const MIN_HUE_STEP = 3;
-const MIN_PERCENT_STEP = 3;
+const MIN_HUE_STEP = 2;
+const MIN_PERCENT_STEP = 2;
 
 const clamp = (n: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, n));
 
